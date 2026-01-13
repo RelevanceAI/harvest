@@ -40,6 +40,7 @@ This repository uses a structured documentation approach:
 | Directory | Audience | Purpose |
 |-----------|----------|---------|
 | `docs/ai/` | AI Agent (OpenCode) | Rules and instructions loaded into the agent's context |
+| `docs/mcp/` | AI Agent (OpenCode) | Detailed MCP server documentation |
 | `docs/plans/` | Developers | Implementation plans and internal roadmap |
 | `docs/architecture/` | Developers | Technical documentation explaining how things work |
 
@@ -50,6 +51,13 @@ Rules in `docs/ai/` are loaded into the Harvest agent's context via OpenCode's `
 - **`git.md`** - Git workflow requirements (Safe-Carry-Forward, checkpoint branches, force-push rules)
 - **`memory.md`** - Memory MCP usage patterns (when to query, when to update, maintenance)
 - **`harvest-mode.md`** - Autonomous operation rules (execute don't ask, fail forward, complete the loop)
+
+MCP server documentation in `docs/mcp/` provides detailed usage guides:
+
+- **`memory.md`** - Persistent knowledge graph operations
+- **`gemini.md`** - Plan review and web research workflows
+- **`playwright.md`** - Browser automation for testing
+- **`devtools.md`** - Low-level browser debugging
 
 ### For Developers
 

@@ -3,7 +3,7 @@
 Persistent knowledge graph for tracking context, errors, patterns, and procedures across sessions.
 
 **Server:** `@modelcontextprotocol/server-memory`
-**Storage:** `/root/.mcp-memory/memory.jsonl` (volume-backed, per-repo)
+**Storage:** `/root/.mcp-memory/memory.jsonl` (Modal volume, per-repo)
 **Auth:** None required
 
 ## Memory Operations
@@ -157,3 +157,17 @@ add_observations(name="ErrorPatterns", observations=["..."])
 "Step: <concrete action with commands>"
 "Requirement: <must-do before X>"
 ```
+
+### Memory Persistence
+
+Memory in Harvest persists **per-repository** across sessions:
+
+- Volume name: `harvest-memory-{owner}-{repo}`
+- Mount point: `/root/.mcp-memory/`
+- First session: Seeded with base entities from `/app/memory-seed.json`
+- Subsequent sessions: Continues from previous state
+
+This means the agent learns and improves for each repository over time, accumulating:
+- Error patterns specific to the codebase
+- Discovered conventions and patterns
+- Workflow procedures that work for this project

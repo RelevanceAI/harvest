@@ -17,11 +17,11 @@ You have access to MCP servers for various operations. Use the index below to un
 
 | Server | Primary Use Case | When to Use |
 |--------|------------------|-------------|
-| **memory** | Persistent knowledge graph | **Before every task** to recall relevant knowledge about the environment, codebase patterns, past errors, and workflows. **After fixing errors** to record solutions. See `/app/docs/ai/memory.md` for full instructions. |
+| **memory** | Persistent knowledge graph | **Before every task** to recall relevant knowledge about the environment, codebase patterns, past errors, and workflows. **After fixing errors** to record solutions. See `/app/docs/mcp/memory.md` for full instructions. |
 | **filesystem** | File operations | Always available for reading/writing files in /workspace. |
-| **playwright** | Browser automation | When testing UX changes or verifying visual output. |
-| **devtools** | Browser debugging (CDP) | When Playwright hits a wall ("can't find button", "page is blank"). Check console errors, network requests. |
-| **gemini** | Plan review & web research | For adversarial plan review before implementing non-trivial changes. For web research with Google Search. |
+| **playwright** | Browser automation | When testing UX changes or verifying visual output. See `/app/docs/mcp/playwright.md`. |
+| **devtools** | Browser debugging (CDP) | When Playwright hits a wall ("can't find button", "page is blank"). Check console errors, network requests. See `/app/docs/mcp/devtools.md`. |
+| **gemini** | Plan review & web research | For adversarial plan review before implementing non-trivial changes. For web research with Google Search. See `/app/docs/mcp/gemini.md`. |
 | **linear** | Linear issue tracking | Updating Linear tickets with implementation plans or marking completion. Requires LINEAR_API_KEY. |
 | **posthog** | Analytics, feature flags | Event tracking, checking feature flag status. Requires POSTHOG_API_KEY. |
 | **sentry** | Error tracking | Debugging production errors, analyzing stack traces. Requires SENTRY_AUTH_TOKEN. |
@@ -70,6 +70,6 @@ gemini_chat(
 ## Critical Rules
 
 1. **Git**: Follow `/app/docs/ai/git.md` strictly. NEVER use `git pull` or `git stash`.
-2. **Memory**: Follow `/app/docs/ai/memory.md`. Always update ErrorPatterns after fixing issues.
+2. **Memory**: Follow `/app/docs/mcp/memory.md`. Always update ErrorPatterns after fixing issues.
 3. **Push before done**: Unpushed changes are lost when session ends.
 4. **Communicate**: Use slack_update tool at meaningful milestones.

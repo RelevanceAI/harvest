@@ -92,8 +92,8 @@ This phase creates the Modal sandbox infrastructure that powers Harvest sessions
   "instructions": [
     "/app/AGENTS.md",
     "/app/docs/ai/git.md",
-    "/app/docs/ai/memory.md",
-    "/app/docs/ai/harvest-mode.md"
+    "/app/docs/ai/harvest-mode.md",
+    "/app/docs/mcp/memory.md"
   ],
   "permission": "allow",
   "mcp": {
@@ -575,8 +575,8 @@ class HarvestSandbox:
   "instructions": [
     "/app/AGENTS.md",
     "/app/docs/ai/git.md",
-    "/app/docs/ai/memory.md",
-    "/app/docs/ai/harvest-mode.md"
+    "/app/docs/ai/harvest-mode.md",
+    "/app/docs/mcp/memory.md"
   ],
   "permission": "allow",
   "mcp": {
@@ -642,13 +642,13 @@ You are running as an autonomous coding agent in a Modal sandbox.
 ## Critical Rules
 
 1. **Git**: Follow /app/docs/ai/git.md strictly. NEVER use `git pull` or `git stash`.
-2. **Memory**: Follow /app/docs/ai/memory.md. Always update ErrorPatterns after fixing issues.
+2. **Memory**: Follow /app/docs/mcp/memory.md. Always update ErrorPatterns after fixing issues.
 3. **Push before done**: Unpushed changes are lost when session ends.
 
 ## Detailed Documentation
 
 - Git workflow: `/app/docs/ai/git.md`
-- Memory usage: `/app/docs/ai/memory.md`
+- Memory usage: `/app/docs/mcp/memory.md`
 - Autonomous operation: `/app/docs/ai/harvest-mode.md`
 ```
 
@@ -656,7 +656,7 @@ You are running as an autonomous coding agent in a Modal sandbox.
 - [ ] `/app/opencode.json` - OpenCode configuration
 - [ ] `/app/AGENTS.md` - Main agent instructions
 - [ ] `/app/docs/ai/git.md` - Git workflow rules (copy from repo)
-- [ ] `/app/docs/ai/memory.md` - Memory usage rules
+- [ ] `/app/docs/mcp/memory.md` - Memory usage rules
 - [ ] `/app/docs/ai/harvest-mode.md` - Autonomous operation rules
 - [ ] `/app/memory-seed.json` - Initial memory entities
 - [ ] Symlink setup: `/root/.config/opencode/opencode.json` → `/app/opencode.json`
@@ -803,7 +803,7 @@ On sandbox start:
 
 #### Memory Maintenance Rules
 
-Include in `/app/docs/ai/memory.md`:
+Include in `/app/docs/mcp/memory.md`:
 - Add timestamps `[YYYY-MM-DD]` to observations that may become stale
 - Mark outdated facts with `SUPERSEDED [date]: <old> - Now: <new>`
 - Trust recent observations when conflicts exist
