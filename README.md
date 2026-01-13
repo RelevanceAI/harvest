@@ -37,12 +37,12 @@ Harvest is a background coding agent service built on the architecture that powe
 
 This repository uses a structured documentation approach:
 
-| Directory | Audience | Purpose |
-|-----------|----------|---------|
-| `docs/ai/` | AI Agent (OpenCode) | Rules and instructions loaded into the agent's context |
-| `docs/mcp/` | AI Agent (OpenCode) | Detailed MCP server documentation |
-| `docs/plans/` | Developers | Implementation plans and internal roadmap |
-| `docs/architecture/` | Developers | Technical documentation explaining how things work |
+| Directory | Audience | Purpose                                                   |
+|-----------|----------|-----------------------------------------------------------|
+| `docs/ai/` | AI Agent (OpenCode) | Rules and instructions loaded into the agent's context    |
+| `docs/mcp/` | AI Agent (OpenCode) | Detailed MCP server documentation                         |
+| `docs/plans/` | Developers | Implementation plans and current ongoing work for harvest |
+| `docs/architecture/` | Developers | Technical documentation explaining how things work        |
 
 ### For AI Agents
 
