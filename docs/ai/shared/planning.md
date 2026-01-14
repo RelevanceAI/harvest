@@ -99,3 +99,19 @@ Before implementing or committing:
 - **Seek feedback on uncertain parts**: Don't guess at architecture
 - **Document your reasoning**: Future maintainers (including you) will appreciate it
 - **Keep the team in sync**: Use Linear, PRs, and Slack to communicate progress
+
+## Plan Storage & Organization
+
+Plans are stored in the `.claude/plans/` directory with timestamped files organized by branch name.
+
+See [`.claude/plans/README.md`](../../.claude/plans/README.md) for:
+- Directory structure and naming conventions
+- Three-phase workflow (research → plan → implementation)
+- Versioning strategy (timestamps for iterations)
+- How to discover and reference plans
+- Integration with GitHub PRs
+
+This infrastructure enables:
+- **Agent self-awareness**: Timestamps help track "which iteration?" across sessions
+- **Clear approval gates**: Plans reviewed before implementation
+- **Feedback loops**: Completed plans stay in git history for reference
