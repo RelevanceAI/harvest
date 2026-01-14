@@ -2,9 +2,9 @@ name: Modal Integration Tests
 
 on:
   push:
-    branches: [ main, develop, 'feat/*' ]
+    branches: [ main ]
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main ]
   workflow_dispatch:
   schedule:
     - cron: '0 2 * * *'  # Daily at 2 AM UTC
