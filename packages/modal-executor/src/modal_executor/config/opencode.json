@@ -1,0 +1,78 @@
+{
+  "$schema": "https://opencode.ai/config.schema.json",
+  "mcp": {
+    "memory": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"],
+      "env": {
+        "MEMORY_FILE": "/root/.mcp-memory/memory.jsonl"
+      }
+    },
+    "filesystem": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/workspace"]
+    },
+    "playwright": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@latest"],
+      "env": {
+        "DISPLAY": ":99"
+      }
+    },
+    "devtools": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "chrome-devtools-mcp@latest"]
+    },
+    "github": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@anthropic-ai/mcp-server-github@latest"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
+      },
+      "enabled": "${GITHUB_TOKEN:-}"
+    },
+    "gemini": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@anthropic-ai/mcp-gemini"],
+      "env": {
+        "GEMINI_API_KEY": "${GEMINI_API_KEY}"
+      },
+      "enabled": "${GEMINI_API_KEY:-}"
+    },
+    "sentry": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@sentry/mcp-server"],
+      "env": {
+        "SENTRY_AUTH_TOKEN": "${SENTRY_AUTH_TOKEN}"
+      },
+      "enabled": "${SENTRY_AUTH_TOKEN:-}"
+    },
+    "linear": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["mcp-remote", "https://mcp.linear.app/sse"],
+      "env": {
+        "LINEAR_API_KEY": "${LINEAR_API_KEY}"
+      },
+      "enabled": "${LINEAR_API_KEY:-}"
+    }
+  },
+  "instructions": "/app/AGENTS.md",
+  "model": {
+    "default": "anthropic:claude-sonnet-4-20250514"
+  },
+  "autoapprove": {
+    "read": true,
+    "edit": true,
+    "bash": true,
+    "mcp": true,
+    "write": true
+  }
+}

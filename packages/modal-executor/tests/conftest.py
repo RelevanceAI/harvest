@@ -6,6 +6,12 @@ from unittest.mock import MagicMock, AsyncMock
 # Mark all tests in this directory as potentially using Modal
 pytest_plugins = []
 
+# Configure pytest-asyncio
+def pytest_configure(config):
+    """Configure pytest markers."""
+    config.addinivalue_line("markers", "modal: tests that require Modal credentials")
+    config.addinivalue_line("markers", "asyncio: tests that use asyncio")
+
 
 @pytest.fixture
 def mock_modal(mocker):
