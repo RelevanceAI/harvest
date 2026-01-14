@@ -104,7 +104,7 @@ Before implementing or committing:
 
 Plans are stored in the `.claude/plans/` directory with timestamped files organized by branch name.
 
-See [`.claude/plans/README.md`](../../.claude/plans/README.md) for:
+See [`.claude/plans/README.md`](../../../.claude/plans/README.md) for:
 - Directory structure and naming conventions
 - Three-phase workflow (research → plan → implementation)
 - Versioning strategy (timestamps for iterations)
