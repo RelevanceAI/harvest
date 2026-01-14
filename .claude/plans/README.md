@@ -58,19 +58,19 @@ Why timestamps matter:
 
 ## Versioning
 
-**Single Iteration**:
+Each iteration gets its own timestamp. Revisions are simply new files with new timestamps:
+
 ```
 research_2026-01-14_1400.md
-plan_2026-01-14_1430.md
-implementation_2026-01-14_1500.md
+research_2026-01-14_1500.md       (deeper investigation)
+plan_2026-01-14_1600.md           (initial plan)
+plan_2026-01-14_1700.md           (revised after feedback)
+implementation_2026-01-14_1800.md (implements latest plan)
 ```
 
-**With Revisions** (plan feedback → revised plan → implement):
-```
-research_2026-01-14_1400.md
-plan_2026-01-14_1430.md           (initial)
-plan_2026-01-14_1430_v2.md        (revised after feedback)
-implementation_2026-01-14_1500.md (implements v2)
+Latest version is easiest to find:
+```bash
+ls -ltr .claude/plans/[branch-name]/plan_*.md | tail -1
 ```
 
 ## Finding Plans
@@ -135,10 +135,10 @@ feat-add-logging/
 ### Example 2: Complex Feature with Revisions
 ```
 feat-modal-sandbox-block-1.1/
-├── research_2026-01-16_0900_v1.md
-├── research_2026-01-16_1100_v2.md (deeper investigation)
+├── research_2026-01-16_0900.md
+├── research_2026-01-16_1100.md (deeper investigation)
 ├── plan_2026-01-16_1300.md
-├── plan_2026-01-16_1300_v2.md (revised after feedback)
+├── plan_2026-01-16_1500.md (revised after feedback)
 └── implementation_2026-01-17_0900.md
 ```
 
@@ -159,9 +159,9 @@ cat .claude/plans/[branch-name]/plan_*.md | tail -1
 **When iterating on a plan**:
 1. Read existing plan file
 2. Get feedback from PR review
-3. Create `plan_YYYY-MM-DD_HHMM_v2.md` with revisions
-4. Reference "See v2 for revisions to original plan"
-5. Don't overwrite - keep versions for audit trail
+3. Create new `plan_YYYY-MM-DD_HHMM.md` file with a new timestamp
+4. Don't overwrite - keep all versions for audit trail
+5. Latest version is found by sorting: `ls -ltr plan_*.md | tail -1`
 
 **When implementing**:
 1. Reference the approved plan PR number
