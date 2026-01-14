@@ -79,7 +79,8 @@ implementation_2026-01-14_1500.md (implements v2)
 - `docs-phase-0-rules-finalization/` - Plan Infrastructure Setup
   - Plan: [plan_2026-01-14_2100.md](docs-phase-0-rules-finalization/plan_2026-01-14_2100.md)
   - Status: Awaiting Review
-  - PR: (pending)
+  - PR: [#1 - Plan Infrastructure for Autonomous Workflows](https://github.com/RelevanceAI/harvest/pull/1)
+  - Label: `phase-review-pending`
 
 ### Completed
 (none yet)
