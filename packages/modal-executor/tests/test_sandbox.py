@@ -1,10 +1,9 @@
 """Tests for Sandbox executor."""
 
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
-from modal_executor.types import ExecutionResult, ExecutionStatus
-from modal_executor.sandbox import SandboxExecutor, HarvestSession, HarvestSandbox
+from modal_executor.sandbox import SandboxExecutor, HarvestSession
 
 
 class TestSandboxExecutor:

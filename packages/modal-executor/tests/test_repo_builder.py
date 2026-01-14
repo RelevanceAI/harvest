@@ -1,6 +1,5 @@
 """Tests for repository image builder."""
 
-import pytest
 import os
 import tempfile
 import json

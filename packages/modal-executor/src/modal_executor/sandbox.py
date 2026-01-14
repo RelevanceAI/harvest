@@ -7,7 +7,6 @@ HarvestSandbox for full agent sessions with OpenCode, git, and MCP servers.
 import json
 import time
 from dataclasses import dataclass, field
-from pathlib import Path
 from typing import Optional
 
 import modal

@@ -15,7 +15,6 @@ class TestBaseImage:
     
     def test_config_dir_exists(self):
         """Test that config directory with files exists."""
-        from pathlib import Path
         from modal_executor.images import _CONFIG_DIR
         
         assert _CONFIG_DIR.exists()

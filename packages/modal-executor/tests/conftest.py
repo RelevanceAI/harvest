@@ -1,7 +1,7 @@
 """Test fixtures for Modal Executor."""
 
 import pytest
-from unittest.mock import MagicMock, AsyncMock
+from unittest.mock import MagicMock
 
 # Mark all tests in this directory as potentially using Modal
 pytest_plugins = []
