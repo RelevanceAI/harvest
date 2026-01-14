@@ -16,17 +16,17 @@ from modal_executor.volume import get_state_volume, MOUNT_PATH, cleanup_stale_fi
 )
 def refresh_environment() -> dict:
     """Periodic refresh of agent execution environment.
-    
+
     Runs every 30 minutes to:
     1. Warm up the base image (ensures fast cold starts)
     2. Clean up stale cache files
     3. Verify environment is healthy
-    
+
     Returns:
         Status dict with refresh details
     """
     start_time = datetime.now(timezone.utc)
-    
+
     # Create a Sandbox to warm up image and clean cache
     sb = modal.Sandbox.create(
         image=get_base_image(),
@@ -34,22 +34,22 @@ def refresh_environment() -> dict:
         timeout=300,  # 5 minutes for cleanup
         app=app,
     )
-    
+
     try:
         # Verify image is working
         result = sb.exec("python", "--version")
         python_version = result.stdout.strip()
-        
+
         # Clean up stale cache files (older than 7 days)
         files_cleaned = cleanup_stale_files(sb, max_age_days=7)
-        
+
         # Check disk usage
         du_result = sb.exec("du", "-sh", MOUNT_PATH)
         disk_usage = du_result.stdout.strip()
-        
+
         end_time = datetime.now(timezone.utc)
         duration = (end_time - start_time).total_seconds()
-        
+
         return {
             "status": "success",
             "timestamp": end_time.isoformat(),
@@ -58,7 +58,7 @@ def refresh_environment() -> dict:
             "files_cleaned": files_cleaned,
             "disk_usage": disk_usage,
         }
-        
+
     except Exception as e:
         end_time = datetime.now(timezone.utc)
         return {
@@ -67,7 +67,7 @@ def refresh_environment() -> dict:
             "duration_secs": (end_time - start_time).total_seconds(),
             "error": str(e),
         }
-        
+
     finally:
         sb.terminate()
 
@@ -75,7 +75,7 @@ def refresh_environment() -> dict:
 @app.function(timeout=60)
 def health_check() -> dict:
     """Quick health check for the executor environment.
-    
+
     Returns:
         Health status dict
     """

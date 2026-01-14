@@ -22,7 +22,6 @@ _CONFIG_DIR = Path(__file__).parent / "config"
 
 _base_image = (
     modal.Image.debian_slim(python_version="3.11")
-    
     # -------------------------------------------------------------------------
     # System Packages
     # -------------------------------------------------------------------------
@@ -66,12 +65,10 @@ _base_image = (
         # Process management
         "procps",
     )
-    
     # -------------------------------------------------------------------------
     # Alias fd (Debian naming quirk: fdfind -> fd)
     # -------------------------------------------------------------------------
     .run_commands("ln -sf $(which fdfind) /usr/local/bin/fd || true")
-    
     # -------------------------------------------------------------------------
     # Node.js 22 via NodeSource
     # -------------------------------------------------------------------------
@@ -79,7 +76,6 @@ _base_image = (
         "curl -fsSL https://deb.nodesource.com/setup_22.x | bash -",
         "apt-get install -y nodejs",
     )
-    
     # -------------------------------------------------------------------------
     # Volta (Node version manager)
     # -------------------------------------------------------------------------
@@ -88,13 +84,16 @@ _base_image = (
         "echo 'export VOLTA_HOME=\"$HOME/.volta\"' >> /root/.bashrc",
         "echo 'export PATH=\"$VOLTA_HOME/bin:$PATH\"' >> /root/.bashrc",
     )
-    .env({"VOLTA_HOME": "/root/.volta", "PATH": "/root/.volta/bin:/usr/local/bin:/usr/bin:/bin"})
-    
+    .env(
+        {
+            "VOLTA_HOME": "/root/.volta",
+            "PATH": "/root/.volta/bin:/usr/local/bin:/usr/bin:/bin",
+        }
+    )
     # -------------------------------------------------------------------------
     # pnpm (for monorepos)
     # -------------------------------------------------------------------------
     .run_commands("npm install -g pnpm")
-    
     # -------------------------------------------------------------------------
     # GitHub CLI
     # -------------------------------------------------------------------------
@@ -104,12 +103,10 @@ _base_image = (
         "echo 'deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main' | tee /etc/apt/sources.list.d/github-cli.list > /dev/null",
         "apt-get update && apt-get install -y gh",
     )
-    
     # -------------------------------------------------------------------------
     # OpenCode (AI coding agent)
     # -------------------------------------------------------------------------
     .run_commands("npm install -g opencode@latest")
-    
     # -------------------------------------------------------------------------
     # MCP Servers - Required (always available)
     # -------------------------------------------------------------------------
@@ -123,7 +120,6 @@ _base_image = (
         # DevTools - Chrome DevTools Protocol debugging
         "npm install -g chrome-devtools-mcp@latest",
     )
-    
     # -------------------------------------------------------------------------
     # MCP Servers - Optional (graceful fail if no API key)
     # -------------------------------------------------------------------------
@@ -135,7 +131,6 @@ _base_image = (
         # Sentry - error tracking
         "npm install -g @sentry/mcp-server || true",
     )
-    
     # -------------------------------------------------------------------------
     # Playwright Browsers (Chromium only for size)
     # -------------------------------------------------------------------------
@@ -143,7 +138,6 @@ _base_image = (
         "npx playwright install chromium",
         "npx playwright install-deps chromium",
     )
-    
     # -------------------------------------------------------------------------
     # Python Packages
     # -------------------------------------------------------------------------
@@ -160,7 +154,6 @@ _base_image = (
         # Async support
         "aiofiles",
     )
-    
     # -------------------------------------------------------------------------
     # Directory Structure
     # -------------------------------------------------------------------------
@@ -180,11 +173,12 @@ _base_image = (
         "mkdir -p /mnt/state/git-repos",
         "mkdir -p /mnt/state/checkpoints",
     )
-    
     # -------------------------------------------------------------------------
     # Harvest Configuration Files (baked into image)
     # -------------------------------------------------------------------------
-    .add_local_file(str(_CONFIG_DIR / "opencode.json"), "/root/.config/opencode/config.json")
+    .add_local_file(
+        str(_CONFIG_DIR / "opencode.json"), "/root/.config/opencode/config.json"
+    )
     .add_local_file(str(_CONFIG_DIR / "AGENTS.md"), "/app/AGENTS.md")
     .add_local_file(str(_CONFIG_DIR / "memory-seed.json"), "/app/memory-seed.json")
 )
@@ -194,9 +188,10 @@ _base_image = (
 # Public API
 # =============================================================================
 
+
 def get_base_image() -> modal.Image:
     """Get the base image for Sandbox execution.
-    
+
     This image includes:
     - Python 3.11 with common packages
     - Node.js 22 with Volta for version management
@@ -205,23 +200,25 @@ def get_base_image() -> modal.Image:
     - All required MCP servers (memory, filesystem, playwright, devtools)
     - Optional MCP servers (github, gemini, sentry)
     - GitHub CLI for repository operations
-    
+
     Returns:
         Configured Modal Image ready for agent sandboxes
     """
     return _base_image
 
 
-def get_base_image_with_extras(pip_packages: list[str] | None = None, npm_packages: list[str] | None = None) -> modal.Image:
+def get_base_image_with_extras(
+    pip_packages: list[str] | None = None, npm_packages: list[str] | None = None
+) -> modal.Image:
     """Get base image with additional packages.
-    
+
     Args:
         pip_packages: Additional pip packages to install
         npm_packages: Additional npm packages to install globally
-        
+
     Returns:
         Extended Modal Image
-        
+
     Example:
         image = get_base_image_with_extras(
             pip_packages=["pandas", "numpy"],
@@ -229,35 +226,35 @@ def get_base_image_with_extras(pip_packages: list[str] | None = None, npm_packag
         )
     """
     image = _base_image
-    
+
     if pip_packages:
         image = image.pip_install(*pip_packages)
-    
+
     if npm_packages:
         for pkg in npm_packages:
             image = image.run_commands(f"npm install -g {pkg}")
-    
+
     return image
 
 
 def get_image_for_repo(repo_name: str, node_version: str | None = None) -> modal.Image:
     """Get an image configured for a specific repository.
-    
+
     This can be extended to handle repo-specific requirements.
-    
+
     Args:
         repo_name: Name of the repository
         node_version: Specific Node.js version (uses Volta to install)
-        
+
     Returns:
         Image configured for the repository
     """
     image = _base_image
-    
+
     if node_version:
         # Use Volta to install specific Node version
         image = image.run_commands(
             f"/root/.volta/bin/volta install node@{node_version}"
         )
-    
+
     return image
