@@ -177,30 +177,111 @@ Assumptions:
 4. **Unfamiliar error pattern**: Git/system error not in your handling logic
 5. **Ownership verification failure**: Can't determine branch ownership reliably
 
+**Additional escalation criteria (system/environment errors):**
+- **Permission denied** on file/directory operations (can't read/write required files)
+- **Out of disk space** (no room to write files, create commits, or install dependencies)
+- **Network timeout** during git fetch/push (unable to sync with remote)
+- **Memory exhaustion** (process killed due to OOM, sandbox resource limits hit)
+- **Corrupted git repository** (unable to read git objects, corrupted refs)
+- **Authentication failure** (expired GitHub token, invalid credentials for integrations)
+- **Module/dependency resolution failure** (missing packages, version conflicts not fixable via install)
+- **Database/service connectivity** (can't reach external services required for task)
+
 **When posting to Slack**:
-- Clearly state what failed
-- Include relevant error messages
-- If applicable, include checkpoint branch name
+- Clearly state what failed and which criterion triggered it
+- Include relevant error messages (full error, not truncated)
+- Show what you attempted (fixes tried, approaches exhausted)
+- If applicable, include checkpoint branch name for recovery
 - Describe what human intervention is needed
+- Provide context: repo, branch, task objective
 
-Example:
+**Example (Test Failure)**:
 ```
-❌ Test failures persist after 3 attempts:
+❌ TEST FAILURES PERSIST (after 3 attempts)
 Error: Cannot find module './classifier'
-(attempted fixes didn't resolve the dependency issue)
 
-Checkpoint branch: checkpoint-feat-classifier-1704123456
+Attempts made:
+1. Ran npm install → still fails
+2. Cleared node_modules, reinstalled → still fails
+3. Checked package.json, manually added missing dep → still fails
 
-Next step: Human investigation needed to understand module resolution.
+Checkpoint: checkpoint-feat-classifier-1704123456
+Root cause: Likely missing peer dependency or build step
+
+Next: Human needs to investigate module resolution
+```
+
+**Example (Permission Denied)**:
+```
+❌ PERMISSION DENIED (system error)
+Operation: Trying to write test results to logs/test-results.json
+Error: EACCES: permission denied, open '/workspace/logs/test-results.json'
+
+Context: Frontend repo, feat/auth branch
+Checkpoint: checkpoint-feat-auth-1704567890
+
+Next: Check directory permissions or check if logs/ exists and is writable
+```
+
+**Example (Network Timeout)**:
+```
+❌ NETWORK TIMEOUT (can't reach remote)
+Operation: git push origin feat/classifier
+Error: fatal: unable to access 'https://github.com/...': Operation timed out
+
+Attempts: Retried 3x, waited between attempts, verified network connectivity
+Checkpoint: checkpoint-feat-classifier-1704123456
+
+Next: Human should check network/GitHub status, may need to retry
 ```
 
 ## Session Termination
 
-- **Successful completion**: Push complete, PR created, session ends gracefully
-- **Checkpoint left**: Report clearly in Slack with branch name
-- **Failed after Panic Button**: Report issue and leave state intact for human investigation
+### Successful Completion
+- Push complete to remote
+- PR created with proper conventions (see `docs/ai/shared/pull-requests.md`)
+- Cleanup: Delete all checkpoint branches (`git branch -D checkpoint-*`)
+- Post final status to Slack with PR link
+- Session ends gracefully
 
-**Critical**: All work is persisted via commits. No data is lost if session terminates.
+### Cleanup Mandate (Before Session Ends)
+
+Always perform cleanup, even on success:
+
+```bash
+# List checkpoint branches
+git branch | grep checkpoint-
+
+# Delete all checkpoints (if operation succeeded)
+git branch -D checkpoint-*
+
+# Verify cleanup
+git branch | grep -c checkpoint-
+# Should return 0
+```
+
+**Why**: Checkpoint branches can accumulate and clutter the repository. They're temporary recovery points that should be removed after use.
+
+### Failed After Panic Button
+- Leave checkpoint branch intact (provides recovery point for human)
+- Report clearly to Slack:
+  - What failed
+  - Why it failed
+  - Checkpoint branch name (for recovery)
+  - Suggested next steps
+- Don't attempt cleanup (human may need it for investigation)
+
+### Auto-Expiry Policy (For Human Review)
+
+If a checkpoint branch is left behind:
+- **Created**: timestamp in branch name (e.g., `checkpoint-feat-auth-1704123456`)
+- **Retention**: Keep for 7 days
+- **Auto-cleanup**: After 7 days, branch may be deleted by maintenance automation
+- **Manual cleanup**: User can delete earlier with `git branch -D checkpoint-*`
+
+This prevents unbounded accumulation of checkpoint branches.
+
+**Critical**: All work is persisted via commits. No data is lost if session terminates. Checkpoints are recovery aids only.
 
 ## Key Constraints
 

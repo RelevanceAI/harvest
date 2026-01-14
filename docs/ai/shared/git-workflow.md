@@ -104,14 +104,81 @@ This restores you to the pre-operation snapshot. No work is lost because the che
 
 ## 4. Squash Before Final Push
 
-Collapse all WIP snapshots into one clean commit:
+### The Squashing Strategy
 
+**Goal**: Collapse WIP snapshots into logical, reviewable commits.
+
+**Rule**: Squash ONLY WIP snapshots. Keep logical commits separate.
+
+#### What Gets Squashed
+
+WIP snapshots (temporary, black box recorder commits):
 ```bash
-git reset --soft origin/<branch>
-git commit -m "feat: clear, descriptive message"
+wip: snapshot before sync
+wip: snapshot after rebase
+wip: checkpoint save
 ```
 
-This is **non-interactive** (no editor), so it works in sandboxes without Vim/Nano.
+These are **squashed together** into one logical commit.
+
+#### What Stays Separate
+
+Logical, independent commits:
+- `feat: add classifier` (feature work)
+- `test: classifier tests` (test work)
+- `docs: update README` (documentation)
+- `refactor: simplify auth` (refactoring)
+
+These are **kept as separate commits** in the final history.
+
+#### How to Squash Correctly
+
+```bash
+# After all work is done, identify what you have
+git log --oneline origin/<branch>..HEAD
+# Example output:
+# 5abc123 wip: snapshot after rebase
+# 4def456 wip: snapshot before sync
+# 3ghi789 feat: add classifier
+# 2jkl012 test: add classifier tests
+# 1mno345 wip: initial snapshot
+
+# Option 1: Squash only WIP snapshots
+# Interactive rebase (advanced, requires editor)
+git rebase -i origin/<branch>
+# Mark wip: snapshots as "squash", keep logical commits as "pick"
+
+# Option 2: Reset to origin, re-apply logical commits
+git reset --soft origin/<branch>
+# Stage changes and commit by logical unit:
+git add src/classifier.ts
+git commit -m "feat: add classifier"
+git add tests/classifier.test.ts
+git commit -m "test: add classifier tests"
+git add docs/README.md
+git commit -m "docs: update README"
+```
+
+#### Result
+
+**Before squashing** (messy history):
+```
+wip: snapshot
+wip: snapshot
+feat: classifier
+test: tests
+wip: snapshot
+docs: README
+```
+
+**After squashing** (clean history):
+```
+feat: add classifier
+test: add classifier tests
+docs: update README
+```
+
+Each logical unit has one clean commit. Easy to review, easy to revert if needed.
 
 ### Commit Message Format
 
@@ -120,6 +187,7 @@ This is **non-interactive** (no editor), so it works in sandboxes without Vim/Na
   - Bad: `fixed bug`, `updated files`, `ENG-123`
 - **Include Linear ID if applicable**: `feat(modal): session context passing [ENG-456]`
 - **Be concise and clear**: One line summary, then blank line, then details if needed
+- **Reference related work**: Link to related commits/issues if relevant
 
 ---
 

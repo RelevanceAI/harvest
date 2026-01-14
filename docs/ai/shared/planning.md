@@ -34,6 +34,27 @@ gemini_chat(
 )
 ```
 
+### Gemini MCP Fallback (If Unavailable)
+
+If Gemini is unavailable (API down, rate-limited, or not configured), use this **heuristic checklist** to self-validate your plan:
+
+**Pre-Implementation Self-Review**:
+- [ ] Specific file paths documented? (Not vague like "update code")
+- [ ] Success criteria clear? (How will you verify this works?)
+- [ ] Assumptions listed? (What are you assuming about existing code?)
+- [ ] Obvious security issues? (Validation, auth, data handling)
+- [ ] Any breaking changes? (Changes to public APIs, data formats)
+- [ ] Edge cases considered? (Empty inputs, errors, race conditions)
+- [ ] Error handling planned? (What happens if things fail)
+- [ ] Performance impact? (Will this slow things down?)
+- [ ] Dependencies clear? (Does this depend on other changes)
+
+If **all items are checked**, proceed with confidence.
+
+If **2+ items are uncertain**, escalate to human review before implementing.
+
+**Note for Autonomous Agent**: Use this checklist if Gemini is unavailable. Don't let it block progress—use your own reasoning. If deeply uncertain, escalate to Panic Button rather than guessing.
+
 ### What to Include in Your Plan
 
 ✅ **DO include**:
