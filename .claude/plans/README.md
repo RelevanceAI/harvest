@@ -80,7 +80,6 @@ implementation_2026-01-14_1500.md (implements v2)
   - Plan: [plan_2026-01-14_2100.md](docs-phase-0-rules-finalization/plan_2026-01-14_2100.md)
   - Status: Awaiting Review
   - PR: [#1 - Plan Infrastructure for Autonomous Workflows](https://github.com/RelevanceAI/harvest/pull/1)
-  - Label: `phase-review-pending`
 
 ### Completed
 (none yet)
@@ -98,7 +97,7 @@ implementation_2026-01-14_1500.md (implements v2)
 ### Phase 2: Planning
 1. Write `plan_YYYY-MM-DD_HHMM.md` with detailed implementation steps
 2. Commit and push
-3. **Open PR** with label `phase-review-pending`
+3. **Open PR** for review
 4. Wait for approval (human ticks checkbox)
 5. If feedback: create `plan_YYYY-MM-DD_HHMM_v2.md` and iterate
 6. Once approved: close PR (don't merge), proceed to implementation
@@ -168,8 +167,6 @@ cat .claude/plans/[branch-name]/plan_*.md | tail -1
 4. Link back to plan for context
 
 ## Integration with GitHub
-
-Plan PRs use label: `phase-review-pending`
 
 Example PR title:
 ```
