@@ -9,13 +9,17 @@
 - **Style**: Be concise and neutral. Use complete sentences when helpful. Keep comments up-to-date or remove them if they become stale.
 - **TODOs**: Do not add TODO comments. Implement the change or create a tracked issue and reference it.
 
-### Comment these:
+## Comment These
+
 - Coordinate transformations
 - CORS workarounds
 - Magic numbers with meaning
 - Timing/sequence requirements
+- Non-obvious algorithm choices
+- External API quirks or limitations
 
-### TSDoc at type definitions
+## TSDoc at Type Definitions
+
 ```typescript
 type SlideAnnotation = {
   /** Unique ID for tracking annotations */
@@ -27,7 +31,7 @@ type SlideAnnotation = {
 }
 ```
 
-### Test File Guidelines
+## Test File Guidelines
 
 - Test descriptions should be self-explanatory; avoid adding comments that merely categorize or label test groups.
 - Do not add prefixes like "NEW:", "UPDATED:", or similar development history markers in test comments.
@@ -36,6 +40,7 @@ type SlideAnnotation = {
 ## Examples
 
 ### Explain WHY, not what
+
 ```typescript
 // ❌ Gets the pixel ratio
 const ratio = window.devicePixelRatio;
@@ -45,22 +50,26 @@ const ratio = window.devicePixelRatio;
 ```
 
 ### Don't comment obvious code
+
 ```typescript
 // ❌ Set the selected slide ID
 setSelectedSlideId(slide.id);
 ```
 
 ### Good vs Bad
-- Good (explains decision and constraints):
-  ```
-  // Why: We debounce to cap Supabase RPC calls under project rate limits; 300ms balances UX vs. quota (see ISSUE-1234).
-  ```
-- Bad (restates code or talks to the user):
-  ```
-  // We call debounce here because it's better :)
-  ```
-- Bad (development history markers):
-  ```
-  // NEW: Tests for image preset (text-only behavior)
-  // UPDATED: Fixed validation logic
-  ```
+
+**Good** (explains decision and constraints):
+```
+// Why: We debounce to cap Supabase RPC calls under project rate limits; 300ms balances UX vs. quota (see ISSUE-1234).
+```
+
+**Bad** (restates code or talks to the user):
+```
+// We call debounce here because it's better :)
+```
+
+**Bad** (development history markers):
+```
+// NEW: Tests for image preset (text-only behavior)
+// UPDATED: Fixed validation logic
+```
