@@ -1,0 +1,36 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "modal-executor"
+version = "0.1.0"
+description = "Modal Sandbox executor for Harvest AI agent"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+authors = [
+    { name = "Harvest Team" }
+]
+
+dependencies = [
+    "modal>=0.68.0",
+    "pydantic>=2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-mock>=3.10.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/modal_executor"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+markers = [
+    "modal: marks tests that require Modal credentials (deselect with '-m \"not modal\"')",
+]
+testpaths = ["tests"]
