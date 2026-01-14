@@ -73,19 +73,22 @@ plan_2026-01-14_1430_v2.md        (revised after feedback)
 implementation_2026-01-14_1500.md (implements v2)
 ```
 
-## Index of Plans
+## Finding Plans
 
-### Active
-- `docs-phase-0-rules-finalization/` - Plan Infrastructure Setup
-  - Plan: [plan_2026-01-14_2100.md](docs-phase-0-rules-finalization/plan_2026-01-14_2100.md)
-  - Status: Awaiting Review
-  - PR: [#1 - Plan Infrastructure for Autonomous Workflows](https://github.com/RelevanceAI/harvest/pull/1)
+**Active Plans**: See open PRs with `[PLAN]` prefix on GitHub. These are the current work in progress.
 
-### Completed
-(none yet)
+**Completed/Archived Plans**: Browse `.claude/plans/` directory structure and git history to see past decisions and lessons learned.
 
-### Abandoned  
-(none yet)
+```bash
+# Find all plan files
+find .claude/plans -name "plan_*.md"
+
+# See plan history for a branch
+ls .claude/plans/[branch-name]/
+
+# Review completed plans in git
+git log --oneline -- .claude/plans/
+```
 
 ## Workflow
 
