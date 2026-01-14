@@ -7,7 +7,11 @@ HarvestSandbox for full agent sessions with OpenCode, git, and MCP servers.
 import json
 import time
 from dataclasses import dataclass, field
-from typing import Optional
+from os import PathLike
+from typing import Optional, Union
+
+from modal import Volume
+from modal.cloud_bucket_mount import CloudBucketMount
 
 import modal
 
@@ -74,7 +78,7 @@ class SandboxExecutor:
 
         try:
             # Build volumes dict
-            volumes = {}
+            volumes: dict[Union[str, PathLike], Union[Volume, CloudBucketMount]] = {}
             if self.mount_volume:
                 volumes["/mnt/state"] = get_state_volume()
 
@@ -282,6 +286,12 @@ class HarvestSandbox:
             session.memory_volume_name, create_if_missing=True
         )
 
+    def _get_sandbox(self) -> modal.Sandbox:
+        """Get the sandbox, raising if not started."""
+        if self.sandbox is None:
+            raise RuntimeError("Sandbox not started. Call start() first.")
+        return self.sandbox
+
     async def start(self, timeout_secs: int = 3600) -> "HarvestSandbox":
         """Start the sandbox with full configuration.
 
@@ -295,7 +305,7 @@ class HarvestSandbox:
             RuntimeError: If sandbox fails to start or OpenCode doesn't respond
         """
         # Build environment variables
-        env_vars = {
+        env_vars: dict[str, str | None] = {
             "GITHUB_TOKEN": self.session.github_token,
             "ANTHROPIC_API_KEY": self.session.anthropic_api_key,
             "GIT_USER_EMAIL": self.session.user_email,
@@ -340,7 +350,7 @@ class HarvestSandbox:
         )
 
         # Clone with specific branch
-        proc = await self.sandbox.exec.aio(
+        proc = await self._get_sandbox().exec.aio(
             "git",
             "clone",
             "--branch",
@@ -359,21 +369,21 @@ class HarvestSandbox:
         Uses credential helper for HTTPS, adds "(Harvest)" suffix for attribution.
         """
         # Store credentials
-        await self.sandbox.exec.aio(
+        await self._get_sandbox().exec.aio(
             "git", "config", "--global", "credential.helper", "store"
         )
 
         # Write credentials file
         creds = f"https://x-access-token:{self.session.github_token}@github.com"
-        await self.sandbox.exec.aio(
+        await self._get_sandbox().exec.aio(
             "bash", "-c", f"echo '{creds}' > ~/.git-credentials"
         )
 
         # Identity with (Harvest) suffix for attribution
-        await self.sandbox.exec.aio(
+        await self._get_sandbox().exec.aio(
             "git", "config", "--global", "user.email", self.session.user_email
         )
-        await self.sandbox.exec.aio(
+        await self._get_sandbox().exec.aio(
             "git",
             "config",
             "--global",
@@ -382,10 +392,10 @@ class HarvestSandbox:
         )
 
         # Safe defaults
-        await self.sandbox.exec.aio(
+        await self._get_sandbox().exec.aio(
             "git", "config", "--global", "push.autoSetupRemote", "true"
         )
-        await self.sandbox.exec.aio(
+        await self._get_sandbox().exec.aio(
             "git", "config", "--global", "init.defaultBranch", "main"
         )
 
@@ -398,7 +408,7 @@ class HarvestSandbox:
             return
 
         auth_json = json.dumps(self.session.opencode_auth)
-        await self.sandbox.exec.aio(
+        await self._get_sandbox().exec.aio(
             "bash",
             "-c",
             f"mkdir -p /root/.local/share/opencode && echo '{auth_json}' > /root/.local/share/opencode/auth.json",
@@ -407,7 +417,7 @@ class HarvestSandbox:
     async def _seed_memory_if_needed(self) -> None:
         """Seed memory with initial entities if this is first use for this repo."""
         # Check if memory file exists
-        proc = await self.sandbox.exec.aio(
+        proc = await self._get_sandbox().exec.aio(
             "bash",
             "-c",
             "test -f /root/.mcp-memory/memory.jsonl && echo 'exists' || echo 'empty'",
@@ -418,7 +428,7 @@ class HarvestSandbox:
         if stdout == "empty":
             # First time - copy seed file to memory location
             # The memory MCP server will read from this file
-            await self.sandbox.exec.aio(
+            await self._get_sandbox().exec.aio(
                 "bash",
                 "-c",
                 """
@@ -460,7 +470,7 @@ EOF
     async def _start_opencode(self) -> None:
         """Start OpenCode in server mode on port 8080."""
         # Start OpenCode server in background
-        await self.sandbox.exec.aio(
+        await self._get_sandbox().exec.aio(
             "bash",
             "-c",
             f"cd {self.session.repo_path} && nohup opencode serve --port 8080 > /tmp/opencode.log 2>&1 &",
@@ -468,7 +478,7 @@ EOF
 
         # Wait for server to be ready (up to 30 seconds)
         for attempt in range(30):
-            proc = await self.sandbox.exec.aio(
+            proc = await self._get_sandbox().exec.aio(
                 "bash", "-c", "curl -s http://localhost:8080/health || echo 'not_ready'"
             )
             stdout = proc.stdout.read().strip()
@@ -480,7 +490,7 @@ EOF
             await self._sleep(1)
 
         # Check logs for errors
-        proc = await self.sandbox.exec.aio("cat", "/tmp/opencode.log")
+        proc = await self._get_sandbox().exec.aio("cat", "/tmp/opencode.log")
         logs = proc.stdout.read()
         raise RuntimeError(f"OpenCode server failed to start. Logs:\n{logs}")
 
@@ -507,7 +517,7 @@ EOF
 
         payload = json.dumps({"prompt": prompt})
 
-        proc = await self.sandbox.exec.aio(
+        proc = await self._get_sandbox().exec.aio(
             "curl",
             "-s",
             "-X",
@@ -523,7 +533,7 @@ EOF
 
     async def get_opencode_logs(self) -> str:
         """Get OpenCode server logs for debugging."""
-        proc = await self.sandbox.exec.aio("cat", "/tmp/opencode.log")
+        proc = await self._get_sandbox().exec.aio("cat", "/tmp/opencode.log")
         return proc.stdout.read()
 
     async def exec(self, *args: str, workdir: Optional[str] = None) -> ExecutionResult:
@@ -543,7 +553,7 @@ EOF
         cwd = workdir or self.session.repo_path
 
         try:
-            proc = await self.sandbox.exec.aio(*args, workdir=cwd)
+            proc = await self._get_sandbox().exec.aio(*args, workdir=cwd)
             duration = time.time() - start_time
 
             return ExecutionResult(

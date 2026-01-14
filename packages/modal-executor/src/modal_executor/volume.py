@@ -72,5 +72,6 @@ async def cleanup_stale_files(
     )
 
     # Count deleted files
-    deleted = result.stdout.strip().split("\n") if result.stdout.strip() else []
+    stdout = result.stdout.read()
+    deleted = stdout.strip().split("\n") if stdout.strip() else []
     return len(deleted)

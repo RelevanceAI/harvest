@@ -38,14 +38,14 @@ def refresh_environment() -> dict:
     try:
         # Verify image is working
         result = sb.exec("python", "--version")
-        python_version = result.stdout.strip()
+        python_version = result.stdout.read().strip()
 
         # Clean up stale cache files (older than 7 days)
         files_cleaned = cleanup_stale_files(sb, max_age_days=7)
 
         # Check disk usage
         du_result = sb.exec("du", "-sh", MOUNT_PATH)
-        disk_usage = du_result.stdout.strip()
+        disk_usage = du_result.stdout.read().strip()
 
         end_time = datetime.now(timezone.utc)
         duration = (end_time - start_time).total_seconds()
