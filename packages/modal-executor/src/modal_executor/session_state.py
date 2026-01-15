@@ -49,20 +49,24 @@ class SessionState:
         if self._conn is None:
             raise RuntimeError("Database connection not initialized")
 
-        self._conn.execute("""
+        self._conn.execute(
+            """
             CREATE TABLE IF NOT EXISTS conversation (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 role TEXT NOT NULL,
                 content TEXT NOT NULL,
                 timestamp REAL NOT NULL
             )
-        """)
-        self._conn.execute("""
+        """
+        )
+        self._conn.execute(
+            """
             CREATE TABLE IF NOT EXISTS files_modified (
                 path TEXT PRIMARY KEY,
                 timestamp REAL NOT NULL
             )
-        """)
+        """
+        )
         self._conn.commit()
 
     def build_context_prompt(self, new_prompt: str) -> str:
@@ -83,10 +87,12 @@ class SessionState:
         if self._conn is None:
             raise RuntimeError("Database connection not initialized")
 
-        cursor = self._conn.execute("""
+        cursor = self._conn.execute(
+            """
             SELECT role, content FROM conversation
             ORDER BY id DESC LIMIT 10
-        """)
+        """
+        )
         history = list(reversed(cursor.fetchall()))  # Oldest first
 
         if not history:

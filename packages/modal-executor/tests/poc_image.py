@@ -13,21 +13,21 @@ poc_image = (
     # Install curl first (needed for Node.js setup)
     .apt_install("curl")
     # Install Node.js (required for npx in MCP servers)
-    .run_commands([
-        "curl -fsSL https://deb.nodesource.com/setup_22.x | bash -",
-        "apt-get install -y nodejs",
-    ])
+    .run_commands(
+        [
+            "curl -fsSL https://deb.nodesource.com/setup_22.x | bash -",
+            "apt-get install -y nodejs",
+        ]
+    )
     # Install Claude Code CLI
-    .run_commands([
-        "npm install -g @anthropic-ai/claude-code@latest"
-    ])
+    .run_commands(["npm install -g @anthropic-ai/claude-code@latest"])
     # Install minimal MCP server for testing
-    .run_commands([
-        "npm install -g @modelcontextprotocol/server-memory"
-    ])
+    .run_commands(["npm install -g @modelcontextprotocol/server-memory"])
     # Create test directories
-    .run_commands([
-        "mkdir -p /workspace/.claude",
-        "mkdir -p /test-repo",
-    ])
+    .run_commands(
+        [
+            "mkdir -p /workspace/.claude",
+            "mkdir -p /test-repo",
+        ]
+    )
 )
