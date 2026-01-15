@@ -4,7 +4,7 @@ This module defines the base image for Harvest agent sandboxes, including:
 - Python 3.11 with common packages
 - Node.js 22 with Volta for version management
 - Playwright with Chromium for browser automation
-- OpenCode for AI agent operation
+- Claude Code CLI for AI agent operation
 - All required MCP servers
 - GitHub CLI for repository operations
 """
@@ -104,9 +104,9 @@ _base_image = (
         "apt-get update && apt-get install -y gh",
     )
     # -------------------------------------------------------------------------
-    # OpenCode (AI coding agent)
+    # Claude Code CLI (official Anthropic AI coding agent)
     # -------------------------------------------------------------------------
-    .run_commands("npm install -g opencode@latest")
+    .run_commands("npm install -g @anthropic-ai/claude-code@latest")
     # -------------------------------------------------------------------------
     # MCP Servers - Required (always available)
     # -------------------------------------------------------------------------
@@ -163,11 +163,12 @@ _base_image = (
         # App directory for Harvest config (baked into image)
         "mkdir -p /app/docs/ai",
         "mkdir -p /app/docs/mcp",
-        # OpenCode configuration
-        "mkdir -p /root/.config/opencode",
-        "mkdir -p /root/.local/share/opencode",
+        # Claude Code CLI configuration
+        "mkdir -p /root/.claude",
         # MCP memory storage (will be mounted as volume)
         "mkdir -p /root/.mcp-memory",
+        # Session state storage (SQLite databases)
+        "mkdir -p /mnt/state/sessions",
         # Cache directories
         "mkdir -p /mnt/state/.cache",
         "mkdir -p /mnt/state/git-repos",
@@ -176,9 +177,6 @@ _base_image = (
     # -------------------------------------------------------------------------
     # Harvest Configuration Files (baked into image)
     # -------------------------------------------------------------------------
-    .add_local_file(
-        str(_CONFIG_DIR / "opencode.json"), "/root/.config/opencode/config.json"
-    )
     .add_local_file(str(_CONFIG_DIR / "AGENTS.md"), "/app/AGENTS.md")
     .add_local_file(str(_CONFIG_DIR / "memory-seed.json"), "/app/memory-seed.json")
 )
@@ -196,7 +194,7 @@ def get_base_image() -> modal.Image:
     - Python 3.11 with common packages
     - Node.js 22 with Volta for version management
     - Playwright with Chromium for browser automation
-    - OpenCode for AI agent operation
+    - Claude Code CLI for AI agent operation
     - All required MCP servers (memory, filesystem, playwright, devtools)
     - Optional MCP servers (github, gemini, sentry)
     - GitHub CLI for repository operations

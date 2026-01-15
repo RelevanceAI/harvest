@@ -1,14 +1,15 @@
 """Sandbox wrapper for executing code in Modal.
 
 This module provides the SandboxExecutor for basic code execution and
-HarvestSandbox for full agent sessions with OpenCode, git, and MCP servers.
+HarvestSandbox for full agent sessions with Claude Code CLI, git, and MCP servers.
 """
 
 import json
+import logging
 import time
 from dataclasses import dataclass, field
 from os import PathLike
-from typing import Optional, Union
+from typing import AsyncIterator, Optional, Union
 
 from modal import Volume
 from modal.cloud_bucket_mount import CloudBucketMount
@@ -16,9 +17,13 @@ from modal.cloud_bucket_mount import CloudBucketMount
 import modal
 
 from modal_executor.app import app
+from modal_executor.claude_cli import ClaudeCliWrapper
 from modal_executor.images import get_base_image
+from modal_executor.session_state import SessionState
 from modal_executor.types import ExecutionResult, ExecutionStatus
 from modal_executor.volume import get_state_volume
+
+logger = logging.getLogger(__name__)
 
 
 # =============================================================================
@@ -220,15 +225,12 @@ class HarvestSession:
 
     # Credentials (injected at runtime)
     github_token: str = ""
-    anthropic_api_key: str = ""
+    claude_oauth_token: str = ""  # CLAUDE_CODE_OAUTH_TOKEN for team subscription
 
     # Optional credentials (for MCP servers)
     gemini_api_key: Optional[str] = None
     sentry_auth_token: Optional[str] = None
     linear_api_key: Optional[str] = None
-
-    # OpenCode auth (OAuth tokens if using opencode.ai)
-    opencode_auth: dict = field(default_factory=dict)
 
     @property
     def repo_path(self) -> str:
@@ -246,7 +248,8 @@ class HarvestSandbox:
 
     Key design decisions:
     - /workspace is the root, repos cloned to /workspace/{repo-name}
-    - OpenCode runs in server mode on port 8080
+    - Claude Code CLI runs with OAuth authentication
+    - Session state persists via SQLite in Modal volume
     - Memory persists via per-repo Modal volume
     - Git uses Safe-Carry-Forward pattern (no pull/stash)
     - Git identity includes "(Harvest)" suffix for attribution
@@ -259,14 +262,14 @@ class HarvestSandbox:
             user_email="dev@example.com",
             user_name="Developer",
             github_token="ghp_xxx",
-            anthropic_api_key="sk-ant-xxx",
+            claude_oauth_token="oauth_xxx",
         )
 
         sandbox = HarvestSandbox(session)
         await sandbox.start()
 
-        response = await sandbox.send_prompt("Fix the failing tests")
-        print(response)
+        async for chunk in sandbox.send_prompt_stream("Fix the failing tests"):
+            print(chunk, end="")
 
         await sandbox.terminate()
     """
@@ -279,7 +282,11 @@ class HarvestSandbox:
         """
         self.session = session
         self.sandbox: Optional[modal.Sandbox] = None
-        self._opencode_ready = False
+
+        # Claude CLI components
+        self.cli_wrapper = ClaudeCliWrapper()
+        self.session_state: Optional[SessionState] = None
+        self._claude_cli_ready = False
 
         # Per-repo memory volume
         self._memory_volume = modal.Volume.from_name(
@@ -302,12 +309,12 @@ class HarvestSandbox:
             Self for chaining
 
         Raises:
-            RuntimeError: If sandbox fails to start or OpenCode doesn't respond
+            RuntimeError: If sandbox fails to start or Claude CLI is unavailable
         """
         # Build environment variables
         env_vars: dict[str, str | None] = {
             "GITHUB_TOKEN": self.session.github_token,
-            "ANTHROPIC_API_KEY": self.session.anthropic_api_key,
+            "CLAUDE_CODE_OAUTH_TOKEN": self.session.claude_oauth_token,
             "GIT_USER_EMAIL": self.session.user_email,
             "GIT_USER_NAME": self.session.user_name,
             "HARVEST_SESSION_ID": self.session.session_id,
@@ -333,12 +340,14 @@ class HarvestSandbox:
             app=app,
         )
 
+        # Initialize session state (SQLite-backed)
+        self.session_state = SessionState(session_id=self.session.session_id)
+
         # Setup sequence
         await self._clone_repo()
         await self._configure_git()
-        await self._inject_opencode_auth()
         await self._seed_memory_if_needed()
-        await self._start_opencode()
+        await self._initialize_claude_cli()
 
         return self
 
@@ -399,20 +408,6 @@ class HarvestSandbox:
             "git", "config", "--global", "init.defaultBranch", "main"
         )
 
-    async def _inject_opencode_auth(self) -> None:
-        """Inject OpenCode OAuth credentials if provided.
-
-        OpenCode stores auth in ~/.local/share/opencode/auth.json
-        """
-        if not self.session.opencode_auth:
-            return
-
-        auth_json = json.dumps(self.session.opencode_auth)
-        await self._get_sandbox().exec.aio(
-            "bash",
-            "-c",
-            f"mkdir -p /root/.local/share/opencode && echo '{auth_json}' > /root/.local/share/opencode/auth.json",
-        )
 
     async def _seed_memory_if_needed(self) -> None:
         """Seed memory with initial entities if this is first use for this repo."""
@@ -467,32 +462,17 @@ EOF
                 """,
             )
 
-    async def _start_opencode(self) -> None:
-        """Start OpenCode in server mode on port 8080."""
-        # Start OpenCode server in background
-        await self._get_sandbox().exec.aio(
-            "bash",
-            "-c",
-            f"cd {self.session.repo_path} && nohup opencode serve --port 8080 > /tmp/opencode.log 2>&1 &",
-        )
+    async def _initialize_claude_cli(self) -> None:
+        """Verify Claude CLI is available in the sandbox."""
+        proc = await self._get_sandbox().exec.aio("claude", "--version")
 
-        # Wait for server to be ready (up to 30 seconds)
-        for attempt in range(30):
-            proc = await self._get_sandbox().exec.aio(
-                "bash", "-c", "curl -s http://localhost:8080/health || echo 'not_ready'"
-            )
-            stdout = proc.stdout.read().strip()
+        if proc.returncode != 0:
+            stderr = proc.stderr.read()
+            raise RuntimeError(f"Claude CLI not available: {stderr}")
 
-            if stdout != "not_ready" and "error" not in stdout.lower():
-                self._opencode_ready = True
-                return
-
-            await self._sleep(1)
-
-        # Check logs for errors
-        proc = await self._get_sandbox().exec.aio("cat", "/tmp/opencode.log")
-        logs = proc.stdout.read()
-        raise RuntimeError(f"OpenCode server failed to start. Logs:\n{logs}")
+        version = proc.stdout.read().strip()
+        logger.info(f"Claude CLI ready: {version}")
+        self._claude_cli_ready = True
 
     async def _sleep(self, seconds: float) -> None:
         """Sleep helper (uses asyncio in async context)."""
@@ -500,41 +480,48 @@ EOF
 
         await asyncio.sleep(seconds)
 
-    async def send_prompt(self, prompt: str) -> str:
-        """Send a prompt to the OpenCode server.
+    async def send_prompt_stream(self, prompt: str) -> AsyncIterator[str]:
+        """Send a prompt to Claude CLI and stream the response.
 
         Args:
             prompt: The task or question for the agent
 
-        Returns:
-            Agent response as string
+        Yields:
+            Text chunks as they arrive from Claude
 
         Raises:
-            RuntimeError: If OpenCode is not ready or request fails
+            RuntimeError: If Claude CLI is not ready or request fails
+
+        Example:
+            async for chunk in sandbox.send_prompt_stream("Fix the bug"):
+                print(chunk, end="")
         """
-        if not self._opencode_ready:
-            raise RuntimeError("OpenCode server is not ready")
+        if not self._claude_cli_ready:
+            raise RuntimeError("Claude CLI is not ready. Call start() first.")
 
-        payload = json.dumps({"prompt": prompt})
+        if self.session_state is None:
+            raise RuntimeError("Session state not initialized")
 
-        proc = await self._get_sandbox().exec.aio(
-            "curl",
-            "-s",
-            "-X",
-            "POST",
-            "-H",
-            "Content-Type: application/json",
-            "-d",
-            payload,
-            "http://localhost:8080/api/prompt",
+        # Build context-enriched prompt with conversation history
+        context_prompt = self.session_state.build_context_prompt(prompt)
+
+        # Stream response chunks
+        response_parts = []
+        async for chunk in self.cli_wrapper.stream_prompt(
+            prompt=context_prompt,
+            oauth_token=self.session.claude_oauth_token,
+            cwd=self.session.repo_path,
+        ):
+            response_parts.append(chunk)
+            yield chunk
+
+        # Save exchange to session state for continuity
+        full_response = "".join(response_parts)
+        self.session_state.add_exchange(prompt, full_response)
+
+        logger.info(
+            f"Prompt completed: {len(response_parts)} chunks, {len(full_response)} chars"
         )
-
-        return proc.stdout.read()
-
-    async def get_opencode_logs(self) -> str:
-        """Get OpenCode server logs for debugging."""
-        proc = await self._get_sandbox().exec.aio("cat", "/tmp/opencode.log")
-        return proc.stdout.read()
 
     async def exec(self, *args: str, workdir: Optional[str] = None) -> ExecutionResult:
         """Execute a command in the sandbox.
@@ -584,9 +571,17 @@ EOF
     async def terminate(self) -> None:
         """Gracefully terminate the sandbox.
 
-        Commits memory volume changes before termination.
+        Closes session state and commits memory volume changes before termination.
         """
         if self.sandbox:
+            try:
+                # Close session state database connection
+                if self.session_state:
+                    self.session_state.close()
+                    self.session_state = None
+            except Exception:
+                pass  # Best effort
+
             try:
                 # Commit volume changes
                 self._memory_volume.commit()
@@ -599,7 +594,7 @@ EOF
                 pass  # Best effort
 
             self.sandbox = None
-            self._opencode_ready = False
+            self._claude_cli_ready = False
 
     @property
     def is_running(self) -> bool:
