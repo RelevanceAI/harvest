@@ -39,8 +39,10 @@ repos:
     hooks:
       - id: trailing-whitespace
         name: trim trailing whitespace
+        exclude_types: [markdown]
       - id: end-of-file-fixer
         name: fix end of files
+        exclude_types: [markdown]
       - id: check-yaml
         name: check yaml syntax
       - id: check-added-large-files
