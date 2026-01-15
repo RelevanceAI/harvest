@@ -36,51 +36,16 @@ Harvest is a background coding agent service built on the architecture that powe
                                        └── Chrome MCP (Browser testing)
 ```
 
-## Current State (PR #2)
+## Current Status
 
-**Status**: Phase 1.1 - Modal Sandbox Infrastructure ✅
+**Phase 1.1 - Modal Sandbox Infrastructure** ✅
 
-This PR migrates from OpenCode to Claude Code CLI and implements the foundational Modal sandbox infrastructure.
-
-### What's Working
-
+Harvest currently provides:
 - ✅ Modal sandboxes with Claude Code CLI integration
 - ✅ Session state persistence (SQLite on Modal volumes)
 - ✅ Git credential management with security hardening
 - ✅ MCP server support (GitHub, Linear, Gemini, Chrome)
 - ✅ Pre-commit hooks for local linting/formatting
-- ✅ Comprehensive security audit and fixes
-
-### Current Architecture
-
-Each Harvest session runs in an isolated Modal sandbox:
-
-**Sandbox Environment**:
-```
-/workspace/{repo-name}/     # Cloned repository (ephemeral)
-/mnt/state/sessions/        # Session state databases (persistent Modal volume)
-/root/.git-credentials      # Git authentication (secure permissions)
-~/.claude/                  # Claude CLI config
-```
-
-**Session State Management**:
-- SQLite database per session at `/mnt/state/sessions/{session-id}.db`
-- Stores conversation history (last 10 messages)
-- Tracks modified files across agent turns
-- Survives sandbox restarts via Modal Volume persistence
-
-**Security Measures**:
-- Credentials injected via `Modal.Secret.from_dict()` (ephemeral)
-- `repr=False` on all credential fields (prevents accidental logging)
-- Credential redaction in error messages (OAuth, GitHub tokens)
-- Git credential helper setup before clone (no tokens in process args)
-- Secure file permissions (chmod 600) on credentials
-
-**MCP Servers**:
-- **GitHub**: PR creation, issue management, code search
-- **Linear**: Issue tracking and progress updates
-- **Gemini**: Adversarial plan review and web research
-- **Chrome/DevTools**: Browser automation and visual testing
 
 ---
 
@@ -122,7 +87,7 @@ This repository uses a structured documentation approach:
 
 - **Implementation Plans**: See [`docs/plans/`](docs/plans/)
   - [`IMPLEMENTATION_PLAN.md`](docs/plans/IMPLEMENTATION_PLAN.md) - Overall phased approach
-  - [`phase-1.1-modal-sandbox.md`](docs/plans/phase-1.1-modal-sandbox.md) - Modal sandbox implementation (current)
+  - [`phase-1.1-modal-sandbox.md`](docs/plans/phase-1.1-modal-sandbox.md) - Modal sandbox implementation
 
 - **Architecture Docs**: See [`docs/architecture/`](docs/architecture/)
 
@@ -200,7 +165,7 @@ Based on the [Ramp Inspect architecture](https://builders.ramp.com/post/why-we-b
 
 ### Phase 1: Foundation (In Progress)
 - [x] Planning complete
-- [x] **Phase 1.1**: Modal sandbox infrastructure with Claude Code CLI ✅ (PR #2)
+- [x] **Phase 1.1**: Modal sandbox infrastructure with Claude Code CLI
 - [ ] **Phase 1.2**: Session orchestration and lifecycle management
 - [ ] **Phase 1.3**: GitHub App integration
 
@@ -227,6 +192,16 @@ See [`docs/plans/IMPLEMENTATION_PLAN.md`](docs/plans/IMPLEMENTATION_PLAN.md) for
 ### Sandbox Architecture
 
 Each Harvest session runs in an isolated Modal sandbox with:
+
+**Sandbox Environment**:
+```
+/workspace/{repo-name}/     # Cloned repository (ephemeral)
+/mnt/state/sessions/        # Session state databases (persistent Modal volume)
+/root/.git-credentials      # Git authentication (secure permissions)
+~/.claude/                  # Claude CLI config
+```
+
+**Session Lifecycle**:
 
 1. **Setup Phase** (runs once per session):
    - Configure git identity with "(Harvest)" attribution
@@ -280,35 +255,18 @@ Harvest follows a strict git workflow (see `docs/ai/shared/git-workflow.md`):
 - No credentials in dataclass repr (all fields have `repr=False`)
 - Credential redaction in error logs (regex-based sanitization)
 - Git credentials stored with secure permissions (chmod 600)
+- Git credential helper configured before cloning (no tokens in process args)
 
 **Isolation**:
 - Each session gets isolated Modal sandbox
 - No cross-session data leakage
 - Sandboxes terminated after session completion
 
----
-
-## Migration from OpenCode (PR #2)
-
-This PR completes the migration from OpenCode to Claude Code CLI:
-
-**Why Claude Code CLI?**
-- Official Anthropic tool with latest model access
-- Native OAuth authentication
-- Stream-JSON output format for real-time streaming
-- Better tool support and reliability
-
-**Breaking Changes**:
-- Removed OpenCode server dependency
-- Changed from Node.js to Python/uv tooling
-- New credential management (Modal secrets)
-- New session state management (SQLite)
-
-**Migration Guide**:
-See commit history for detailed changes. Key files:
-- `packages/modal-executor/src/modal_executor/sandbox.py` - Sandbox orchestration
-- `packages/modal-executor/src/modal_executor/claude_cli.py` - Claude CLI wrapper
-- `packages/modal-executor/src/modal_executor/session_state.py` - State management
+**MCP Servers**:
+- **GitHub**: PR creation, issue management, code search
+- **Linear**: Issue tracking and progress updates
+- **Gemini**: Adversarial plan review and web research
+- **Chrome/DevTools**: Browser automation and visual testing
 
 ---
 
