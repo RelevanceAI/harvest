@@ -50,6 +50,37 @@ class TestHarvestSession:
             == "harvest-memory-RelevanceAI-relevance-chat-app"
         )
 
+    def test_session_repr_does_not_leak_credentials(self):
+        """Test that HarvestSession repr excludes credential fields.
+
+        Security requirement: Credential fields must have repr=False to prevent
+        accidental logging of sensitive tokens.
+        """
+        session = HarvestSession(
+            session_id="test-123",
+            repo_owner="TestOrg",
+            repo_name="test-repo",
+            github_token="ghp_secret123456",
+            claude_oauth_token="oauth_secret789",
+            gemini_api_key="gemini_secret_abc",
+            sentry_auth_token="sentry_secret_def",
+            linear_api_key="linear_secret_ghi",
+        )
+
+        repr_str = repr(session)
+
+        # Verify credentials are NOT in repr output
+        assert "ghp_secret123456" not in repr_str
+        assert "oauth_secret789" not in repr_str
+        assert "gemini_secret_abc" not in repr_str
+        assert "sentry_secret_def" not in repr_str
+        assert "linear_secret_ghi" not in repr_str
+
+        # Verify non-sensitive fields ARE in repr output
+        assert "test-123" in repr_str
+        assert "TestOrg" in repr_str
+        assert "test-repo" in repr_str
+
 
 @pytest.mark.modal
 class TestSandboxExecutorIntegration:

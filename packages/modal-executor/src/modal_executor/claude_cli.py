@@ -40,6 +40,26 @@ class ClaudeCliWrapper:
         self.last_returncode: Optional[int] = None
         self.last_stderr: Optional[str] = None
 
+    def _redact_credentials(self, text: str) -> str:
+        """Redact potential credentials from error messages.
+
+        Args:
+            text: Text that may contain credentials
+
+        Returns:
+            Text with credentials redacted
+        """
+        import re
+
+        # Redact common token patterns
+        text = re.sub(r"oauth_[a-zA-Z0-9_-]+", "oauth_REDACTED", text)
+        text = re.sub(r"ghp_[a-zA-Z0-9]+", "ghp_REDACTED", text)
+        text = re.sub(r"gho_[a-zA-Z0-9]+", "gho_REDACTED", text)
+        text = re.sub(r"github_pat_[a-zA-Z0-9_]+", "github_pat_REDACTED", text)
+        # Redact long alphanumeric strings that look like tokens
+        text = re.sub(r"\b[a-zA-Z0-9_-]{40,}\b", "TOKEN_REDACTED", text)
+        return text
+
     async def stream_prompt(
         self,
         prompt: str,
@@ -102,7 +122,9 @@ class ClaudeCliWrapper:
             if self.last_returncode != 0:
                 error_msg = f"Claude CLI exited with code {self.last_returncode}"
                 if self.last_stderr:
-                    error_msg += f": {self.last_stderr[:500]}"
+                    # Redact credentials before logging
+                    redacted_stderr = self._redact_credentials(self.last_stderr[:500])
+                    error_msg += f": {redacted_stderr}"
                 logger.error(error_msg)
                 raise RuntimeError(error_msg)
 

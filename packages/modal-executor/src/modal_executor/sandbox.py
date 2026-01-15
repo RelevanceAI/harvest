@@ -6,7 +6,7 @@ HarvestSandbox for full agent sessions with Claude Code CLI, git, and MCP server
 
 import logging
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from os import PathLike
 from typing import AsyncIterator, Optional, Union
 
@@ -222,14 +222,16 @@ class HarvestSession:
     user_email: str = ""
     user_name: str = ""
 
-    # Credentials (injected at runtime)
-    github_token: str = ""
-    claude_oauth_token: str = ""  # CLAUDE_CODE_OAUTH_TOKEN for team subscription
+    # Credentials (injected at runtime) - excluded from repr for security
+    github_token: str = field(default="", repr=False)
+    claude_oauth_token: str = field(
+        default="", repr=False
+    )  # CLAUDE_CODE_OAUTH_TOKEN for team subscription
 
-    # Optional credentials (for MCP servers)
-    gemini_api_key: Optional[str] = None
-    sentry_auth_token: Optional[str] = None
-    linear_api_key: Optional[str] = None
+    # Optional credentials (for MCP servers) - excluded from repr for security
+    gemini_api_key: Optional[str] = field(default=None, repr=False)
+    sentry_auth_token: Optional[str] = field(default=None, repr=False)
+    linear_api_key: Optional[str] = field(default=None, repr=False)
 
     @property
     def repo_path(self) -> str:
@@ -342,19 +344,22 @@ class HarvestSandbox:
         # Initialize session state (SQLite-backed)
         self.session_state = SessionState(session_id=self.session.session_id)
 
-        # Setup sequence
-        await self._clone_repo()
+        # Setup sequence - configure git BEFORE cloning for credential security
         await self._configure_git()
+        await self._clone_repo()
         await self._seed_memory_if_needed()
         await self._initialize_claude_cli()
 
         return self
 
     async def _clone_repo(self) -> None:
-        """Clone the repository to /workspace/{repo-name}."""
+        """Clone the repository to /workspace/{repo-name}.
+
+        Uses credential helper configured in _configure_git() - no token in URL.
+        """
+        # Use HTTPS URL without embedded token - credential helper provides auth
         repo_url = (
-            f"https://x-access-token:{self.session.github_token}"
-            f"@github.com/{self.session.repo_owner}/{self.session.repo_name}.git"
+            f"https://github.com/{self.session.repo_owner}/{self.session.repo_name}.git"
         )
 
         # Clone with specific branch
@@ -375,16 +380,20 @@ class HarvestSandbox:
         """Configure git identity and credentials.
 
         Uses credential helper for HTTPS, adds "(Harvest)" suffix for attribution.
+        Credentials are stored before cloning to avoid token in command args.
         """
-        # Store credentials
+        # Configure credential helper
         await self._get_sandbox().exec.aio(
             "git", "config", "--global", "credential.helper", "store"
         )
 
-        # Write credentials file
+        # Write credentials file with secure permissions
+        # Use printf instead of echo to avoid shell interpretation issues
         creds = f"https://x-access-token:{self.session.github_token}@github.com"
         await self._get_sandbox().exec.aio(
-            "bash", "-c", f"echo '{creds}' > ~/.git-credentials"
+            "bash",
+            "-c",
+            f"printf '%s\\n' '{creds}' > ~/.git-credentials && chmod 600 ~/.git-credentials",
         )
 
         # Identity with (Harvest) suffix for attribution

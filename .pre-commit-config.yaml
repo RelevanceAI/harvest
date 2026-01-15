@@ -9,7 +9,6 @@ repos:
     hooks:
       - id: ruff
         name: ruff (linter)
-        args: [check]
         files: ^packages/modal-executor/(src/|tests/)
         types: [python]
 
