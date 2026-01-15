@@ -69,7 +69,7 @@ class TestMyFeature:
         # Configure mock...
         mocker.patch.dict("sys.modules", {"modal": mock})
         return mock
-    
+
     def test_something(self, mock_modal):
         from modal_executor import SandboxExecutor
         # Test with mocked Modal
@@ -83,10 +83,10 @@ class TestMyFeatureIntegration:
     @pytest.mark.asyncio
     async def test_real_execution(self):
         from modal_executor import SandboxExecutor
-        
+
         executor = SandboxExecutor()
         result = await executor.execute('print("test")')
-        
+
         assert result.succeeded
 ```
 

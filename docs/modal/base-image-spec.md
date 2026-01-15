@@ -4,8 +4,8 @@ The Modal Executor uses a custom base image for Sandbox execution.
 
 ## Image Configuration
 
-**Base**: Debian Slim with Python 3.11  
-**Target Size**: <800MB  
+**Base**: Debian Slim with Python 3.11
+**Target Size**: <800MB
 **Location**: `packages/modal-executor/src/modal_executor/images.py`
 
 ## Installed Packages

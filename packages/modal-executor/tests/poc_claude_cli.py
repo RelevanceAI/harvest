@@ -31,25 +31,25 @@ poc_image = (
     # Install curl and sudo first (needed for Node.js setup and user creation)
     .apt_install("curl", "sudo")
     # Install Node.js (required for npx in MCP servers)
-    .run_commands([
-        "curl -fsSL https://deb.nodesource.com/setup_22.x | bash -",
-        "apt-get install -y nodejs",
-    ])
+    .run_commands(
+        [
+            "curl -fsSL https://deb.nodesource.com/setup_22.x | bash -",
+            "apt-get install -y nodejs",
+        ]
+    )
     # Install Claude Code CLI
-    .run_commands([
-        "npm install -g @anthropic-ai/claude-code@latest"
-    ])
+    .run_commands(["npm install -g @anthropic-ai/claude-code@latest"])
     # Install minimal MCP server for testing
-    .run_commands([
-        "npm install -g @modelcontextprotocol/server-memory"
-    ])
+    .run_commands(["npm install -g @modelcontextprotocol/server-memory"])
     # Create non-root user for running Claude (required for --dangerously-skip-permissions)
-    .run_commands([
-        "groupadd -g 10001 claude-user",
-        "useradd -u 10001 -g claude-user -m -s /bin/bash claude-user",
-        "mkdir -p /home/claude-user/.claude /home/claude-user/.mcp-memory /workspace /test-repo",
-        "chown -R claude-user:claude-user /home/claude-user /workspace /test-repo",
-    ])
+    .run_commands(
+        [
+            "groupadd -g 10001 claude-user",
+            "useradd -u 10001 -g claude-user -m -s /bin/bash claude-user",
+            "mkdir -p /home/claude-user/.claude /home/claude-user/.mcp-memory /workspace /test-repo",
+            "chown -R claude-user:claude-user /home/claude-user /workspace /test-repo",
+        ]
+    )
 )
 
 
@@ -57,11 +57,7 @@ class ClaudeCodeCLIWrapper:
     """Proof-of-concept wrapper for Claude Code CLI with OAuth"""
 
     @staticmethod
-    async def execute(
-        prompt: str,
-        oauth_token: str,
-        cwd: str = "/test-repo"
-    ) -> dict:
+    async def execute(prompt: str, oauth_token: str, cwd: str = "/test-repo") -> dict:
         """
         Execute a single prompt via Claude Code CLI.
 
@@ -73,11 +69,12 @@ class ClaudeCodeCLIWrapper:
         - error: str (if failed)
         """
         import time
+
         start_time = time.time()
 
         # Set OAuth token in environment
         env = os.environ.copy()
-        env['CLAUDE_CODE_OAUTH_TOKEN'] = oauth_token
+        env["CLAUDE_CODE_OAUTH_TOKEN"] = oauth_token
 
         try:
             # Invoke Claude Code CLI in headless mode
@@ -86,7 +83,8 @@ class ClaudeCodeCLIWrapper:
             proc = await asyncio.create_subprocess_exec(
                 "claude",
                 "--print",
-                "--output-format", "text",
+                "--output-format",
+                "text",
                 prompt,
                 cwd=cwd,
                 env=env,
@@ -99,11 +97,14 @@ class ClaudeCodeCLIWrapper:
 
             # Check if authentication failed
             stderr_text = stderr.decode()
-            if "unauthorized" in stderr_text.lower() or "authentication" in stderr_text.lower():
+            if (
+                "unauthorized" in stderr_text.lower()
+                or "authentication" in stderr_text.lower()
+            ):
                 return {
                     "success": False,
                     "error": f"Authentication failed: {stderr_text}",
-                    "duration_secs": duration
+                    "duration_secs": duration,
                 }
 
             # Parse JSON stream
@@ -121,18 +122,20 @@ class ClaudeCodeCLIWrapper:
             return {
                 "success": True,
                 "response": response_text,
-                "raw_output": raw_output[:1000],  # Limit to first 1000 chars for display
+                "raw_output": raw_output[
+                    :1000
+                ],  # Limit to first 1000 chars for display
                 "raw_output_length": len(raw_output),
                 "stderr": stderr_text,
                 "duration_secs": duration,
-                "return_code": proc.returncode
+                "return_code": proc.returncode,
             }
 
         except Exception as e:
             return {
                 "success": False,
                 "error": str(e),
-                "duration_secs": time.time() - start_time
+                "duration_secs": time.time() - start_time,
             }
 
 
@@ -143,7 +146,7 @@ def parse_json_stream(stream: str) -> str:
     Format appears to be newline-delimited JSON events.
     Extract text content from assistant messages.
     """
-    lines = stream.strip().split('\n')
+    lines = stream.strip().split("\n")
     text_parts = []
 
     for line in lines:
@@ -157,25 +160,23 @@ def parse_json_stream(stream: str) -> str:
             # (Need to discover actual format through testing)
             if isinstance(event, dict):
                 # Try common patterns
-                if 'type' in event and event['type'] == 'message':
-                    if 'content' in event:
-                        text_parts.append(str(event['content']))
-                elif 'text' in event:
-                    text_parts.append(event['text'])
-                elif 'content' in event and isinstance(event['content'], str):
-                    text_parts.append(event['content'])
+                if "type" in event and event["type"] == "message":
+                    if "content" in event:
+                        text_parts.append(str(event["content"]))
+                elif "text" in event:
+                    text_parts.append(event["text"])
+                elif "content" in event and isinstance(event["content"], str):
+                    text_parts.append(event["content"])
 
         except json.JSONDecodeError:
             # Skip invalid JSON lines
             continue
 
-    return '\n'.join(text_parts) if text_parts else stream
+    return "\n".join(text_parts) if text_parts else stream
 
 
 @app.function(
-    image=poc_image,
-    secrets=[modal.Secret.from_name("claude-code-oauth")],
-    timeout=300
+    image=poc_image, secrets=[modal.Secret.from_name("claude-code-oauth")], timeout=300
 )
 async def test_claude_cli_oauth():
     """
@@ -191,13 +192,18 @@ async def test_claude_cli_oauth():
     if not oauth_token:
         return {
             "error": "CLAUDE_CODE_OAUTH_TOKEN not found in environment",
-            "success": False
+            "success": False,
         }
 
     # Test 0: Check if Claude CLI is installed and accessible
     print("Test 0: Verify Claude CLI installation...")
     proc = await asyncio.create_subprocess_exec(
-        "sudo", "-E", "-u", "claude-user", "claude", "--version",
+        "sudo",
+        "-E",
+        "-u",
+        "claude-user",
+        "claude",
+        "--version",
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
     )
@@ -208,12 +214,13 @@ async def test_claude_cli_oauth():
     # Test 0b: Try running as root first to isolate the issue
     print("\nTest 0b: Try simple prompt as root (no sudo)...")
     env = os.environ.copy()
-    env['CLAUDE_CODE_OAUTH_TOKEN'] = oauth_token
-    env['HOME'] = '/root'
+    env["CLAUDE_CODE_OAUTH_TOKEN"] = oauth_token
+    env["HOME"] = "/root"
     proc_root = await asyncio.create_subprocess_exec(
         "claude",
         "--print",
-        "--output-format", "text",
+        "--output-format",
+        "text",
         "Say hello",
         env=env,
         cwd="/test-repo",
@@ -228,15 +235,18 @@ async def test_claude_cli_oauth():
 
     # Check if any files were created
     import subprocess
-    result = subprocess.run(["find", "/root/.claude", "-type", "f", "-mmin", "-1"],
-                          capture_output=True, text=True)
+
+    result = subprocess.run(
+        ["find", "/root/.claude", "-type", "f", "-mmin", "-1"],
+        capture_output=True,
+        text=True,
+    )
     print(f"  Recent files in /root/.claude: {result.stdout[:200]}")
 
     # Test 1: Simple prompt
     print("\nTest 1: Basic prompt execution...")
     result1 = await ClaudeCodeCLIWrapper.execute(
-        prompt="Say 'Hello from Modal' and nothing else",
-        oauth_token=oauth_token
+        prompt="Say 'Hello from Modal' and nothing else", oauth_token=oauth_token
     )
 
     print(f"✓ Test 1 Result: {result1}")
@@ -246,28 +256,25 @@ async def test_claude_cli_oauth():
     # Test 2: Multi-turn simulation (separate invocations)
     print("\nTest 2: Multi-turn conversation simulation...")
     result2a = await ClaudeCodeCLIWrapper.execute(
-        prompt="Remember this number: 42. Say 'Remembered'",
-        oauth_token=oauth_token
+        prompt="Remember this number: 42. Say 'Remembered'", oauth_token=oauth_token
     )
 
     result2b = await ClaudeCodeCLIWrapper.execute(
-        prompt="What number did I just tell you to remember?",
-        oauth_token=oauth_token
+        prompt="What number did I just tell you to remember?", oauth_token=oauth_token
     )
 
     print(f"✓ Test 2a Result: {result2a}")
     print(f"✓ Test 2b Result: {result2b}")
-    print(f"  Note: Expected to fail (no continuity) - result2b won't know '42'")
+    print("  Note: Expected to fail (no continuity) - result2b won't know '42'")
 
     # Test 3: Performance check
     print("\nTest 3: Performance (5 sequential calls)...")
     durations = []
     for i in range(5):
         result = await ClaudeCodeCLIWrapper.execute(
-            prompt=f"Count to {i+1}",
-            oauth_token=oauth_token
+            prompt=f"Count to {i+1}", oauth_token=oauth_token
         )
-        durations.append(result.get('duration_secs', 0))
+        durations.append(result.get("duration_secs", 0))
 
     avg_duration = sum(durations) / len(durations)
     print(f"✓ Average latency: {avg_duration:.2f}s")
@@ -278,14 +285,14 @@ async def test_claude_cli_oauth():
         "test2_continuity": {
             "first": result2a,
             "second": result2b,
-            "has_continuity": "42" in result2b.get('response', '')
+            "has_continuity": "42" in result2b.get("response", ""),
         },
         "test3_performance": {
             "avg_latency_secs": avg_duration,
             "min_latency_secs": min(durations),
             "max_latency_secs": max(durations),
-            "all_durations": durations
-        }
+            "all_durations": durations,
+        },
     }
 
 
@@ -308,15 +315,15 @@ def main():
     print("✅ VIABILITY ASSESSMENT")
     print("=" * 60)
 
-    test1 = result.get('test1_basic', {})
-    test2 = result.get('test2_continuity', {})
-    test3 = result.get('test3_performance', {})
+    test1 = result.get("test1_basic", {})
+    test2 = result.get("test2_continuity", {})
+    test3 = result.get("test3_performance", {})
 
     print(f"✓ Authentication works: {test1.get('success', False)}")
     print(f"✗ Conversation continuity: {test2.get('has_continuity', False)}")
     print(f"⚠ Average latency: {test3.get('avg_latency_secs', 0):.2f}s")
 
-    if test1.get('success'):
+    if test1.get("success"):
         print("\n🎉 PROCEED: Claude Code CLI + OAuth works in Modal!")
         print("⚠️  WARNING: No conversation continuity - need workaround")
     else:

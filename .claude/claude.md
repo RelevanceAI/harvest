@@ -106,7 +106,7 @@ See `@docs/ai/shared/git-workflow.md` for full details.
 
 ## Code Comments: WHY Over WHAT
 
-✅ **Good**: 
+✅ **Good**:
 ```typescript
 // Need pixelRatio to convert DOM coords to canvas coords on high-DPI displays
 const ratio = window.devicePixelRatio;

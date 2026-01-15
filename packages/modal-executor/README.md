@@ -21,6 +21,36 @@ source .venv/bin/activate
 uv pip install -e ".[dev]"
 ```
 
+## Development Setup
+
+### Install Pre-commit Hooks
+
+Pre-commit hooks run linting and formatting checks before each commit to catch issues early.
+
+```bash
+# One-time setup (per clone)
+pre-commit install
+
+# Test hooks on all files
+pre-commit run --all-files
+```
+
+**Configured hooks**:
+- **Ruff**: Fast Python linter
+- **Black**: Code formatter (check mode)
+- **Mypy**: Static type checker (non-blocking)
+- **General**: Trailing whitespace, end-of-file, YAML syntax, etc.
+
+**Skipping hooks** (not recommended):
+```bash
+git commit --no-verify -m "message"
+```
+
+**Updating hooks**:
+```bash
+pre-commit autoupdate
+```
+
 ## Setup
 
 1. Authenticate with Modal:

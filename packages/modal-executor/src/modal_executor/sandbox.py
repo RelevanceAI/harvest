@@ -4,10 +4,9 @@ This module provides the SandboxExecutor for basic code execution and
 HarvestSandbox for full agent sessions with Claude Code CLI, git, and MCP servers.
 """
 
-import json
 import logging
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from os import PathLike
 from typing import AsyncIterator, Optional, Union
 
@@ -408,7 +407,6 @@ class HarvestSandbox:
             "git", "config", "--global", "init.defaultBranch", "main"
         )
 
-
     async def _seed_memory_if_needed(self) -> None:
         """Seed memory with initial entities if this is first use for this repo."""
         # Check if memory file exists
@@ -445,7 +443,7 @@ with open('/root/.mcp-memory/memory.jsonl', 'w') as out:
             'observations': entity.get('observations', [])
         }
         out.write(json.dumps(record) + '\\n')
-    
+
     # Write relations
     for relation in seed.get('relations', []):
         record = {

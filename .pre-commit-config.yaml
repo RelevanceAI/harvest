@@ -1,0 +1,51 @@
+# Pre-commit hooks for Harvest monorepo
+# Runs linting and formatting checks before commits
+# Matches GitHub Actions CI workflow
+
+repos:
+  # Ruff - Fast Python linter (modal-executor package)
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.1.15
+    hooks:
+      - id: ruff
+        name: ruff (linter)
+        args: [check]
+        files: ^packages/modal-executor/(src/|tests/)
+        types: [python]
+
+  # Black - Python code formatter (modal-executor package)
+  - repo: https://github.com/psf/black-pre-commit-mirror
+    rev: 23.12.1
+    hooks:
+      - id: black
+        name: black (formatter check)
+        args: [--check]
+        files: ^packages/modal-executor/(src/|tests/)
+        types: [python]
+
+  # Mypy - Static type checker (modal-executor package, non-blocking)
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.8.0
+    hooks:
+      - id: mypy
+        name: mypy (type checker)
+        args: [--ignore-missing-imports]
+        files: ^packages/modal-executor/src/
+        types: [python]
+        verbose: true
+
+  # General hooks (good practices)
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+        name: trim trailing whitespace
+      - id: end-of-file-fixer
+        name: fix end of files
+      - id: check-yaml
+        name: check yaml syntax
+      - id: check-added-large-files
+        name: check for large files
+        args: [--maxkb=1000]
+      - id: check-merge-conflict
+        name: check for merge conflicts

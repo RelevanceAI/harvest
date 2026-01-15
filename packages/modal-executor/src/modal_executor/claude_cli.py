@@ -106,7 +106,7 @@ class ClaudeCliWrapper:
                 logger.error(error_msg)
                 raise RuntimeError(error_msg)
 
-            logger.info(f"Claude CLI completed successfully (returncode=0)")
+            logger.info("Claude CLI completed successfully (returncode=0)")
 
         except asyncio.TimeoutError:
             logger.error(f"Claude CLI timed out after {timeout}s")

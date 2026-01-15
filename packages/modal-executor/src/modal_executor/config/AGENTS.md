@@ -50,7 +50,7 @@ add_observations(
 **After discovering patterns:**
 ```
 add_observations(
-  name="LearnedPatterns", 
+  name="LearnedPatterns",
   observations=["Use X for Y (NOT Z): <clear directive>"]
 )
 ```
