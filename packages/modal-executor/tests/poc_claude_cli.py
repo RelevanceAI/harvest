@@ -23,9 +23,34 @@ import json
 import os
 import modal
 
-from poc_image import poc_image
-
 app = modal.App("claude-cli-poc")
+
+# Minimal test image with Claude Code CLI
+poc_image = (
+    modal.Image.debian_slim(python_version="3.11")
+    # Install curl and sudo first (needed for Node.js setup and user creation)
+    .apt_install("curl", "sudo")
+    # Install Node.js (required for npx in MCP servers)
+    .run_commands([
+        "curl -fsSL https://deb.nodesource.com/setup_22.x | bash -",
+        "apt-get install -y nodejs",
+    ])
+    # Install Claude Code CLI
+    .run_commands([
+        "npm install -g @anthropic-ai/claude-code@latest"
+    ])
+    # Install minimal MCP server for testing
+    .run_commands([
+        "npm install -g @modelcontextprotocol/server-memory"
+    ])
+    # Create non-root user for running Claude (required for --dangerously-skip-permissions)
+    .run_commands([
+        "groupadd -g 10001 claude-user",
+        "useradd -u 10001 -g claude-user -m -s /bin/bash claude-user",
+        "mkdir -p /home/claude-user/.claude /home/claude-user/.mcp-memory /workspace /test-repo",
+        "chown -R claude-user:claude-user /home/claude-user /workspace /test-repo",
+    ])
+)
 
 
 class ClaudeCodeCLIWrapper:
@@ -56,11 +81,13 @@ class ClaudeCodeCLIWrapper:
 
         try:
             # Invoke Claude Code CLI in headless mode
+            # Run as root since we're in an isolated Modal sandbox
+            # Use --print flag for non-interactive output
             proc = await asyncio.create_subprocess_exec(
                 "claude",
-                "-p", prompt,
-                "--output-format", "stream-json",
-                "--dangerously-skip-permissions",
+                "--print",
+                "--output-format", "text",
+                prompt,
                 cwd=cwd,
                 env=env,
                 stdout=asyncio.subprocess.PIPE,
@@ -81,12 +108,22 @@ class ClaudeCodeCLIWrapper:
 
             # Parse JSON stream
             raw_output = stdout.decode()
+
+            # DEBUG: Print raw output to see what we're getting
+            if not raw_output:
+                print(f"  WARNING: Empty stdout! stderr: {stderr_text[:200]}")
+            else:
+                print(f"  DEBUG: Got {len(raw_output)} bytes of output")
+                print(f"  DEBUG: First 500 chars: {raw_output[:500]}")
+
             response_text = parse_json_stream(raw_output)
 
             return {
                 "success": True,
                 "response": response_text,
-                "raw_output": raw_output,
+                "raw_output": raw_output[:1000],  # Limit to first 1000 chars for display
+                "raw_output_length": len(raw_output),
+                "stderr": stderr_text,
                 "duration_secs": duration,
                 "return_code": proc.returncode
             }
@@ -157,14 +194,54 @@ async def test_claude_cli_oauth():
             "success": False
         }
 
+    # Test 0: Check if Claude CLI is installed and accessible
+    print("Test 0: Verify Claude CLI installation...")
+    proc = await asyncio.create_subprocess_exec(
+        "sudo", "-E", "-u", "claude-user", "claude", "--version",
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    stdout, stderr = await proc.communicate()
+    print(f"  claude --version: {stdout.decode().strip()}")
+    print(f"  return code: {proc.returncode}")
+
+    # Test 0b: Try running as root first to isolate the issue
+    print("\nTest 0b: Try simple prompt as root (no sudo)...")
+    env = os.environ.copy()
+    env['CLAUDE_CODE_OAUTH_TOKEN'] = oauth_token
+    env['HOME'] = '/root'
+    proc_root = await asyncio.create_subprocess_exec(
+        "claude",
+        "--print",
+        "--output-format", "text",
+        "Say hello",
+        env=env,
+        cwd="/test-repo",
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    stdout_root, stderr_root = await proc_root.communicate()
+    print(f"  Root test - stdout length: {len(stdout_root.decode())}")
+    print(f"  Root test - stdout content: {stdout_root.decode()}")
+    print(f"  Root test - stderr: {stderr_root.decode()[:200]}")
+    print(f"  Root test - return code: {proc_root.returncode}")
+
+    # Check if any files were created
+    import subprocess
+    result = subprocess.run(["find", "/root/.claude", "-type", "f", "-mmin", "-1"],
+                          capture_output=True, text=True)
+    print(f"  Recent files in /root/.claude: {result.stdout[:200]}")
+
     # Test 1: Simple prompt
-    print("Test 1: Basic prompt execution...")
+    print("\nTest 1: Basic prompt execution...")
     result1 = await ClaudeCodeCLIWrapper.execute(
         prompt="Say 'Hello from Modal' and nothing else",
         oauth_token=oauth_token
     )
 
     print(f"✓ Test 1 Result: {result1}")
+    if result1.get("stderr"):
+        print(f"  stderr: {result1['stderr']}")
 
     # Test 2: Multi-turn simulation (separate invocations)
     print("\nTest 2: Multi-turn conversation simulation...")
