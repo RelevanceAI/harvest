@@ -5,7 +5,7 @@ Modal Sandbox executor for Harvest AI agent - enables isolated execution of AI-g
 ## Features
 
 - **Sandbox Execution**: Run arbitrary Python code in isolated Modal Sandboxes
-- **HarvestSandbox**: Full agent environment with OpenCode, MCP servers, and browser automation
+- **HarvestSandbox**: Full agent environment with Claude Code CLI, MCP servers, and browser automation
 - **Multi-Repo Support**: Clone and work with any GitHub repository at `/workspace/{repo-name}`
 - **Persistent Memory**: Per-repo knowledge graph that persists across sessions
 - **Pre-Built Images**: 30-minute cron job keeps repository images warm with dependencies installed
@@ -72,7 +72,7 @@ session = HarvestSession(
     user_email="dev@example.com",
     user_name="Developer",
     github_token="ghp_xxx",
-    anthropic_api_key="sk-ant-xxx",
+    claude_oauth_token="oauth_xxx",
     # Optional
     gemini_api_key="xxx",
     sentry_auth_token="xxx",
@@ -82,11 +82,11 @@ session = HarvestSession(
 sandbox = HarvestSandbox(session)
 await sandbox.start()
 
-# Send prompt to OpenCode agent
-response = await sandbox.send_prompt(
+# Send prompt to Claude CLI agent with streaming
+async for chunk in sandbox.send_prompt_stream(
     "Fix the failing tests in src/classifier.ts"
-)
-print(response)
+):
+    print(chunk, end="")
 
 # Run commands directly
 result = await sandbox.exec("npm", "test")
@@ -124,7 +124,7 @@ The sandbox includes:
 | Volta | Latest | Node version management |
 | pnpm | Latest | Monorepo package management |
 | Playwright | Latest | Browser automation (Chromium) |
-| OpenCode | Latest | AI coding agent |
+| Claude Code CLI | Latest | AI coding agent (official Anthropic tool) |
 | GitHub CLI | Latest | Repository operations |
 
 ### MCP Servers
@@ -148,11 +148,12 @@ The sandbox includes:
   {repo-name}/        # Cloned repository
 /app/                 # Harvest config (read-only)
   AGENTS.md           # Agent instructions
-  opencode.json       # OpenCode configuration
   memory-seed.json    # Initial memory entities
 /root/
-  .config/opencode/   # OpenCode config
+  .claude/            # Claude Code CLI config
   .mcp-memory/        # Memory volume (persistent per-repo)
+/mnt/state/           # Modal Volume (persistent)
+  sessions/           # SQLite databases for conversation state
 ```
 
 ## Development
@@ -168,11 +169,44 @@ pytest -m modal
 modal deploy src/modal_executor/app.py
 ```
 
+## Debugging Claude CLI Regressions
+
+If Claude CLI integration breaks (auth fails, streaming breaks, format changes), use the validation script to diagnose issues:
+
+### 1. Run Validation Script
+
+```bash
+export CLAUDE_CODE_OAUTH_TOKEN=<your-token>
+python scripts/validate_claude_cli.py
+```
+
+This script validates:
+- OAuth authentication
+- Streaming format
+- Exit code handling
+
+### 2. Check Claude CLI Version
+
+```bash
+claude --version
+```
+
+### 3. Run POC Test
+
+```bash
+modal run tests/poc_claude_cli.py
+```
+
+### 4. Update ClaudeCliWrapper
+
+If stream format changed, update `src/modal_executor/claude_cli.py::_extract_text()` to handle new event formats.
+
+The validation script is located at `scripts/validate_claude_cli.py` for easy discovery when debugging regressions.
+
 ## Configuration Files
 
 Configuration files are baked into the image at `/app/`:
 
-- **opencode.json**: MCP server configuration
 - **AGENTS.md**: Agent instructions (git workflow, panic button, etc.)
 - **memory-seed.json**: Initial knowledge graph entities
 
@@ -183,7 +217,7 @@ See `src/modal_executor/config/` for the source files.
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `GITHUB_TOKEN` | Yes | GitHub PAT for cloning repos |
-| `ANTHROPIC_API_KEY` | Yes | For OpenCode agent |
+| `CLAUDE_CODE_OAUTH_TOKEN` | Yes | OAuth token for Claude Code CLI (team subscription) |
 | `GEMINI_API_KEY` | No | For Gemini MCP server |
 | `SENTRY_AUTH_TOKEN` | No | For Sentry MCP server |
 | `LINEAR_API_KEY` | No | For Linear MCP server |
@@ -195,12 +229,13 @@ Modal App (harvest-agent-executor)
 ├── Base Image
 │   ├── Python 3.11 + Node.js 22 + Volta
 │   ├── Playwright + Chromium
-│   ├── OpenCode + MCP servers
+│   ├── Claude Code CLI + MCP servers
 │   └── Config files (/app/)
 ├── Per-Session Sandboxes
 │   ├── Repository clone (/workspace/)
 │   ├── Git credentials + identity
-│   ├── OpenCode server (:8080)
+│   ├── Claude CLI with OAuth
+│   ├── Session state (SQLite in /mnt/state/sessions/)
 │   └── Memory volume mount
 ├── Per-Repo Memory Volumes
 │   └── harvest-memory-{owner}-{repo}
