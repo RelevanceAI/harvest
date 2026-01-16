@@ -121,7 +121,7 @@ This plan outlines the implementation of Harvest, a background coding agent serv
 class SessionDurableObject {
   state: DurableObjectState;
   db: SqlStorage; // Per-session SQLite
-  
+
   // Core methods:
   - createSession()
   - sendPrompt()

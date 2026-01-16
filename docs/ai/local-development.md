@@ -16,6 +16,7 @@ Follow these shared rules as your foundation:
 - `@docs/ai/shared/git-workflow.md` — Safe-Carry-Forward sync pattern, checkpoint branches, squashing
 - `@docs/ai/shared/code-comments.md` — WHY over WHAT/HOW, preserve existing comments
 - `@docs/ai/shared/planning.md` — Research before coding, use Gemini for adversarial review
+- `@docs/ai/shared/documentation.md` — Update docs with changes, capture gotchas, avoid stale values
 
 ## Workflow
 

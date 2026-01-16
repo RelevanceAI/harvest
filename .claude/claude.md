@@ -21,6 +21,7 @@ All agents follow these core rules:
 | **Git Workflow** | `@docs/ai/shared/git-workflow.md` | Safe-Carry-Forward sync, snapshots, checkpoints, squashing |
 | **Code Comments** | `@docs/ai/shared/code-comments.md` | Explain WHY not WHAT; preserve existing comments |
 | **Planning** | `@docs/ai/shared/planning.md` | Research before coding, use Gemini for adversarial review |
+| **Documentation** | `@docs/ai/shared/documentation.md` | Update docs with changes, capture gotchas, avoid stale values |
 
 ---
 
@@ -106,7 +107,7 @@ See `@docs/ai/shared/git-workflow.md` for full details.
 
 ## Code Comments: WHY Over WHAT
 
-✅ **Good**: 
+✅ **Good**:
 ```typescript
 // Need pixelRatio to convert DOM coords to canvas coords on high-DPI displays
 const ratio = window.devicePixelRatio;

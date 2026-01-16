@@ -271,7 +271,7 @@ def build_repo_image(
 ) -> dict:
     """
     Build a pre-warmed image for a repository.
-    
+
     1. Clone the repository
     2. Install dependencies (npm/pip/etc)
     3. Run initial build commands
@@ -280,22 +280,22 @@ def build_repo_image(
     import os
     import subprocess
     import json
-    
+
     github_token = os.environ["GITHUB_TOKEN"]
     repo_url = f"https://x-access-token:{github_token}@github.com/{repo_owner}/{repo_name}.git"
     repo_path = f"/workspace/{repo_name}"
-    
+
     # Clone repository
     subprocess.run([
         "git", "clone", "--depth", "1", "--branch", branch,
         repo_url, repo_path
     ], check=True)
-    
+
     os.chdir(repo_path)
-    
+
     # Detect and install dependencies
     build_info = {"repo": f"{repo_owner}/{repo_name}", "branch": branch}
-    
+
     if os.path.exists("package.json"):
         # Prefer npm ci for reproducible installs
         if os.path.exists("package-lock.json"):
@@ -303,27 +303,27 @@ def build_repo_image(
         else:
             subprocess.run(["npm", "install"], check=True)
         build_info["package_manager"] = "npm"
-        
+
         # Run build if script exists
         with open("package.json") as f:
             pkg = json.load(f)
             if "build" in pkg.get("scripts", {}):
                 subprocess.run(["npm", "run", "build"], check=False)
-                
+
     elif os.path.exists("requirements.txt"):
         subprocess.run([
             "pip", "install", "-r", "requirements.txt",
             "--break-system-packages"  # Required in container (PEP 668)
         ], check=True)
         build_info["package_manager"] = "pip"
-        
+
     elif os.path.exists("pyproject.toml"):
         subprocess.run([
             "pip", "install", "-e", ".",
             "--break-system-packages"
         ], check=True)
         build_info["package_manager"] = "pip"
-    
+
     return build_info
 
 
@@ -338,7 +338,7 @@ def refresh_all_images():
         ("RelevanceAI", "relevance-chat-app", "main"),
         # Add more repos here
     ]
-    
+
     for owner, name, branch in repos:
         build_repo_image.spawn(owner, name, branch)
 ```
@@ -367,27 +367,27 @@ app = modal.App("harvest-sandbox")
 class HarvestSandbox:
     """
     Manages a Modal sandbox for a Harvest session.
-    
+
     Key design decisions:
     - /workspace is the root, repos cloned to /workspace/{repo-name}
     - OpenCode runs in server mode on port 8080
     - Memory persists via per-repo Modal volume
     - Git uses Safe-Carry-Forward pattern (no pull/stash)
     """
-    
+
     def __init__(self, session_id: str, repo_owner: str, repo_name: str):
         self.session_id = session_id
         self.repo_owner = repo_owner
         self.repo_name = repo_name
         self.repo_path = f"/workspace/{repo_name}"
         self.sandbox = None
-        
+
         # Per-repo memory volume
         self.memory_volume = modal.Volume.from_name(
             f"harvest-memory-{repo_owner}-{repo_name}",
             create_if_missing=True
         )
-    
+
     async def start(
         self,
         github_token: str,
@@ -405,11 +405,11 @@ class HarvestSandbox:
             "GIT_USER_EMAIL": user_email,
             "GIT_USER_NAME": user_name,
         }
-        
+
         # Add optional secrets if provided
         if optional_secrets:
             secrets.update(optional_secrets)
-        
+
         self.sandbox = await modal.Sandbox.create(
             image=base_image,
             timeout=3600,  # 1 hour max
@@ -418,7 +418,7 @@ class HarvestSandbox:
                 "/root/.mcp-memory": self.memory_volume,
             },
         )
-        
+
         # Setup sequence
         await self._clone_repo(github_token)
         await self._configure_git(user_email, user_name, github_token)
@@ -426,21 +426,21 @@ class HarvestSandbox:
         await self._setup_mcp_config(optional_secrets or {})
         await self._seed_memory_if_needed()
         await self._start_opencode()
-        
+
         return self.sandbox
-    
+
     async def _clone_repo(self, github_token: str):
         """Clone the repository to /workspace/{repo-name}."""
         repo_url = f"https://x-access-token:{github_token}@github.com/{self.repo_owner}/{self.repo_name}.git"
-        
+
         await self.sandbox.exec(
             "git", "clone", repo_url, self.repo_path
         )
-    
+
     async def _configure_git(self, user_email: str, user_name: str, github_token: str):
         """
         Configure git identity and credentials.
-        
+
         Uses credential helper for HTTPS, adds "(Harvest)" suffix for attribution.
         """
         # Credential helper
@@ -451,7 +451,7 @@ class HarvestSandbox:
             "bash", "-c",
             f"echo 'https://x-access-token:{github_token}@github.com' > ~/.git-credentials"
         )
-        
+
         # Identity with (Harvest) suffix
         await self.sandbox.exec(
             "git", "config", "--global", "user.email", user_email
@@ -459,37 +459,37 @@ class HarvestSandbox:
         await self.sandbox.exec(
             "git", "config", "--global", "user.name", f"{user_name} (Harvest)"
         )
-        
+
         # Safe defaults
         await self.sandbox.exec(
             "git", "config", "--global", "push.autoSetupRemote", "true"
         )
-    
+
     async def _inject_opencode_auth(self, opencode_auth: dict):
         """
         Inject OpenCode OAuth credentials.
-        
+
         OpenCode stores auth in ~/.local/share/opencode/auth.json
         """
         import json
         auth_json = json.dumps(opencode_auth)
-        
+
         await self.sandbox.exec(
             "bash", "-c",
             f"echo '{auth_json}' > /root/.local/share/opencode/auth.json"
         )
-    
+
     async def _setup_mcp_config(self, optional_secrets: dict):
         """
         Setup MCP configuration with optional servers based on available secrets.
         """
         # Base MCP config is in /app/opencode.json (baked into image)
         # Here we could extend it with optional servers if secrets are present
-        
+
         # For now, optional servers are configured but will gracefully fail
         # if their API keys aren't present
         pass
-    
+
     async def _seed_memory_if_needed(self):
         """
         Seed memory with initial entities if this is first use for this repo.
@@ -499,7 +499,7 @@ class HarvestSandbox:
             "bash", "-c",
             "test -f /root/.mcp-memory/memory.jsonl && echo 'exists' || echo 'empty'"
         )
-        
+
         if "empty" in result.stdout:
             # First time - seed from /app/memory-seed.json
             await self.sandbox.exec(
@@ -508,7 +508,7 @@ class HarvestSandbox:
                 # This will be done via OpenCode on first prompt
                 "echo 'Memory will be seeded on first prompt'"
             )
-    
+
     async def _start_opencode(self):
         """
         Start OpenCode in server mode.
@@ -517,34 +517,34 @@ class HarvestSandbox:
         await self.sandbox.exec(
             "ln", "-sf", "/app/opencode.json", "/root/.config/opencode/opencode.json"
         )
-        
+
         # Start OpenCode server in background
         await self.sandbox.exec(
             "bash", "-c",
             f"cd {self.repo_path} && nohup opencode serve --port 8080 > /tmp/opencode.log 2>&1 &"
         )
-        
+
         # Wait for server to be ready
         await self.sandbox.exec(
             "bash", "-c",
             "for i in $(seq 1 30); do curl -s http://localhost:8080/health && break || sleep 1; done"
         )
-    
+
     async def send_prompt(self, prompt: str) -> str:
         """
         Send a prompt to the OpenCode server.
         """
         import json
-        
+
         result = await self.sandbox.exec(
             "curl", "-X", "POST",
             "-H", "Content-Type: application/json",
             "-d", json.dumps({"prompt": prompt}),
             "http://localhost:8080/api/prompt"
         )
-        
+
         return result.stdout
-    
+
     async def terminate(self):
         """Gracefully terminate the sandbox."""
         if self.sandbox:
@@ -849,21 +849,21 @@ class SessionState:
 class SessionManager:
     """
     Manages Harvest session lifecycle.
-    
+
     Responsibilities:
     - Create new sessions
     - Track session state
     - Handle follow-up prompts (queue during execution)
     - Terminate sessions
-    
+
     Note: In production, state is managed by Cloudflare Durable Objects (Phase 2).
     This is the Modal-side session management.
     """
-    
+
     def __init__(self):
         self.sessions: dict[str, SessionState] = {}
         self.sandboxes: dict[str, HarvestSandbox] = {}
-    
+
     async def create_session(
         self,
         repo_owner: str,
@@ -877,7 +877,7 @@ class SessionManager:
     ) -> SessionState:
         """Create a new Harvest session."""
         session_id = str(uuid.uuid4())
-        
+
         # Create and start sandbox
         sandbox = HarvestSandbox(session_id, repo_owner, repo_name)
         await sandbox.start(
@@ -887,7 +887,7 @@ class SessionManager:
             user_name=user_name,
             optional_secrets=optional_secrets,
         )
-        
+
         # Track state
         state = SessionState(
             session_id=session_id,
@@ -898,16 +898,16 @@ class SessionManager:
             created_at=datetime.utcnow(),
             last_activity=datetime.utcnow(),
         )
-        
+
         self.sessions[session_id] = state
         self.sandboxes[session_id] = sandbox
-        
+
         return state
-    
+
     async def send_prompt(self, session_id: str, prompt: str) -> str:
         """
         Send a prompt to a running session.
-        
+
         Design decision: Queue prompts during execution.
         From Ramp article: "We chose to queue them, as we found it not only
         easier to manage, but also helpful for sending over thoughts on
@@ -916,25 +916,25 @@ class SessionManager:
         sandbox = self.sandboxes.get(session_id)
         if not sandbox:
             raise ValueError(f"Session {session_id} not running")
-        
+
         # Update activity timestamp
         state = self.sessions[session_id]
         state.last_activity = datetime.utcnow()
-        
+
         # Send to sandbox
         return await sandbox.send_prompt(prompt)
-    
+
     async def terminate_session(self, session_id: str):
         """Terminate a session."""
         sandbox = self.sandboxes.get(session_id)
         if sandbox:
             await sandbox.terminate()
             del self.sandboxes[session_id]
-        
+
         state = self.sessions.get(session_id)
         if state:
             state.status = "terminated"
-    
+
     def get_session(self, session_id: str) -> Optional[SessionState]:
         """Get session state."""
         return self.sessions.get(session_id)
@@ -1029,11 +1029,11 @@ async def test_sandbox_starts_successfully():
         user_email="test@example.com",
         user_name="Test User",
     )
-    
+
     # Verify OpenCode is running
     result = await sandbox.sandbox.exec("curl", "http://localhost:8080/health")
     assert "ok" in result.stdout.lower()
-    
+
     await sandbox.terminate()
 
 
@@ -1042,10 +1042,10 @@ async def test_git_identity_configured():
     """Verify git identity includes (Harvest) suffix."""
     sandbox = HarvestSandbox("test-123", "owner", "repo")
     await sandbox.start(...)
-    
+
     result = await sandbox.sandbox.exec("git", "config", "user.name")
     assert "(Harvest)" in result.stdout
-    
+
     await sandbox.terminate()
 
 
@@ -1060,13 +1060,13 @@ async def test_memory_volume_persists():
         "echo 'test entry' >> /root/.mcp-memory/memory.jsonl"
     )
     await sandbox1.terminate()
-    
+
     # Second session - verify entry exists
     sandbox2 = HarvestSandbox("test-2", "owner", "repo")
     await sandbox2.start(...)
     result = await sandbox2.sandbox.exec("cat", "/root/.mcp-memory/memory.jsonl")
     assert "test entry" in result.stdout
-    
+
     await sandbox2.terminate()
 ```
 
