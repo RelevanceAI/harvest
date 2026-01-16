@@ -172,10 +172,13 @@ pre-commit run --all-files
 To enable Harvest AI rules and superpowers skills when working locally with Claude Code:
 
 ```bash
-# 1. Install superpowers plugin
+# 1. Add the Claude plugins marketplace
+claude plugins add claude-plugins-official https://github.com/anthropics/claude-plugins-official
+
+# 2. Install superpowers plugin
 claude plugins install claude-plugins-official/superpowers
 
-# 2. Copy the template settings file
+# 3. Copy the template settings file
 cp .claude/settings.json.template .claude/settings.json
 
 # This enables:
