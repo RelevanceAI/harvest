@@ -75,6 +75,60 @@
         "Check existing code for conventions before implementing new features",
         "Follow test naming conventions found in existing test files"
       ]
+    },
+    {
+      "name": "ComplexityDecisions",
+      "entityType": "execution_knowledge",
+      "observations": [
+        "Track brainstorming decisions and outcomes",
+        "Format: [DATE] Task 'description' → [brainstormed/skipped] → [outcome] → [GOOD CALL/SHOULD HAVE X]"
+      ]
+    },
+    {
+      "name": "VerificationPatterns",
+      "entityType": "execution_knowledge",
+      "observations": [
+        "Track verification approaches per file type",
+        "Format: [file pattern] changes → [verification approach] → [worked/revealed issues]",
+        "Example: src/api/*.ts → Integration tests required → Caught auth bug"
+      ]
+    },
+    {
+      "name": "SuccessfulWorkflows",
+      "entityType": "execution_knowledge",
+      "observations": [
+        "Track end-to-end successful task completions",
+        "Format: [Context] Task 'description' → [workflow steps] → PR merged [DATE]"
+      ]
+    },
+    {
+      "name": "FailurePatterns",
+      "entityType": "execution_knowledge",
+      "observations": [
+        "Track panic situations and resolutions",
+        "Format: [DATE] PANIC/RESOLVED: [error type] → [root cause] → [fix] → [outcome]",
+        "Use for learning to avoid repeated failures"
+      ]
+    },
+    {
+      "name": "SessionProgress",
+      "entityType": "session_state",
+      "observations": [
+        "Track attempts during current session for loop detection",
+        "Format: Attempt [N]: [action] (files changed: [count]) → [result]",
+        "Cleared after circuit breaker or session end",
+        "Used by simple loop detector (v1)"
+      ]
+    },
+    {
+      "name": "LoopDetectionFailures",
+      "entityType": "improvement_tracking",
+      "observations": [
+        "Track when simple loop detection fails",
+        "Format: [DATE] Simple detection [missed loop/blocked valid retry]: [scenario] → Suggests [improvement needed]",
+        "Review periodically to prioritize iteration path",
+        "Examples: Environment change false positive → Add cache tracking"
+      ]
     }
   ],
   "relations": [
@@ -102,6 +156,46 @@
       "from": "LearnedPatterns",
       "to": "WorkflowProcedures",
       "relationType": "informs"
+    },
+    {
+      "from": "ComplexityDecisions",
+      "to": "SuccessfulWorkflows",
+      "relationType": "informs"
+    },
+    {
+      "from": "VerificationPatterns",
+      "to": "SuccessfulWorkflows",
+      "relationType": "validates"
+    },
+    {
+      "from": "FailurePatterns",
+      "to": "ErrorPatterns",
+      "relationType": "prevents"
+    },
+    {
+      "from": "HarvestSession",
+      "to": "ComplexityDecisions",
+      "relationType": "uses"
+    },
+    {
+      "from": "HarvestSession",
+      "to": "VerificationPatterns",
+      "relationType": "uses"
+    },
+    {
+      "from": "SessionProgress",
+      "to": "FailurePatterns",
+      "relationType": "enables"
+    },
+    {
+      "from": "LoopDetectionFailures",
+      "to": "SessionProgress",
+      "relationType": "improves"
+    },
+    {
+      "from": "HarvestSession",
+      "to": "SessionProgress",
+      "relationType": "tracks_in"
     }
   ]
 }

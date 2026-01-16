@@ -115,3 +115,52 @@ This infrastructure enables:
 - **Agent self-awareness**: Timestamps help track "which iteration?" across sessions
 - **Clear approval gates**: Plans reviewed before implementation
 - **Feedback loops**: Completed plans stay in git history for reference
+
+## Hierarchical Planning (New)
+
+### Plan PR Contains High-Level Tasks
+
+Plans created in Session 1 should have **5-10 high-level tasks** (30-60 min each).
+
+**Example Plan PR Structure**:
+```markdown
+# Implementation Plan: Repository Classifier
+
+## Task 1: Core Classification Logic (45 min)
+- Implement classify() function with confidence scoring
+- Handle edge cases (empty messages, ambiguous intent)
+- Success: Function returns repo name + confidence score
+
+## Task 2: Integration with Slack Bot (30 min)
+- Add classifier to message handler
+- Route to appropriate repo sandbox
+- Success: Messages routed correctly in Slack
+
+## Task 3: Testing & Verification (40 min)
+- Unit tests for classifier
+- Integration tests with mock Slack messages
+- Success: All tests pass, coverage >80%
+```
+
+### Agent Breaks Down During Execution
+
+During Session 2, agent dynamically expands each high-level task:
+
+**Task 1 becomes**:
+- 1.1: Write failing test for classify() (2 min)
+- 1.2: Implement classify() basic logic (5 min)
+- 1.3: Verify test passes (1 min)
+- 1.4: Write failing test for confidence scoring (2 min)
+- 1.5: Implement confidence scoring (4 min)
+- 1.6: Verify test passes (1 min)
+- 1.7: Write failing test for edge cases (3 min)
+- 1.8: Implement edge case handling (5 min)
+- 1.9: Verify test passes (1 min)
+- 1.10: Run full test suite (2 min)
+- 1.11: Commit completed task (1 min)
+
+**Benefits**:
+- Plan PR stays readable (not hundreds of tiny tasks)
+- Agent has flexibility in execution approach
+- Human reviews strategy, not micro-steps
+- Scales to large features without context overflow
