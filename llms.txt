@@ -1,0 +1,52 @@
+# Harvest
+
+> Background coding agent service that tends to your repositories like farmers tending to crops - autonomous development while you sleep
+
+<!-- MAINTENANCE: When adding new docs, update this index -->
+
+## Quick Start
+
+- [README](README.md): Project overview, architecture, capabilities, getting started
+- [Claude Code Configuration](.claude/CLAUDE.md): AI agent rules and workflows
+
+## Core AI Rules (All Contexts)
+
+- [Git Workflow](docs/ai/shared/git-workflow.md): Safe-Carry-Forward sync, snapshots, checkpoints, squashing
+- [Code Comments](docs/ai/shared/code-comments.md): Explain WHY not WHAT; preserve existing comments
+- [Planning Guidelines](docs/ai/shared/planning.md): Research before coding, use Gemini for adversarial review
+- [Documentation Standards](docs/ai/shared/documentation.md): Update docs with changes, capture gotchas
+- [Pull Request Guidelines](docs/ai/shared/pull-requests.md): PR conventions and review standards
+
+## Context-Specific Rules
+
+- [Local Development Rules](docs/ai/local-development.md): Working locally with Claude CLI
+- [Autonomous Agent Rules](docs/ai/autonomous-agent.md): Background agent in Modal sandbox
+
+## MCP Server Guides
+
+- [MCP Overview](docs/mcp/README.md): Model Context Protocol server index
+- [Gemini MCP](docs/mcp/gemini.md): Plan review and adversarial analysis workflows
+- [DevTools MCP](docs/mcp/devtools.md): Chrome DevTools Protocol for browser automation
+- [Playwright MCP](docs/mcp/playwright.md): End-to-end testing workflows
+- [Memory MCP](docs/mcp/memory.md): Persistent knowledge graph and cross-session memory
+
+## Implementation Plans
+
+- [Overall Roadmap](docs/plans/IMPLEMENTATION_PLAN.md): Phased implementation strategy (Phases 1-4)
+- [Phase 1.1 - Modal Sandbox](docs/plans/phase-1.1-modal-sandbox.md): Modal sandbox infrastructure details
+- [Phase 1.1 - Agent Agnostic](docs/plans/phase-1.1-revised-agent-agnostic.md): Revised agent-agnostic architecture
+- [Planning Workflow](.claude/plans/README.md): Three-phase planning process (Research → Plan → Implementation)
+
+## Architecture
+
+- [Modal Testing Guide](docs/modal/testing.md): Testing strategies for Modal sandboxes
+- [Modal Base Image Spec](docs/modal/base-image-spec.md): Container image specification
+- [Modal Setup](docs/setup/modal-setup.md): Environment configuration and setup procedures
+
+## Package Documentation
+
+- [Modal Executor](packages/modal-executor/README.md): Core Modal sandbox execution package
+
+## GitHub Workflows
+
+- [GitHub Workflows README](.github/README.md): CI/CD pipeline documentation
