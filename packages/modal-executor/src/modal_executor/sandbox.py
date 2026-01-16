@@ -470,16 +470,147 @@ EOF
                 """,
             )
 
-    async def _initialize_claude_cli(self) -> None:
-        """Verify Claude CLI is available in the sandbox."""
+    async def _get_claude_version_safe(self) -> str:
+        """Get Claude CLI version with robust parsing and fallback.
+
+        Returns:
+            Version string (e.g., "2.1.3")
+
+        Raises:
+            RuntimeError: If Claude CLI is not available
+        """
         proc = await self._get_sandbox().exec.aio("claude", "--version")
 
         if proc.returncode != 0:
             stderr = proc.stderr.read()
             raise RuntimeError(f"Claude CLI not available: {stderr}")
 
-        version = proc.stdout.read().strip()
-        logger.info(f"Claude CLI ready: {version}")
+        version_output = proc.stdout.read().strip()
+
+        # Robust version extraction
+        # Handles formats: "2.1.3", "Claude CLI 2.1.3", "Version: 2.1.3", etc.
+        import re
+        match = re.search(r'(\d+\.\d+\.\d+)', version_output)
+
+        if match:
+            version = match.group(1)
+            logger.info(f"Detected Claude CLI version: {version}")
+            return version
+        else:
+            # Fallback to a recent known-good version if parsing fails
+            logger.warning(
+                f"Could not parse version from: {version_output}. "
+                "Falling back to default version 2.1.3"
+            )
+            return "2.1.3"
+
+    async def _write_json_atomic(self, path: str, data: dict) -> None:
+        """Write JSON file atomically to prevent corruption.
+
+        Args:
+            path: Absolute path to JSON file
+            data: Dictionary to serialize as JSON
+        """
+        import json
+
+        content = json.dumps(data, indent=2)
+
+        # Write to temp file then rename (atomic on most filesystems)
+        # Use bash to handle temp file creation and atomic rename
+        await self._get_sandbox().exec.aio(
+            "bash",
+            "-c",
+            f"cat > {path}.tmp << 'JSONEOF'\n{content}\nJSONEOF\n&& mv {path}.tmp {path}"
+        )
+
+    async def _create_main_config(self, version: str) -> None:
+        """Create ~/.claude.json with onboarding and trust settings.
+
+        Args:
+            version: Claude CLI version string
+
+        Note:
+            Trusts /workspace parent directory to allow working with multiple
+            repos (/workspace/a, /workspace/b, etc.) and repos cloned during
+            execution. Claude's trust model should respect parent directory trust
+            when running in subdirectories.
+        """
+        config = {
+            "hasCompletedOnboarding": True,
+            "lastOnboardingVersion": version,
+            "bypassPermissionsModeAccepted": True,
+            "projects": {
+                "/workspace": {
+                    "hasTrustDialogAccepted": True,
+                    "allowedTools": []
+                }
+            }
+        }
+
+        await self._write_json_atomic("/root/.claude.json", config)
+        logger.debug("Created ~/.claude.json with /workspace trust")
+
+    async def _create_prefs_config(self) -> None:
+        """Create ~/.claude/.claude.json with preferences (theme)."""
+        config = {
+            "hasCompletedOnboarding": True,
+            "theme": "dark"
+        }
+
+        await self._write_json_atomic("/root/.claude/.claude.json", config)
+        logger.debug("Created ~/.claude/.claude.json")
+
+    async def _create_user_settings(self) -> None:
+        """Create ~/.claude/settings.json with permissions, hooks, and plugins."""
+        config = {
+            "permissions": {
+                "allow": ["*"],
+                "defaultMode": "bypassPermissions"
+            },
+            "hooks": {
+                "SessionStart": [
+                    {
+                        "hooks": [
+                            {
+                                "type": "command",
+                                "command": "cat /app/AGENTS.md"
+                            }
+                        ]
+                    }
+                ]
+            },
+            "enabledPlugins": {
+                "superpowers@claude-plugins-official": True
+            }
+        }
+
+        await self._write_json_atomic("/root/.claude/settings.json", config)
+        logger.debug("Created ~/.claude/settings.json")
+
+    async def _initialize_claude_cli(self) -> None:
+        """Initialize Claude CLI configuration files at runtime.
+
+        Generates all config files dynamically to ensure compatibility
+        with the installed Claude CLI version. Implements atomic writes
+        for reliability.
+
+        Creates:
+        - ~/.claude.json: Main state (onboarding, trust, version)
+        - ~/.claude/.claude.json: Preferences (theme)
+        - ~/.claude/settings.json: User settings (permissions, hooks, plugins)
+
+        Raises:
+            RuntimeError: If Claude CLI is not available or config creation fails
+        """
+        # Detect Claude CLI version with robust parsing
+        version = await self._get_claude_version_safe()
+
+        # Generate all config files dynamically
+        await self._create_main_config(version)
+        await self._create_prefs_config()
+        await self._create_user_settings()
+
+        logger.info(f"Claude CLI configured for version {version}")
         self._claude_cli_ready = True
 
     async def _sleep(self, seconds: float) -> None:

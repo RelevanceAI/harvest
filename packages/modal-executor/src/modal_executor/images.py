@@ -186,6 +186,8 @@ _base_image = (
     # -------------------------------------------------------------------------
     .add_local_file(str(_CONFIG_DIR / "AGENTS.md"), "/app/AGENTS.md")
     .add_local_file(str(_CONFIG_DIR / "memory-seed.json"), "/app/memory-seed.json")
+    # Note: Claude config files (~/.claude.json, settings.json, etc.) are generated
+    # at runtime in sandbox.py::_initialize_claude_cli() to ensure version compatibility
 )
 
 

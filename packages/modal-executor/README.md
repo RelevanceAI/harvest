@@ -173,6 +173,27 @@ The sandbox includes:
 - `sentry` - Error tracking
 - `linear` - Issue tracking (via mcp-remote)
 
+## Trust Configuration
+
+The sandbox automatically trusts `/workspace` at startup, which covers all subdirectories:
+- Multiple repositories (`/workspace/a`, `/workspace/b`, etc.)
+- Repositories cloned during execution
+- Any directory under `/workspace`
+
+Trust is configured at sandbox startup in `~/.claude.json`:
+```json
+{
+  "projects": {
+    "/workspace": {
+      "hasTrustDialogAccepted": true,
+      "allowedTools": []
+    }
+  }
+}
+```
+
+This prevents Claude from showing trust prompts when working with any repository in the workspace.
+
 ## Directory Structure
 
 ```
@@ -237,10 +258,14 @@ The validation script is located at `scripts/validate_claude_cli.py` for easy di
 
 ## Configuration Files
 
-Configuration files are baked into the image at `/app/`:
+Configuration files are baked into the image:
 
+**App Config** (`/app/`):
 - **AGENTS.md**: Agent instructions (git workflow, panic button, etc.)
 - **memory-seed.json**: Initial knowledge graph entities
+
+**Claude Settings** (`/root/.claude/`):
+- **settings.json**: Claude Code user settings (enables superpowers plugin)
 
 See `src/modal_executor/config/` for the source files.
 

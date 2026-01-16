@@ -98,6 +98,7 @@ class ClaudeCliWrapper:
                 "--print",
                 "--output-format",
                 "stream-json",
+                "--dangerously-skip-permissions",
                 prompt,
                 cwd=cwd,
                 env=env,

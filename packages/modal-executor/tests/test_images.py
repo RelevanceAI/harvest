@@ -20,6 +20,8 @@ class TestBaseImage:
         assert _CONFIG_DIR.exists()
         assert (_CONFIG_DIR / "AGENTS.md").exists()
         assert (_CONFIG_DIR / "memory-seed.json").exists()
+        # settings.json.template is reference only, not baked into image
+        assert (_CONFIG_DIR / "settings.json.template").exists()
 
 
 @pytest.mark.modal
