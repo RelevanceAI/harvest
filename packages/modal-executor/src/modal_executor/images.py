@@ -78,6 +78,13 @@ _base_image = (
     )
     # -------------------------------------------------------------------------
     # Volta (Node version manager)
+    #
+    # Volta provides automatic Node version switching in interactive shells
+    # via shell hooks. However, Python subprocess contexts don't trigger these
+    # hooks, requiring manual version detection (see repo_builder.py).
+    #
+    # Volta's value: Once a version is installed via `volta install node@X`,
+    # the npm/node shims in PATH automatically use that version.
     # -------------------------------------------------------------------------
     .run_commands(
         "curl https://get.volta.sh | bash -s -- --skip-setup",

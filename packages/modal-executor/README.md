@@ -151,11 +151,13 @@ The sandbox includes:
 |-----------|---------|---------|
 | Python | 3.11 | Base runtime |
 | Node.js | 22 | JavaScript/TypeScript execution |
-| Volta | Latest | Node version management |
+| Volta | Latest | Node version management (see note below) |
 | pnpm | Latest | Monorepo package management |
 | Playwright | Latest | Browser automation (Chromium) |
 | Claude Code CLI | Latest | AI coding agent (official Anthropic tool) |
 | GitHub CLI | Latest | Repository operations |
+
+**Note on Volta**: Volta provides automatic Node version switching in interactive shells. In the Modal sandbox context, we run commands via Python subprocesses which don't trigger Volta's shell hooks. The `repo_builder.py` module manually detects Node versions from `.nvmrc`/`.node-version`/`package.json` and installs them via `volta install node@{version}`. Once installed, Volta's shims ensure the correct version is used automatically.
 
 ### MCP Servers
 

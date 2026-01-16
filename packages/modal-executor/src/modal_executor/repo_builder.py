@@ -76,6 +76,21 @@ class RepoBuildInfo:
 # =============================================================================
 
 
+# Volta Limitation: Manual Version Detection Required
+#
+# While Volta is installed in the base image for automatic Node version switching,
+# it only works in interactive shells with hook initialization. Volta intercepts
+# `cd` commands via shell hooks to read .nvmrc/package.json and switch versions.
+#
+# In this context, we use subprocess.run() to execute commands in non-interactive
+# processes. These don't load shell hooks, so Volta's automatic switching never
+# triggers. We must manually replicate Volta's detection logic:
+#   1. Read .nvmrc, .node-version, or package.json ourselves
+#   2. Explicitly call `volta install node@{version}`
+#   3. Volta's shims in PATH will then use the installed version
+#
+# This is a common limitation of version managers (nvm, rbenv, pyenv) in
+# non-interactive/subprocess contexts.
 def _detect_node_version(repo_path: str) -> Optional[str]:
     """Detect Node.js version from .nvmrc, .node-version, or package.json."""
     # Check .nvmrc
@@ -205,7 +220,8 @@ def build_repo_image(
     """Build a pre-warmed image for a repository.
 
     1. Clone the repository
-    2. Detect and switch to correct Node version (via Volta)
+    2. Manually detect Node version and install via Volta
+       (Volta's auto-switching doesn't work in subprocess contexts)
     3. Install dependencies (npm/pnpm/pip)
     4. Run initial build commands
     5. Return metadata about the build

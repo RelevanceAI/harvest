@@ -436,6 +436,7 @@ class HarvestSandbox:
                 """
                 if [ -f /app/memory-seed.json ]; then
                     # Convert seed JSON to JSONL format for memory server
+                    # Using heredoc to avoid creating intermediate .py files for this one-time conversion
                     python3 << 'EOF'
 import json
 
