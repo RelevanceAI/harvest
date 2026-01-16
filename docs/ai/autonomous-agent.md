@@ -136,6 +136,7 @@ Follow shared rules for all work:
 
 - `@docs/ai/shared/code-comments.md` — Explain WHY, not WHAT/HOW. Preserve existing comments.
 - `@docs/ai/shared/planning.md` — Research before coding, use Gemini if uncertain.
+- `@docs/ai/shared/documentation.md` — Update docs with changes, capture gotchas, avoid stale values.
 
 ## Planning & Adversarial Review
 

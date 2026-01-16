@@ -73,6 +73,7 @@ This repository uses a structured documentation approach:
 - `git-workflow.md` - Safe-Carry-Forward sync, checkpoints, squashing
 - `code-comments.md` - Explain WHY not WHAT; preserve existing comments
 - `planning.md` - Research before coding, use Gemini for adversarial review
+- `documentation.md` - Update docs with changes, capture gotchas, avoid stale values
 
 **Context-Specific Rules** (`docs/ai/`):
 - `local-development.md` - Rules for local Claude CLI usage
