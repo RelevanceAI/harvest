@@ -56,6 +56,7 @@ This repository uses a structured documentation approach:
 | Directory | Audience | Purpose |
 |-----------|----------|---------|
 | `.claude/` | AI Agent (Claude) | Project-level rules loaded into Claude's context |
+| `.claude/plans/` | Developers & AI | Planning workflow (Research → Plan → Implementation) |
 | `docs/ai/` | AI Agent (Claude) | Context-specific agent rules and workflows |
 | `docs/mcp/` | AI Agent (Claude) | Detailed MCP server documentation |
 | `docs/plans/` | Developers | Implementation plans and current work |
@@ -84,6 +85,12 @@ This repository uses a structured documentation approach:
 - `chrome.md` - Browser automation for testing
 
 ### For Developers
+
+- **Planning Workflow**: See [`.claude/plans/README.md`](.claude/plans/README.md)
+  - Three-phase workflow: Research → Plan → Implementation
+  - Plans organized by branch in `.claude/plans/[branch-name]/`
+  - Timestamped files for versioning and audit trail
+  - Plans submitted as PRs with `[PLAN]` prefix for review
 
 - **Implementation Plans**: See [`docs/plans/`](docs/plans/)
   - [`IMPLEMENTATION_PLAN.md`](docs/plans/IMPLEMENTATION_PLAN.md) - Overall phased approach
