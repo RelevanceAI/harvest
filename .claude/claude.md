@@ -20,8 +20,35 @@ All agents follow these core rules:
 |------|----------|---------|
 | **Git Workflow** | `@docs/ai/shared/git-workflow.md` | Safe-Carry-Forward sync, snapshots, checkpoints, squashing |
 | **Code Comments** | `@docs/ai/shared/code-comments.md` | Explain WHY not WHAT; preserve existing comments |
-| **Planning** | `@docs/ai/shared/planning.md` | Research before coding, use Gemini for adversarial review |
+| **Planning** | `@docs/ai/shared/planning.md` | Research before coding, use Gemini for adversarial review, hierarchical planning |
 | **Documentation** | `@docs/ai/shared/documentation.md` | Update docs with changes, capture gotchas, avoid stale values |
+| **Complexity Heuristic** | `@docs/ai/shared/complexity-heuristic.md` | Decide when to invoke brainstorming based on task complexity |
+| **Verification** | `@docs/ai/shared/verification.md` | Smart verification (tests for logic, appropriate checks for non-logic) |
+| **Debugging** | `@docs/ai/shared/debugging.md` | Systematic debugging with failure escalation (fail-forward → systematic → panic) |
+| **Finishing Workflow** | `@docs/ai/shared/finishing-workflow.md` | 4-option completion framework with test verification gate |
+
+---
+
+## Superpowers Skills Integration
+
+Harvest uses skills from the obra/superpowers framework. These are available via slash commands when the superpowers plugin is installed.
+
+### Skill Usage Guide
+
+**Complexity-Based Brainstorming**:
+- Agent evaluates task complexity using `@docs/ai/shared/complexity-heuristic.md`
+- Complex tasks → Invoke `/superpowers:brainstorming` for interactive design
+- Simple tasks → Skip to autonomous planning
+
+**Available Skills**:
+- `/superpowers:brainstorming` - Interactive design validation (Session 1, complex tasks)
+- `/superpowers:writing-plans` - Reference for plan format (informational)
+- `/superpowers:test-driven-development` - Reference for TDD approach (informational)
+- `/superpowers:systematic-debugging` - See `@docs/ai/shared/debugging.md` (integrated)
+- `/superpowers:verification-before-completion` - See `@docs/ai/shared/verification.md` (integrated)
+- `/superpowers:finishing-a-development-branch` - See `@docs/ai/shared/finishing-workflow.md` (integrated)
+
+**Note**: Most superpowers concepts are integrated into Harvest's rules. Skills are referenced for specific workflows (brainstorming, finishing).
 
 ---
 

@@ -25,3 +25,6 @@ htmlcov/
 
 # Modal
 .modal/
+
+# Claude Code
+.claude/settings.json

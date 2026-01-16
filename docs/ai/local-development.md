@@ -15,8 +15,12 @@ Follow these shared rules as your foundation:
 
 - `@docs/ai/shared/git-workflow.md` — Safe-Carry-Forward sync pattern, checkpoint branches, squashing
 - `@docs/ai/shared/code-comments.md` — WHY over WHAT/HOW, preserve existing comments
-- `@docs/ai/shared/planning.md` — Research before coding, use Gemini for adversarial review
+- `@docs/ai/shared/planning.md` — Research before coding, use Gemini for adversarial review. Hierarchical planning for complex tasks.
 - `@docs/ai/shared/documentation.md` — Update docs with changes, capture gotchas, avoid stale values
+- `@docs/ai/shared/complexity-heuristic.md` — Decide when to invoke brainstorming based on task complexity
+- `@docs/ai/shared/verification.md` — Smart verification (tests for logic, appropriate checks for non-logic)
+- `@docs/ai/shared/debugging.md` — Systematic debugging with failure escalation
+- `@docs/ai/shared/finishing-workflow.md` — 4-option completion framework
 
 ## Workflow
 
@@ -94,6 +98,47 @@ git branch -D checkpoint-*
 ```
 
 See `@docs/ai/shared/git-workflow.md` for full details on when/how to use checkpoints.
+
+## Brainstorming Complex Tasks
+
+Before starting implementation, evaluate task complexity using `@docs/ai/shared/complexity-heuristic.md`:
+
+### When to Brainstorm
+
+Invoke `/superpowers:brainstorming` if the task involves:
+- Architectural changes or new modules
+- Changes spanning 3+ files across different subsystems
+- New features (not bug fixes or docs)
+- Uncertain approach with multiple valid solutions
+- High-risk areas (security, performance, auth, payments)
+
+### Brainstorming Flow
+
+1. **Present 2-3 approaches** with trade-offs
+2. **Discuss with user** to understand preferences and constraints
+3. **Validate incrementally** as design solidifies
+4. **Document chosen approach** in plan or design doc
+5. **Proceed to implementation** with confidence
+
+### When to Skip Brainstorming
+
+Skip if:
+- Bug fix in single file with clear root cause
+- Documentation or config changes only
+- Simple refactor (rename, extract function)
+- Clear, unambiguous task with obvious implementation
+
+When uncertain, ask: "This task seems [simple/complex]. Should I brainstorm the design approach, or proceed directly to planning?"
+
+## Executing Plans (Local Mode)
+
+When using the executing-plans skill:
+
+- **You can pause for feedback**: Unlike autonomous mode, you have human judgment available
+- **"Ready for feedback" is optional**: Report progress and wait if you want validation, or continue immediately
+- **Use judgment**: If uncertain about next batch, pause and ask. If confident, keep going.
+
+The skill's checkpoints are opportunities to pause, not mandates.
 
 ## Planning Workflow
 

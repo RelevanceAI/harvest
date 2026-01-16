@@ -49,4 +49,4 @@
 
 ## GitHub Workflows
 
-- [GitHub Workflows README](.github/README.md): CI/CD pipeline documentation
+- [GitHub Workflows](.github/BUILDS.md): CI/CD pipeline documentation

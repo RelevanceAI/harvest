@@ -50,3 +50,13 @@ repos:
         args: [--maxkb=1000]
       - id: check-merge-conflict
         name: check for merge conflicts
+
+  # Local hooks (custom scripts)
+  - repo: local
+    hooks:
+      - id: validate-llms-index
+        name: validate llms.txt references
+        entry: bash scripts/validate-llms-index.sh
+        language: system
+        pass_filenames: false
+        files: ^(llms\.txt|docs/.*|README\.md)$
