@@ -4,7 +4,9 @@ This module provides the SandboxExecutor for basic code execution and
 HarvestSandbox for full agent sessions with Claude Code CLI, git, and MCP servers.
 """
 
+import json
 import logging
+import re
 import time
 from dataclasses import dataclass, field
 from os import PathLike
@@ -489,7 +491,6 @@ EOF
 
         # Robust version extraction
         # Handles formats: "2.1.3", "Claude CLI 2.1.3", "Version: 2.1.3", etc.
-        import re
         match = re.search(r'(\d+\.\d+\.\d+)', version_output)
 
         if match:
@@ -511,8 +512,6 @@ EOF
             path: Absolute path to JSON file
             data: Dictionary to serialize as JSON
         """
-        import json
-
         content = json.dumps(data, indent=2)
 
         # Write to temp file then rename (atomic on most filesystems)
