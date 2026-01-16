@@ -167,6 +167,28 @@ pre-commit install
 pre-commit run --all-files
 ```
 
+### Claude Code Configuration (Local Development)
+
+To enable Harvest AI rules and superpowers skills when working locally with Claude Code:
+
+```bash
+# 1. Install superpowers plugin
+claude plugins install claude-plugins-official/superpowers
+
+# 2. Copy the template settings file
+cp .claude/settings.json.template .claude/settings.json
+
+# This enables:
+# - Automatic loading of Harvest rules on session start
+# - Superpowers skills (/brainstorming, /finishing-a-development-branch, etc.)
+```
+
+**What this does:**
+- **SessionStart hook**: Automatically loads `.claude/CLAUDE.md` with project rules
+- **Superpowers plugin**: Enables workflow skills for planning, debugging, and finishing work
+
+**Note**: `.claude/settings.json` is gitignored (local settings only). The template is committed for easy setup.
+
 ### Running Tests
 
 ```bash
