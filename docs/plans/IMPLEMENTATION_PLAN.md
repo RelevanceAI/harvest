@@ -2,29 +2,56 @@
 
 > A multi-phased approach to building a background coding agent inspired by Ramp's Inspect
 
+## Status Overview (Updated: January 2026)
+
+| Phase | Block | Status | Implementation |
+|-------|-------|--------|----------------|
+| **Phase 1: Foundation** | | **🟢 Partially Complete** | |
+| | 1.1: Modal Sandbox Infrastructure | ✅ Complete | `packages/modal-executor/` |
+| | 1.2: GitHub App Integration | ❌ Not Started | Using GitHub PAT (interim) |
+| | 1.3: Agent Runtime | ✅ Complete | Claude Code CLI (superseded OpenCode) |
+| **Phase 2: API Layer** | | ⏸️ Blocked | Awaiting `harvest-client` wrapper |
+| **Phase 3: Client** | | ❌ Not Started | |
+| **Phase 4: Intelligence** | | ❌ Not Started | |
+
+**Current Blocker**: `harvest-client` Python package needs to be created to wrap `HarvestSandbox` for external consumption (estimated: 2-4 hours).
+
+---
+
 ## Executive Summary
 
 This plan outlines the implementation of Harvest, a background coding agent service that enables autonomous development across multiple repositories. The architecture is designed in isolated, healthy blocks that can be developed, tested, and deployed independently.
+
+**Latest Update**: Phase 1.1 (Modal Sandbox Infrastructure) and 1.3 (Agent Runtime Integration) completed January 2026. Harvest now provides production-ready Modal sandboxes with Claude Code CLI, session state persistence, and full MCP server support.
 
 ---
 
 ## Phase 1: Foundation
 
-### Block 1.1: Modal Sandbox Infrastructure
+### Block 1.1: Modal Sandbox Infrastructure ✅ **COMPLETE**
 **Goal**: Create the core execution environment for coding sessions
 
+**Status**: ✅ Completed January 2026
+- Implementation: `packages/modal-executor/` (1,927 lines)
+- Tests: 9 test files + 2 POC validation files
+- Git commit: `7730454` - "feat: OpenCode → Claude Code CLI migration with streaming (#2)"
+
 **Key Components**:
-- Modal sandbox setup and configuration
-- Image registry system for repository snapshots
-- Automated image building pipeline (30-minute refresh cycle)
-- Snapshot storage and restoration system
+- ✅ Modal sandbox setup and configuration
+- ✅ Image registry system for repository snapshots
+- ✅ Automated image building pipeline (30-minute refresh cycle)
+- ✅ Session state persistence via SQLite on Modal volumes
 
 **Deliverables**:
-- [ ] Modal account setup and authentication
-- [ ] Base image builder script that clones repos and installs dependencies
-- [ ] Scheduled job (cron) for building images every 30 minutes
-- [ ] Snapshot save/restore functionality
-- [ ] Test harness for spinning up sandboxes from snapshots
+- [x] Modal account setup and authentication
+- [x] Base image builder script that clones repos and installs dependencies
+- [x] Scheduled job (cron) for building images every 30 minutes
+- [x] HarvestSandbox class with async API (`sandbox.py`: 615 lines)
+- [x] Claude Code CLI integration with streaming (`claude_cli.py`: 232 lines)
+- [x] Session state persistence (`session_state.py`: 166 lines)
+- [x] MCP servers installed (memory, filesystem, playwright, devtools, github, gemini, sentry)
+- [x] Git credential security with Safe-Carry-Forward workflow
+- [x] Test harness for spinning up sandboxes from snapshots
 
 **Technical Details**:
 ```python
@@ -71,29 +98,32 @@ This plan outlines the implementation of Harvest, a background coding agent serv
 
 ---
 
-### Block 1.3: OpenCode Server Integration
-**Goal**: Deploy OpenCode as the core coding agent within sandboxes
+### Block 1.3: Agent Runtime Integration ✅ **COMPLETE** (Superseded)
+**Goal**: Deploy AI coding agent within sandboxes
 
-**Key Components**:
-- OpenCode server installation in Modal images
-- Plugin system setup
-- Basic custom tools (test runner, slack updates)
-- Event listener infrastructure
+**Implementation Decision**: Migrated from OpenCode to **Claude Code CLI** (Anthropic's official CLI)
+- Reason: Anthropic policy blocks third-party OAuth wrappers
+- Solution: Direct Claude Code CLI integration with team subscription OAuth
+- Status: ✅ Completed January 2026 (part of Block 1.1 implementation)
 
-**Deliverables**:
-- [ ] OpenCode installed in base sandbox images
-- [ ] Server startup scripts and configuration
-- [ ] Plugin scaffolding for custom tools
-- [ ] Event hook system (tool.execute.before/after)
-- [ ] File operation blocking mechanism (during sync)
+**What Was Built**:
+- [x] Claude Code CLI installed in base sandbox images (`images.py:116`)
+- [x] OAuth token authentication (`claude_cli.py`)
+- [x] JSON streaming wrapper with async iteration (`claude_cli.py:63-150`)
+- [x] MCP server integration (memory, filesystem, playwright, devtools, github, gemini)
+- [x] Session state persistence for conversation continuity (`session_state.py`)
 
 **Technical Details**:
-```typescript
-// MVP custom OpenCode plugins:
-- Test runner tool (run_tests)
-- Slack messaging tool (slack_update)
-- File sync blocker plugin
+```python
+# Claude Code CLI integration with streaming:
+async def stream_prompt(prompt: str, oauth_token: str) -> AsyncIterator[str]:
+    proc = await asyncio.create_subprocess_exec(
+        "claude", "--print", "--output-format", "stream-json", prompt,
+        # ... streams JSON events line-by-line
+    )
 ```
+
+**Note**: Custom tools (test runner, slack updates) deferred to Phase 4 (Intelligence layer).
 
 ---
 

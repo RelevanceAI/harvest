@@ -38,14 +38,37 @@ Harvest is a background coding agent service built on the architecture that powe
 
 ## Current Status
 
-**Phase 1.1 - Modal Sandbox Infrastructure** ✅
+**Phase 1 - Foundation**: 🟢 **Partially Complete** (Updated: January 2026)
 
-Harvest currently provides:
-- ✅ Modal sandboxes with Claude Code CLI integration
-- ✅ Session state persistence (SQLite on Modal volumes)
-- ✅ Git credential management with security hardening
-- ✅ MCP server support (GitHub, Linear, Gemini, Chrome)
-- ✅ Pre-commit hooks for local linting/formatting
+### ✅ Completed (Phase 1.1 + 1.3)
+
+Harvest infrastructure is production-ready:
+- ✅ **Modal sandboxes** with full development environment
+- ✅ **Claude Code CLI integration** with OAuth + JSON streaming
+- ✅ **Session state persistence** (SQLite on Modal volumes)
+- ✅ **Conversation continuity** (last 10 messages context)
+- ✅ **Git workflow** with Safe-Carry-Forward patterns
+- ✅ **Git credential security** (helper-based, no token exposure)
+- ✅ **MCP servers** (memory, filesystem, playwright, devtools, github, gemini, sentry, linear)
+- ✅ **30-minute cron** for image refresh
+- ✅ **Pre-commit hooks** for linting/formatting
+- ✅ **1,927 lines** of production code with tests
+
+**Implementation**: `packages/modal-executor/` ([source](packages/modal-executor/))
+
+### 🚧 Current Blocker
+
+**`harvest-client` Package** (Estimated: 2-4 hours)
+- Thin Python wrapper around `HarvestSandbox` for external consumption
+- Required for integration with Relevance's NodeAPI
+- Blocks Phase 2 (API Layer) work
+
+### ❌ Not Started
+
+- Phase 1.2: Session orchestration and lifecycle management
+- Phase 2: API Layer (Cloudflare Workers + Durable Objects)
+- Phase 3: Client (Slack bot, web dashboard)
+- Phase 4: Intelligence (agent tools, metrics)
 
 ---
 
