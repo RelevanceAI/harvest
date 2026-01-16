@@ -18,7 +18,6 @@ class TestBaseImage:
         from modal_executor.images import _CONFIG_DIR
 
         assert _CONFIG_DIR.exists()
-        assert (_CONFIG_DIR / "opencode.json").exists()
         assert (_CONFIG_DIR / "AGENTS.md").exists()
         assert (_CONFIG_DIR / "memory-seed.json").exists()
 

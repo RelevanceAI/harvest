@@ -4,22 +4,8 @@ import json
 from pathlib import Path
 
 
-class TestOpenCodeConfig:
-    """Tests for OpenCode configuration files."""
-
-    def test_opencode_json_valid(self):
-        """Test opencode.json is valid JSON with required MCP servers."""
-        config_path = (
-            Path(__file__).parent.parent / "src/modal_executor/config/opencode.json"
-        )
-
-        with open(config_path) as f:
-            config = json.load(f)
-
-        assert "mcp" in config
-        assert "memory" in config["mcp"]
-        assert "filesystem" in config["mcp"]
-        assert "playwright" in config["mcp"]
+class TestAgentConfig:
+    """Tests for agent configuration files."""
 
     def test_agents_md_has_key_sections(self):
         """Test AGENTS.md has required instruction sections."""
