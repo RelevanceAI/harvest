@@ -187,7 +187,7 @@ cp .claude/settings.json.template .claude/settings.json
 ```
 
 **What this does:**
-- **SessionStart hook**: Automatically loads `.claude/CLAUDE.md` with project rules
+- **SessionStart hook**: Automatically loads `.claude/CLAUDE.md` and `docs/ai/local-development.md` with project rules and local workflow guidance
 - **Superpowers plugin**: Enables workflow skills for planning, debugging, and finishing work
 
 **Note**: `.claude/settings.json` is gitignored (local settings only). The template is committed for easy setup.
