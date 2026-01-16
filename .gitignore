@@ -28,3 +28,6 @@ htmlcov/
 
 # Claude Code
 .claude/settings.json
+
+# Git worktrees
+.worktrees
