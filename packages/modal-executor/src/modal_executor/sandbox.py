@@ -4,6 +4,7 @@ This module provides the SandboxExecutor for basic code execution and
 HarvestSandbox for full agent sessions with Claude Code CLI, git, and MCP servers.
 """
 
+import asyncio
 import json
 import logging
 import re
@@ -614,8 +615,6 @@ EOF
 
     async def _sleep(self, seconds: float) -> None:
         """Sleep helper (uses asyncio in async context)."""
-        import asyncio
-
         await asyncio.sleep(seconds)
 
     async def send_prompt_stream(self, prompt: str) -> AsyncIterator[str]:

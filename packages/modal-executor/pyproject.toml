@@ -39,3 +39,13 @@ markers = [
     "modal: marks tests that require Modal credentials (deselect with '-m \"not modal\"')",
 ]
 testpaths = ["tests"]
+
+[tool.ruff.lint]
+# Enable Pylint's import-outside-top-level rule to prevent imports inside functions
+# This ensures all imports are at module level for better dependency visibility
+# Note: Only applies to src/ directory, not tests (where lazy imports are common)
+extend-select = ["PLC0415"]
+
+[tool.ruff.lint.per-file-ignores]
+# Allow imports inside functions in test files (common pytest pattern)
+"tests/**/*.py" = ["PLC0415"]

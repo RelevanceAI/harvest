@@ -6,7 +6,9 @@ with dependencies already installed for faster sandbox startup.
 
 import json
 import os
+import re
 import subprocess
+import time
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
@@ -117,8 +119,6 @@ def _detect_node_version(repo_path: str) -> Optional[str]:
             # Parse simple version constraints (e.g., ">=18", "^20", "22")
             if node_engine:
                 # Extract first number sequence
-                import re
-
                 match = re.search(r"\d+", node_engine)
                 if match:
                     return match.group()
@@ -234,8 +234,6 @@ def build_repo_image(
     Returns:
         RepoBuildInfo as dictionary
     """
-    import time
-
     start_time = time.time()
     github_token = os.environ["GITHUB_TOKEN"]
     repo_url = (
