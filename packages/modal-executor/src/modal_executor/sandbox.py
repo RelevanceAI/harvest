@@ -492,7 +492,7 @@ EOF
 
         # Robust version extraction
         # Handles formats: "2.1.3", "Claude CLI 2.1.3", "Version: 2.1.3", etc.
-        match = re.search(r'(\d+\.\d+\.\d+)', version_output)
+        match = re.search(r"(\d+\.\d+\.\d+)", version_output)
 
         if match:
             version = match.group(1)
@@ -520,7 +520,7 @@ EOF
         await self._get_sandbox().exec.aio(
             "bash",
             "-c",
-            f"cat > {path}.tmp << 'JSONEOF'\n{content}\nJSONEOF\n&& mv {path}.tmp {path}"
+            f"cat > {path}.tmp << 'JSONEOF'\n{content}\nJSONEOF\n&& mv {path}.tmp {path}",
         )
 
     async def _create_main_config(self, version: str) -> None:
@@ -540,11 +540,8 @@ EOF
             "lastOnboardingVersion": version,
             "bypassPermissionsModeAccepted": True,
             "projects": {
-                "/workspace": {
-                    "hasTrustDialogAccepted": True,
-                    "allowedTools": []
-                }
-            }
+                "/workspace": {"hasTrustDialogAccepted": True, "allowedTools": []}
+            },
         }
 
         await self._write_json_atomic("/root/.claude.json", config)
@@ -552,10 +549,7 @@ EOF
 
     async def _create_prefs_config(self) -> None:
         """Create ~/.claude/.claude.json with preferences (theme)."""
-        config = {
-            "hasCompletedOnboarding": True,
-            "theme": "dark"
-        }
+        config = {"hasCompletedOnboarding": True, "theme": "dark"}
 
         await self._write_json_atomic("/root/.claude/.claude.json", config)
         logger.debug("Created ~/.claude/.claude.json")
@@ -563,25 +557,13 @@ EOF
     async def _create_user_settings(self) -> None:
         """Create ~/.claude/settings.json with permissions, hooks, and plugins."""
         config = {
-            "permissions": {
-                "allow": ["*"],
-                "defaultMode": "bypassPermissions"
-            },
+            "permissions": {"allow": ["*"], "defaultMode": "bypassPermissions"},
             "hooks": {
                 "SessionStart": [
-                    {
-                        "hooks": [
-                            {
-                                "type": "command",
-                                "command": "cat /app/AGENTS.md"
-                            }
-                        ]
-                    }
+                    {"hooks": [{"type": "command", "command": "cat /app/AGENTS.md"}]}
                 ]
             },
-            "enabledPlugins": {
-                "superpowers@claude-plugins-official": True
-            }
+            "enabledPlugins": {"superpowers@claude-plugins-official": True},
         }
 
         await self._write_json_atomic("/root/.claude/settings.json", config)
