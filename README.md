@@ -62,6 +62,19 @@ This repository uses a structured documentation approach:
 | `docs/plans/` | Developers | Implementation plans and current work |
 | `docs/architecture/` | Developers | Technical documentation |
 
+### LLM-Accessible Documentation
+
+**Documentation Index** (`llms.txt`):
+- Emerging standard for LLM-accessible documentation
+- Categorized index of all markdown documentation
+- Enables efficient documentation discovery by LLMs
+- Useful for both AI tools and human developers
+
+**Claude Code Configuration** (`.claude/CLAUDE.md`):
+- Project rules loaded into Claude's context
+- MCP server integration
+- Context-aware rule loading (local dev vs. autonomous agent)
+
 ### For AI Agents
 
 **Project Rules** (`.claude/CLAUDE.md`):

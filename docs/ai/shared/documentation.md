@@ -115,6 +115,36 @@ API endpoints are organized by domain (see `src/api/` directory).
 
 **Never**: Leave outdated docs without cleanup. Stale docs are worse than no docs.
 
+### Maintaining llms.txt Index
+
+When creating new documentation files, add them to `llms.txt` in the appropriate section.
+
+**Trigger**: Adding or removing markdown documentation
+
+**Steps**:
+1. Create/update the source documentation file
+2. Add entry to `llms.txt` under appropriate section header
+3. Commit changes together (atomic update)
+
+**Example**:
+```bash
+# Add new MCP server guide
+echo "# Linear MCP Guide" > docs/mcp/linear.md
+
+# Add to llms.txt under "MCP Server Guides" section
+# (edit llms.txt and add line: - [Linear MCP](docs/mcp/linear.md): Linear issue tracking integration)
+
+git add docs/mcp/linear.md llms.txt
+git commit -m "docs(mcp): add Linear MCP guide"
+```
+
+**Detection**: Optional CI check warns if llms.txt appears outdated
+```bash
+# Count markdown files vs indexed entries
+DOCS_COUNT=$(find docs -name "*.md" | wc -l)
+INDEX_COUNT=$(grep -E '^\- \[' llms.txt | wc -l)
+```
+
 ## Examples
 
 ### Good Documentation Flow
