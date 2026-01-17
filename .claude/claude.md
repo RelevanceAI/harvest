@@ -79,6 +79,32 @@ Your available MCP tools depend on context:
 Same MCP tools as local development, plus:
 - Full bash/git/filesystem access within sandbox
 
+### Quick Reference for Lightweight MCPs
+
+**Linear:**
+```python
+# Update an issue
+linear_update_issue(issueId="ENG-123", status="In Progress")
+
+# List issues assigned to you
+linear_list_issues(assignee="me")
+```
+
+**PostHog:**
+```python
+# Check feature flag
+posthog_get_feature_flag(key="new-feature", distinctId="user-123")
+
+# Track event
+posthog_capture(event="task_completed", properties={"task_id": "..."})
+```
+
+**Sentry:**
+```python
+# Get issue details
+sentry_get_issue(issueId="12345")
+```
+
 ---
 
 ## Planning Workflow

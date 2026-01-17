@@ -372,6 +372,25 @@ Harvest follows a strict git workflow (see `docs/ai/shared/git-workflow.md`):
 - **Gemini**: Adversarial plan review and web research
 - **Chrome/DevTools**: Browser automation and visual testing
 
+### Adding MCP Servers
+
+**All servers need:**
+1. Entry in MCP Tools Index (`.claude/CLAUDE.md`)
+2. Configuration in Modal sandbox setup
+
+**Heavy servers (complex workflows) also need:**
+3. Dedicated doc file: `docs/mcp/{server-name}.md`
+
+**Decision criteria:**
+- **Create separate doc when:** Documentation exceeds ~50 lines, complex workflows, multi-step patterns
+- **Keep in quick reference when:** Straightforward usage (1-3 tools), simple one-liners
+
+**Example structure for docs/mcp/{server}.md:**
+- When to use
+- Common workflows
+- Code examples
+- Gotchas and limitations
+
 ---
 
 ## Contributing
