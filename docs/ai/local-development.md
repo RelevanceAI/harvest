@@ -9,6 +9,93 @@ You are working on the Harvest codebase locally with Claude (OpenCode).
 
 All shared rules from `@docs/ai/shared/*.md` apply (loaded via `.claude/CLAUDE.md`).
 
+## Development Commands
+
+Harvest is a Python project using `uv` for dependency management. The main package is located at `packages/modal-executor/`.
+
+### Initial Setup
+
+```bash
+# Navigate to the package directory
+cd packages/modal-executor
+
+# Create virtual environment and install dependencies
+uv venv --allow-existing
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+uv pip install -e ".[dev]"
+
+# Install pre-commit hooks (one-time setup)
+pre-commit install
+
+# Authenticate with Modal
+modal setup
+
+# Create required secrets
+modal secret create harvest-github GITHUB_TOKEN=ghp_xxx
+```
+
+### Common Development Commands
+
+| Command | Action |
+|---------|--------|
+| `pytest` | Run all tests (this should be used by default) |
+| `pytest -v` | Run tests with verbose output |
+| `pytest tests/test_sandbox.py` | Run specific test file |
+| `pytest -m "not modal"` | Run tests excluding Modal-dependent tests |
+| `pytest --cov` | Run tests with coverage report |
+| `pre-commit run --all-files` | Run all pre-commit hooks (linting, formatting, type checking) |
+| `ruff check .` | Run linter |
+| `ruff check --fix .` | Run linter and auto-fix issues |
+| `mypy src/` | Run type checker |
+| `modal list` | Verify Modal setup |
+
+### Testing Workflow
+
+**Default test command:**
+```bash
+pytest
+```
+
+**Before committing:**
+```bash
+# Pre-commit hooks will run automatically on `git commit`
+# To test hooks manually:
+pre-commit run --all-files
+```
+
+**Skipping Modal-dependent tests:**
+```bash
+# Use this if you don't have Modal credentials configured
+pytest -m "not modal"
+```
+
+**Running specific tests:**
+```bash
+# Single test file
+pytest tests/test_sandbox.py
+
+# Single test function
+pytest tests/test_sandbox.py::test_basic_execution
+
+# All tests in verbose mode
+pytest -v
+```
+
+### Stopping Development Servers
+
+Modal sandboxes are ephemeral and auto-terminate. For local development:
+
+- **Python processes**: `Ctrl+C` in the terminal
+- **Pre-commit hooks**: Run automatically on commit (no server to stop)
+- **pytest**: Tests run and exit automatically
+
+### Requirements
+
+- Python 3.11+
+- `uv` package manager (install via `pip install uv` or `brew install uv`)
+- Modal account (for sandbox execution)
+- GitHub personal access token (for repository cloning)
+
 ## MCP Tools Available
 
 - **github**: GitHub API for PRs, issues, checks

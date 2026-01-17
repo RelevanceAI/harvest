@@ -1,3 +1,88 @@
+## Responding to PR Reviews
+
+When a reviewer leaves comments on your PR, respond directly in each thread rather than posting one large comment at the end.
+
+### Attribution
+
+**Always start your response with 🤖** to make it clear Claude is responding, not the human account owner:
+
+```
+🤖 Good catch - I'll add validation for that edge case.
+```
+
+### Reply In-Thread
+
+Use `gh api` to reply directly to review comment threads:
+
+```bash
+# Reply to a specific review comment
+gh api --method POST \
+  repos/{owner}/{repo}/pulls/{pull_number}/comments/{comment_id}/replies \
+  -f body="🤖 Your response here"
+```
+
+**Why in-thread replies matter:**
+- Keeps discussion organized by topic
+- Reviewer sees response in context of their original comment
+- Easier to track which feedback has been addressed
+- Avoids wall-of-text syndrome
+
+### Getting Comment IDs
+
+To find review comment IDs for replying:
+
+```bash
+# List all review comments on a PR with their IDs
+gh api repos/{owner}/{repo}/pulls/{pull_number}/comments \
+  --jq '.[] | {id, path, body: .body[0:80]}'
+```
+
+### Response Guidelines
+
+**Keep it brief:**
+- Address the specific point raised
+- State your action: "Will fix", "Good point, adding this", "Agreed, removing"
+- If complex, reference a plan file: "See detailed plan in `PLAN.md`"
+
+**Be direct:**
+- ✅ "🤖 Will add null check here."
+- ✅ "🤖 Good catch - this edge case wasn't covered. Adding test."
+- ❌ "Thank you so much for this excellent feedback! I really appreciate you taking the time..." (too verbose)
+
+**Acknowledge when you're unsure:**
+- "🤖 Need to verify if this breaks backwards compatibility. Will test and update."
+
+**Push back when appropriate:**
+
+Reviewers aren't always right, but neither is Claude. Consider feedback carefully before responding. It's okay to disagree, but only if you're confident in your reasoning and approach.
+
+- If you disagree, explain your position clearly and seek clarification
+- Provide evidence: benchmarks, docs, code examples that support your view
+- Be open to being wrong - the goal is the best outcome, not winning
+- ✅ "🤖 I considered that approach but went with X because [specific reason]. Happy to discuss if you see issues I'm missing."
+- ✅ "🤖 Could you clarify what you mean by Y? I may be misunderstanding the concern."
+- ❌ Accepting feedback you believe is incorrect without discussion
+- ❌ Dismissing feedback without genuine consideration
+
+### Example Workflow
+
+```bash
+# 1. Get the review comments
+gh api repos/{owner}/{repo}/pulls/{pull_number}/comments \
+  --jq '.[] | {id, path, body: .body[0:80]}'
+
+# 2. Reply to each relevant comment
+gh api --method POST \
+  repos/{owner}/{repo}/pulls/{pull_number}/comments/{comment_id}/replies \
+  -f body="🤖 Will revert this file. The auto-copy issue needs a follow-up fix."
+
+gh api --method POST \
+  repos/{owner}/{repo}/pulls/{pull_number}/comments/{comment_id}/replies \
+  -f body="🤖 Agreed - removing all plan files from PR."
+```
+
+---
+
 ## Pull Request Conventions
 
 ### PR Titles
