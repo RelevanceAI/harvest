@@ -16,13 +16,37 @@ All shared rules from `@docs/ai/shared/*.md` apply (loaded via `.claude/CLAUDE.m
 - **chrome**: Browser automation for testing UI changes
 - **gemini**: Plan review and adversarial analysis
 
+## Workspace Isolation (Git Worktrees)
+
+**Problem:** Multiple Claude instances on the same repo cause conflicts (file changes, git state, test runs).
+
+**Solution:** Use git worktrees to create isolated workspaces for each feature. Use when:
+
+- Starting new feature work (especially if other Claude instances might be running)
+- Complex changes that need dedicated workspace
+- When you want to preserve main branch state while experimenting
+
+**How to set up:**
+
+Use the `/superpowers:using-git-worktrees` skill, which will:
+1. Create isolated workspace at `.worktrees/<branch-name>/`
+2. Verify `.worktrees` is in `.gitignore` (already configured for Harvest)
+3. Run `npm install` and baseline tests
+4. Report ready when clean
+
+Cleanup happens via `/superpowers:finishing-a-development-branch` skill
+
 ## Workflow
 
-### 1. Before You Start
+### 1. Before You Make Any Changes
 
-- **Read the existing code**: Understand patterns, naming conventions, test style
-- **Check project rules**: Review `docs/ai/` and `docs/architecture/` for guidance
-- **Plan for non-trivial work**: Research the problem, draft a plan, validate with Gemini if uncertain
+Git hooks prevent commits to main/master/develop automatically.
+
+Follow the planning workflow in `@docs/ai/shared/planning.md`:
+1. **Research** - Read existing code, understand patterns, identify constraints
+2. **Plan** - Draft plan with file paths, changes, success criteria
+3. **Validate** - Use Gemini for adversarial review if complex
+4. **Execute** - Implement with confidence
 
 ### 2. While You Code
 
@@ -71,11 +95,11 @@ Follow `@docs/ai/shared/complexity-heuristic.md` to evaluate task complexity and
 - User may override based on their preferences or project context
 - Interactive discussion helps calibrate complexity assessment
 
-## Executing Plans (Local Mode)
+## Executing Plans
 
 When using the executing-plans skill:
 
-- **You can pause for feedback**: Unlike autonomous mode, you have human judgment available
+- **You can pause for feedback**: You have human judgment available
 - **"Ready for feedback" is optional**: Report progress and wait if you want validation, or continue immediately
 - **Use judgment**: If uncertain about next batch, pause and ask. If confident, keep going.
 
@@ -85,15 +109,11 @@ The skill's checkpoints are opportunities to pause, not mandates.
 
 Follow `@docs/ai/shared/planning.md` for all planning workflows (research, draft plan, Gemini review, implementation).
 
-### Local Mode Notes
-
 **Iterative planning:**
 - Can iterate on plans with user before finalizing
 - User may provide additional context during planning phase
 - Gemini review is recommended but optional (human can review instead)
 - Can pause implementation to revise plan if requirements change
-
-## Key Differences from Autonomous Agent
 
 You have **human judgment** available — use it:
 
@@ -101,8 +121,6 @@ You have **human judgment** available — use it:
 - Iterate on code if tests fail (don't just retry blindly)
 - Think about edge cases and maintainability
 - Commit to Linear or Slack if you hit snags
-
-The rules are the same as the autonomous agent, but you can reason about ambiguity and adjust on the fly.
 
 ## Common Scenarios
 
