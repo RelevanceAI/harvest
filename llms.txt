@@ -29,18 +29,18 @@
 - [Playwright MCP](docs/mcp/playwright.md): End-to-end testing workflows
 - [Memory MCP](docs/mcp/memory.md): Persistent knowledge graph and cross-session memory
 
-## Implementation Plans
+## Implementation Plans & Proposals
 
-- [Overall Roadmap](docs/plans/IMPLEMENTATION_PLAN.md): Phased implementation strategy (Phases 1-4)
+- [Implementation Plan](docs/plans/IMPLEMENTATION_PLAN.md): Phased implementation strategy (Phases 1-4)
+- [PTY Interactive Sessions](docs/proposals/pty-interactive-sessions.md): PTY architecture proposal (✅ Approved)
 - [Phase 1.1 - Modal Sandbox](docs/plans/phase-1.1-modal-sandbox.md): Modal sandbox infrastructure details
 - [Phase 1.1 - Agent Agnostic](docs/plans/phase-1.1-revised-agent-agnostic.md): Revised agent-agnostic architecture
-- [Planning Workflow](.claude/plans/README.md): Three-phase planning process (Research → Plan → Implementation)
 
-## Architecture
+## Setup & Configuration
 
+- [Modal Setup](docs/setup/modal-setup.md): Environment configuration and setup procedures
 - [Modal Testing Guide](docs/modal/testing.md): Testing strategies for Modal sandboxes
 - [Modal Base Image Spec](docs/modal/base-image-spec.md): Container image specification
-- [Modal Setup](docs/setup/modal-setup.md): Environment configuration and setup procedures
 
 ## Package Documentation
 
