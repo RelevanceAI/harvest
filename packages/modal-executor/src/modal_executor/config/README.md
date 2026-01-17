@@ -21,9 +21,3 @@ This directory contains configuration files for the Harvest autonomous agent run
 ## memory-seed.json
 
 Initial knowledge graph for the MCP memory server. Contains base knowledge about Harvest, repositories, and conventions.
-
-## AGENTS.md
-
-**Status:** Active file, baked into Modal image at `/app/AGENTS.md`
-
-Contains core autonomous agent instructions for Harvest. This file is loaded via SessionStart hooks in all agent sessions.
