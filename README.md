@@ -187,17 +187,49 @@ Harvest uses a **shared base + mode-specific extensions** architecture with comp
 
 ### For Developers
 
-- **Planning Workflow**: See [`.claude/plans/README.md`](.claude/plans/README.md)
-  - Three-phase workflow: Research → Plan → Implementation
-  - Plans organized by branch in `.claude/plans/[branch-name]/`
-  - Timestamped files for versioning and audit trail
-  - Plans submitted as PRs with `[PLAN]` prefix for review
+#### Planning Workflow
 
-- **Implementation Plans**: See [`docs/plans/`](docs/plans/)
-  - [`IMPLEMENTATION_PLAN.md`](docs/plans/IMPLEMENTATION_PLAN.md) - Overall phased approach
-  - [`phase-1.1-modal-sandbox.md`](docs/plans/phase-1.1-modal-sandbox.md) - Modal sandbox implementation
+Harvest uses a three-phase planning workflow:
 
-- **Architecture Docs**: See [`docs/architecture/`](docs/architecture/)
+**Directory Structure:**
+```
+.claude/plans/
+└── [branch-name]/
+    ├── research_YYYY-MM-DD_HHMM.md
+    ├── plan_YYYY-MM-DD_HHMM.md
+    └── implementation_YYYY-MM-DD_HHMM.md
+```
+
+**Phase 1 - Research:**
+- Explore the problem space, understand constraints
+- Document findings in `research_YYYY-MM-DD_HHMM.md`
+- Commit and push
+
+**Phase 2 - Planning:**
+- Create detailed implementation plan in `plan_YYYY-MM-DD_HHMM.md`
+- Open PR with `[PLAN]` prefix for review
+- Iterate on feedback (new timestamped files, don't overwrite)
+- Once approved: close PR, proceed to implementation
+
+**Phase 3 - Implementation:**
+- Execute approved plan
+- Document results in `implementation_YYYY-MM-DD_HHMM.md`
+- Create implementation PR referencing plan PR number
+- Merge when approved
+
+**Why timestamps:** Agent self-awareness ("which iteration?"), audit trail, easy sorting.
+
+**Detailed guidelines:** See `docs/ai/shared/planning.md` for full process, Gemini review, and hierarchical planning.
+
+#### Implementation Plans
+
+See [`docs/plans/`](docs/plans/) for overall roadmap:
+- [`IMPLEMENTATION_PLAN.md`](docs/plans/IMPLEMENTATION_PLAN.md) - Overall phased approach
+- [`phase-1.1-modal-sandbox.md`](docs/plans/phase-1.1-modal-sandbox.md) - Modal sandbox implementation
+
+#### Architecture Documentation
+
+See [`docs/architecture/`](docs/architecture/) for technical documentation.
 
 ---
 
