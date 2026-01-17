@@ -139,6 +139,8 @@ _base_image = (
         "npm install -g @houtini/gemini-mcp || true",
         # Sentry - error tracking
         "npm install -g @sentry/mcp-server || true",
+        # Context7 - up-to-date code documentation
+        "npm install -g @upstash/context7-mcp || true",
     )
     # -------------------------------------------------------------------------
     # Playwright Browsers (Chromium only for size)
@@ -221,7 +223,7 @@ def get_base_image() -> modal.Image:
     - Playwright with Chromium for browser automation
     - Claude Code CLI for AI agent operation
     - All required MCP servers (memory, filesystem, playwright, devtools)
-    - Optional MCP servers (github, gemini, sentry)
+    - Optional MCP servers (github, gemini, sentry, context7)
     - GitHub CLI for repository operations
 
     Returns:
