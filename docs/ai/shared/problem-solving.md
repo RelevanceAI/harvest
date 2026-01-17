@@ -25,7 +25,7 @@ When you hit a problem, your first instinct should NOT be to patch or bypass. Fo
 **NEVER do these without exhausting the above:**
 - ❌ Patch dependency source files directly
 - ❌ Use dependency patching tools as first resort
-- ❌ Bypass linters/hooks with skip flags
+- ❌ Bypass linters/hooks with skip flags (except WIP snapshots - see git-workflow.md)
 - ❌ Disable type checking or suppress errors
 - ❌ Modify vendored dependencies
 - ❌ Hack around errors instead of fixing root cause
@@ -92,16 +92,21 @@ result: ExpectedType = safe_operation()
 ### ❌ Bad: Skipping Linters/Hooks
 
 ```bash
-git commit --no-verify -m "quick fix"
+git commit --no-verify -m "quick fix"  # DON'T do this
+
+# Exception: WIP snapshots are allowed --no-verify (see git-workflow.md)
+git commit -m "wip: snapshot before sync" --no-verify  # OK for WIP only
+
 # Or: pytest -x --no-cov
 # Or: eslint --no-inline-config
 ```
 
 **Why it's bad:**
-- Bypasses quality checks
-- Can break CI
+- Bypasses quality checks for final commits
+- Can break CI if merged
 - Creates technical debt
 - Defeats the purpose of automation
+- (Exception: WIP snapshots are temporary and get squashed)
 
 ### ✅ Good: Fixing the Issue
 
@@ -120,8 +125,10 @@ ruff check --fix .
 There are rare cases where workarounds are necessary:
 
 1. **Third-party library has confirmed bug** - Use workaround temporarily
-   - Document with comment linking to upstream issue
-   - Add TODO to remove when fixed
+   - ONLY if bug is confirmed by maintainer in public issue tracker
+   - OR documented in project's official known issues/changelog
+   - Document with comment linking to upstream issue URL
+   - Add TODO with issue number to remove when fixed
    - Consider contributing a fix upstream
 
 2. **Blocking external dependency** - Temporary measure while waiting for maintainer
@@ -139,6 +146,21 @@ There are rare cases where workarounds are necessary:
 - Link to relevant issues/tickets
 - Add TODO with removal plan
 - Make it obvious this is temporary
+
+## When to Ask for Help
+
+Before spending excessive time searching for solutions, ask a human if:
+
+- **After 3-4 different approaches fail** - You've tried official APIs, searched issues, and attempted alternatives
+- **Documentation is unclear or contradictory** - The library docs don't clearly explain how to solve your problem
+- **Architectural decision required** - Multiple valid approaches exist with different tradeoffs
+- **Security or safety implications** - The change could affect authentication, data integrity, or user safety
+- **Legacy code with unclear intent** - Code patterns don't match modern best practices and purpose is unclear
+
+**Better to ask early than waste time on the wrong approach.**
+
+In local mode: Ask the user directly via chat.
+In autonomous mode: Create a Linear issue or Slack message with context.
 
 ## Problem-Solving Checklist
 
