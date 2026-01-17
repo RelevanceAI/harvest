@@ -425,6 +425,7 @@ context = state.build_context_prompt("What did you change?")
 | **Playwright** | `@anthropic-ai/mcp-server-playwright` or `@playwright/mcp` | None | Not required |
 | **DevTools** | `chrome-devtools-mcp` | None | Not required |
 | **GitHub** | `@anthropic-ai/mcp-server-github` | `GITHUB_TOKEN` | [Create fine-grained PAT](https://github.com/settings/tokens?type=beta) with repo access |
+| **Linear** | `@modelcontextprotocol/server-linear` | `LINEAR_API_KEY` | [Linear API settings](https://linear.app/settings/api) |
 | **Gemini** | `@houtini/gemini-mcp` | `GEMINI_API_KEY` (optional) | [Google AI Studio API keys](https://aistudio.google.com/app/apikey) - free tier available |
 | **Sentry** | `@sentry/mcp-server` | `SENTRY_AUTH_TOKEN` (optional) | [Sentry auth tokens](https://sentry.io/settings/account/api/auth-tokens/) with read scopes |
 
