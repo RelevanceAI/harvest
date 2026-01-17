@@ -39,8 +39,9 @@ Linear issues are team communication tools, not dumping grounds. Keep them clean
 - Similar issue exists and is active
 - Request is outside your scope
 - You lack confidence in the action
+- You're speculating ("maybe I should create an issue...")
 
-**Golden Rule:** Search first with `list_issues`. If unsure, ask.
+**Golden Rule:** Act autonomously when explicitly directed. Do nothing when speculative. Search before creating.
 
 ---
 
@@ -163,7 +164,7 @@ create_issue({
 
 **Guidelines:**
 - Always query available labels before applying them
-- Let humans set Urgent/High priority unless explicitly instructed
+- Default to Medium priority (3) unless user specifies otherwise
 - Use grouped labels if they exist (e.g., `Performance → Network requests`)
 - Assign to specific person when known
 
@@ -316,7 +317,7 @@ See function signatures in Claude Code for full parameters.
 
 **AI-Specific:**
 - Insufficient search → duplicates
-- Acting on ambiguity → ask user first
+- Acting on ambiguity → do nothing instead
 - Losing context → read full issue before commenting
 - Over-automation → circular updates
 - Ignoring rate limits → batch operations
@@ -326,16 +327,26 @@ See function signatures in Claude Code for full parameters.
 ## Decision Tree: Should I Act on Linear?
 
 ```
-Is info complete and unambiguous?
-  ├─ NO → Ask user or do nothing
-  └─ YES → Does similar issue exist?
-      ├─ YES → Update/link existing
-      └─ NO → Is it within my scope?
-          ├─ NO → Ask user
-          └─ YES → Is priority/impact clear?
-              ├─ NO → Create with Medium priority (3), let humans triage
-              └─ YES (High/Urgent) → Ask user before setting High/Urgent
-              └─ YES (Medium/Low) → Create with confidence
+Do I have explicit direction?
+  ├─ YES (user command/event trigger) → Act autonomously
+  │   ├─ Search for duplicates first
+  │   ├─ Use Medium priority (3) unless told otherwise
+  │   └─ Provide clear attribution (🤖)
+  │
+  └─ NO (speculative/uncertain) → Do nothing
+      ├─ Don't create issues "just in case"
+      ├─ Don't escalate priority speculatively
+      └─ Don't update without clear signal
 ```
 
-**For Linear actions: When in doubt, ask the user before creating/updating.**
+**Explicit direction:**
+- User says "create an issue for X"
+- PR merged → update linked issue status
+- Found duplicate while working → comment and link
+- Event-based automation rule triggered
+
+**Speculative (do nothing):**
+- "Maybe I should create an issue for this"
+- Unsure if bug or expected behavior
+- Guessing at priority without signal
+- Acting on assumptions about team needs
