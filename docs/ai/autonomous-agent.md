@@ -320,21 +320,6 @@ This prevents unbounded accumulation of checkpoint branches.
 3. **Test suite is your truth** — if tests pass, the code works (for this codebase)
 4. **Slack is your voice** — use it to communicate at checkpoints and when hitting Panic Button
 
-## Comparison to Local Development
-
-| Aspect | Autonomous (Session 1) | Autonomous (Session 2) | Local (You + Claude) |
-|--------|------------------------|------------------------|----------------------|
-| **Interaction** | Interactive if needed (brainstorm, clarify) | No interaction | Human judgment always available |
-| **Decision-making** | Get plan right, ask if unclear | Autonomous, fail-forward | Iterative with human |
-| **Planning** | CRITICAL - quality > speed | Execute approved plan | Flexible, can revise |
-| **Error handling** | Can ask for clarification | Fail-forward (3 attempts then Panic) | Debug carefully with human |
-| **Escalation** | Ask via brainstorming/Slack | Post to Slack when stuck | Ask human directly |
-
-**Key differences:**
-- **Autonomous Session 1:** Interaction ENCOURAGED to get plan right
-- **Autonomous Session 2:** Fully autonomous execution of approved plan
-- **Local:** Human available throughout, no session separation
-
 ## Example: Complete Two-Session Workflow
 
 **Session 1 (Research + Planning):**

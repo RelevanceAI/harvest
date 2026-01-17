@@ -9,15 +9,6 @@ You are working on the Harvest codebase locally with Claude (OpenCode).
 
 All shared rules from `@docs/ai/shared/*.md` apply (loaded via `.claude/CLAUDE.md`).
 
-**Git Hooks (Local Development Only):**
-
-Run the setup script after cloning (see README.md Development Setup):
-```bash
-bash scripts/setup-git-hooks.sh
-```
-
-This configures `core.hooksPath` to use `.githooks/` for all worktrees in this repository clone. Prevents commits to main/master/develop.
-
 ## MCP Tools Available
 
 - **github**: GitHub API for PRs, issues, checks
@@ -29,9 +20,8 @@ This configures `core.hooksPath` to use `.githooks/` for all worktrees in this r
 
 **Problem:** Multiple Claude instances on the same repo cause conflicts (file changes, git state, test runs).
 
-**Solution:** Use git worktrees to create isolated workspaces for each feature.
+**Solution:** Use git worktrees to create isolated workspaces for each feature. Use when:
 
-- You are already in a worktree for the current change
 - Starting new feature work (especially if other Claude instances might be running)
 - Complex changes that need dedicated workspace
 - When you want to preserve main branch state while experimenting
@@ -44,10 +34,7 @@ Use the `/superpowers:using-git-worktrees` skill, which will:
 3. Run `npm install` and baseline tests
 4. Report ready when clean
 
-**Harvest-specific notes:**
-- This is **LOCAL MODE ONLY** - autonomous agents run in isolated Modal sandboxes
-- Worktrees are already configured for this repo (`.worktrees/` directory exists)
-- Cleanup happens via `/superpowers:finishing-a-development-branch` skill
+Cleanup happens via `/superpowers:finishing-a-development-branch` skill
 
 ## Workflow
 
@@ -108,11 +95,11 @@ Follow `@docs/ai/shared/complexity-heuristic.md` to evaluate task complexity and
 - User may override based on their preferences or project context
 - Interactive discussion helps calibrate complexity assessment
 
-## Executing Plans (Local Mode)
+## Executing Plans
 
 When using the executing-plans skill:
 
-- **You can pause for feedback**: Unlike autonomous mode, you have human judgment available
+- **You can pause for feedback**: You have human judgment available
 - **"Ready for feedback" is optional**: Report progress and wait if you want validation, or continue immediately
 - **Use judgment**: If uncertain about next batch, pause and ask. If confident, keep going.
 
@@ -122,15 +109,11 @@ The skill's checkpoints are opportunities to pause, not mandates.
 
 Follow `@docs/ai/shared/planning.md` for all planning workflows (research, draft plan, Gemini review, implementation).
 
-### Local Mode Notes
-
 **Iterative planning:**
 - Can iterate on plans with user before finalizing
 - User may provide additional context during planning phase
 - Gemini review is recommended but optional (human can review instead)
 - Can pause implementation to revise plan if requirements change
-
-## Key Differences from Autonomous Agent
 
 You have **human judgment** available — use it:
 
@@ -138,8 +121,6 @@ You have **human judgment** available — use it:
 - Iterate on code if tests fail (don't just retry blindly)
 - Think about edge cases and maintainability
 - Commit to Linear or Slack if you hit snags
-
-The rules are the same as the autonomous agent, but you can reason about ambiguity and adjust on the fly.
 
 ## Common Scenarios
 
