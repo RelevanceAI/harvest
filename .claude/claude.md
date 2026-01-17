@@ -74,17 +74,6 @@ Harvest uses skills from the obra/superpowers framework. These are available via
 | **devtools** | Chrome DevTools Protocol | Debugging, performance analysis | `@docs/mcp/devtools.md` |
 | **memory** | Knowledge graph | Persistent learning across sessions | `@docs/mcp/memory.md` |
 
-
-### Quick Reference for Lightweight MCPs
-
-**Linear:**
-See `@docs/ai/shared/linear-issues.md` for comprehensive guidance on:
-- When to create vs update issues
-- Issue templates (BUG/FEAT/TASK)
-- AI attribution (always use 🤖)
-- Avoiding duplicates
-- MCP tools reference
-
 **PostHog:**
 ```python
 # Check feature flag
