@@ -27,7 +27,7 @@
 ## Implementation Plans & Proposals
 
 - [Implementation Plan](docs/plans/IMPLEMENTATION_PLAN.md): Phased implementation strategy (Phases 1-4)
-- [PTY Interactive Sessions](docs/proposals/pty-interactive-sessions.md): PTY architecture proposal (✅ Approved)
+- [PTY Interactive Sessions](.claude/plans/feat-harvest-pty-interactive-sessions/EXEC_SUMMARY.md): PTY architecture proposal (✅ Approved)
 - [Phase 1.1 - Modal Sandbox](docs/plans/phase-1.1-modal-sandbox.md): Modal sandbox infrastructure details
 - [Phase 1.1 - Agent Agnostic](docs/plans/phase-1.1-revised-agent-agnostic.md): Revised agent-agnostic architecture
 
