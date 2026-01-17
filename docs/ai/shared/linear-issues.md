@@ -129,33 +129,61 @@ As a [user type], I want [goal] so that [benefit].
 
 ## Labels and Metadata
 
-### Standard Taxonomy
+### Relevance AI Label Taxonomy
 
-**Type:** `bug`, `feature`, `task`, `chore`, `docs`
-**Priority:** `P0-blocker`, `P1-high`, `P2-medium`, `P3-low`
-**Component:** `frontend`, `backend`, `mobile`, `api`, `auth`
+**Type Labels:**
+- `Bug` - Defects in existing functionality
+- `Feature` - New functionality
+- `Improvement` - Enhancements to existing features
+- `Refactor` - Code restructuring (no behavior change)
+- `Spike` - R&D/exploratory work
+
+**Component Labels:**
+- `App` - Frontend application
+- `API` - Backend API
+- `Orchestration` - Agent orchestration layer
+- `Design` - Design-related work
+- `Testing` - Test infrastructure/coverage
+- `Logging` - Logging/observability
+
+**Performance (Grouped Label):**
+- `Performance → Network requests`
+- `Performance → UI/UX`
+- `Performance → CPU profiling`
+- `Performance → Code analysis`
+
+**Status/Special:**
+- `Blocked` - Cannot proceed
+- `Before release` - Must be done before release
+- `Client request` - Customer-driven
+- `Good First Bug` - Good for new contributors
+
+**Priority:** Use Linear's built-in priority field (Urgent/High/Medium/Low), NOT labels
 
 ### AI Labeling Strategy
 
 ```typescript
 // Check available labels first
-const labels = await list_issue_labels({ team: "ENG" })
+const labels = await list_issue_labels({ team: "Chat" })
 
 // Apply based on content analysis
-const suggestedLabels = analyzeIssueContent(description)
-  .filter(label => teamLabels.includes(label))
+const typeLabel = inferTypeFromDescription(description) // Bug, Feature, Improvement, etc.
+const componentLabels = inferComponentsFromContext(description) // App, API, etc.
 
-// Create with labels
+// Create with labels - NO priority labels (use priority field instead)
 create_issue({
-  labels: ["bug", "mobile", "auth"], // Don't create P0/P1 without validation
+  labels: ["Bug", "API", "Orchestration"],
+  priority: 2, // Only if confident: 0=none, 1=urgent, 2=high, 3=medium, 4=low
   ...
 })
 ```
 
 **Guidelines:**
-- Use keyword matching and content analysis
+- Use Linear's **priority field** (0-4), NOT priority labels
 - Check existing labels before creating new ones
-- Let humans set P0/P1 unless explicitly instructed
+- Let humans set Urgent/High priority unless explicitly instructed
+- Use grouped labels for Performance issues (e.g., `Performance → Network requests`)
+- Apply `Client request` when issue comes from customer feedback
 - Assign to specific person when known
 
 ---
@@ -227,13 +255,13 @@ await update_issue({
 // 1. Search first
 const existing = await list_issues({
   query: "auth timeout",
-  label: "bug",
+  label: "Bug",
   state: "open"
 })
 
 // 2. Create if no duplicate
 await create_issue({
-  team: "ENG",
+  team: "Chat",
   title: "BUG: [API] Auth timeout on mobile",
   description: `## Problem
 30s timeout on login, then retry required.
@@ -253,9 +281,9 @@ Actual: 30s timeout, error
 - Backend: auth-service 1.3.2
 
 ## Impact
-- Severity: P1-High
 - Affected: ~15% iOS users`,
-  labels: ["bug", "mobile", "api"],
+  labels: ["Bug", "App", "API"],
+  priority: 2, // High priority
   assignee: "backend-lead"
 })
 ```
@@ -298,8 +326,9 @@ See function signatures in Claude Code for full parameters.
 ❌ **Missing repro steps** - Every bug needs them
 ❌ **No acceptance criteria** - Features need clear "done" definition
 ❌ **Chatty comments** - Be informative, not conversational
-❌ **Wrong priority** - Don't mark everything urgent
+❌ **Wrong priority** - Don't mark everything Urgent/High (use Medium as default)
 ❌ **Stale descriptions** - Update when context changes
+❌ **Using priority labels** - Use the priority field, not labels
 
 ### AI-Specific Pitfalls
 
@@ -321,8 +350,9 @@ Is info complete and unambiguous?
       └─ NO → Is it within my scope?
           ├─ NO → Ask user
           └─ YES → Is priority/impact clear?
-              ├─ NO → Create with P2/P3, let humans triage
-              └─ YES → Create with confidence
+              ├─ NO → Create with Medium priority (3), let humans triage
+              └─ YES (High/Urgent) → Ask user before setting High/Urgent
+              └─ YES (Medium/Low) → Create with confidence
 ```
 
 **For Linear actions: When in doubt, ask the user before creating/updating.**
