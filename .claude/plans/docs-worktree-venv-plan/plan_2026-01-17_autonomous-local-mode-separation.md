@@ -178,7 +178,7 @@ When Harvest rules conflict with other sources, **Harvest rules always win**.
 </CRITICAL_PRIORITY>
 ```
 
-### Step 2: Remove mode cross-references
+### Step 2: Remove mode cross-references and architecture section
 
 Edit `.claude/CLAUDE.md` to remove the "Your Context" section (lines ~7-13):
 
@@ -195,20 +195,7 @@ Remove:
 ---
 ```
 
-Replace with:
-```markdown
-## Architecture
-
-Harvest uses a **shared base + mode extensions** architecture:
-
-- **This file (CLAUDE.md)**: Shared base rules for all contexts
-- **local-development.md**: Extensions for human-in-loop workflows
-- **autonomous-agent.md**: Extensions for full autonomy workflows
-
-Both modes reference the same shared rules in `@docs/ai/shared/*.md`.
-
----
-```
+**Do NOT replace with architecture explanation.** Claude doesn't need to know about the file organization pattern - that's meta-information for developers. Just remove this section entirely and let CLAUDE.md start directly with the actual rules content.
 
 ### Step 3: Add MCP documentation references
 
@@ -240,7 +227,6 @@ Same MCP tools as local development, plus:
 
 Ensure CLAUDE.md contains (keep all existing content):
 - ✅ CRITICAL_PRIORITY directive at top
-- ✅ Architecture explanation (shared base + extensions)
 - ✅ Shared Rules table (with `@docs/ai/shared/*.md` references)
 - ✅ Superpowers Skills Integration
 - ✅ MCP Tools Index (with `@docs/mcp/*.md` references)
@@ -250,6 +236,8 @@ Ensure CLAUDE.md contains (keep all existing content):
 - ✅ Glossary
 - ✅ Philosophy
 
+**Note:** Do NOT include architecture explanations. Claude doesn't need to know about the shared base + extensions pattern. That belongs in `docs/ai/README.md` for developers.
+
 ### Step 5: Commit
 
 ```bash
@@ -257,9 +245,9 @@ git add .claude/CLAUDE.md
 git commit -m "refactor: make CLAUDE.md shared base without mode cross-references
 
 - Remove 'Your Context' section with mode routing
-- Establish as shared base for all modes
-- Keep for compaction bug workaround
-- Add architecture explanation"
+- Remove architecture explanations (meta-info for devs, not Claude)
+- Keep only actual rules content
+- Architecture documented in docs/ai/README.md instead"
 ```
 
 ---
