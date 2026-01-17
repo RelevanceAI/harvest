@@ -216,7 +216,7 @@ This prevents Claude from showing trust prompts when working with any repository
 ## Development
 
 ```bash
-# Run tests (mocked, no Modal required)
+# Run tests (automatically skips Modal integration tests)
 pytest
 
 # Run integration tests (requires Modal credentials)

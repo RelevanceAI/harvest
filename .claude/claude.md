@@ -66,6 +66,7 @@ Harvest uses skills from the obra/superpowers framework. These are available via
 | **github** | GitHub API (PRs, issues) | Creating PRs, managing issues, checking CI | Built-in |
 | **linear** | Linear issue tracking | Linking to issues, updating progress | Built-in |
 | **gemini** | Plan review & web research | Adversarial review of plans | `@docs/mcp/gemini.md` |
+| **context7** | Up-to-date code documentation | Current framework/library docs and examples | `@docs/mcp/context7.md` |
 | **playwright** | Browser automation | E2E testing, visual verification | `@docs/mcp/playwright.md` |
 | **devtools** | Chrome DevTools Protocol | Debugging, performance analysis | `@docs/mcp/devtools.md` |
 | **memory** | Knowledge graph | Persistent learning across sessions | `@docs/mcp/memory.md` |

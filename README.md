@@ -443,7 +443,22 @@ Harvest follows a strict git workflow (see `docs/ai/shared/git-workflow.md`):
 - **GitHub**: PR creation, issue management, code search
 - **Linear**: Issue tracking and progress updates
 - **Gemini**: Adversarial plan review and web research
+- **Context7**: Up-to-date framework/library documentation and code examples
 - **Chrome/DevTools**: Browser automation and visual testing
+
+### MCP Servers Configuration
+
+| Server | Package | Required Secrets | Where to Get API Key |
+|--------|---------|------------------|----------------------|
+| **Memory** | `@modelcontextprotocol/server-memory` | None | Not required |
+| **Filesystem** | `@modelcontextprotocol/server-filesystem` | None | Not required |
+| **Playwright** | `@anthropic-ai/mcp-server-playwright` or `@playwright/mcp` | None | Not required |
+| **DevTools** | `chrome-devtools-mcp` | None | Not required |
+| **GitHub** | `@anthropic-ai/mcp-server-github` | `GITHUB_TOKEN` | [Create fine-grained PAT](https://github.com/settings/tokens?type=beta) with repo access |
+| **Gemini** | `@houtini/gemini-mcp` | `GEMINI_API_KEY` (optional) | [Google AI Studio API keys](https://aistudio.google.com/app/apikey) - free tier available |
+| **Sentry** | `@sentry/mcp-server` | `SENTRY_AUTH_TOKEN` (optional) | [Sentry auth tokens](https://sentry.io/settings/account/api/auth-tokens/) with read scopes |
+
+**Note**: Servers marked "optional" are gracefully skipped if the API key is not configured. They enhance agent capabilities but are not required for basic operation.
 
 ### Adding MCP Servers
 
