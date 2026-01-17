@@ -72,6 +72,41 @@ Harvest infrastructure is production-ready:
 
 ---
 
+## Critical Technical TODOs
+
+### 🚨 WORKDIR Verification & Guardrails (Modal Sandbox)
+
+**Context**: The autonomous agent relies on `WORKDIR /app/` for `@docs/` reference resolution in baked rule files. If Claude CLI runs from a different directory, all rule references will fail.
+
+**Required Actions**:
+
+1. **Verify Modal WORKDIR Configuration**
+   - Confirm Modal respects `WORKDIR /app/` in container definition
+   - Test that working directory persists across all execution contexts
+   - Document Modal-specific WORKDIR configuration mechanism
+
+2. **Add Defensive Working Directory Enforcement**
+   - Add `os.chdir('/app')` at the start of sandbox execution
+   - Add explicit working directory check before every Claude CLI invocation
+   - Log `os.getcwd()` before CLI calls for debugging
+
+3. **Test Edge Cases**
+   - Verify `@docs/` resolution after cloning a repository
+   - Test working directory stability during git operations
+   - Ensure subprocess calls don't pollute working directory
+
+4. **Add Guardrails**
+   ```python
+   # Before every Claude CLI invocation
+   assert os.getcwd() == '/app/', f"Working directory must be /app/, got {os.getcwd()}"
+   ```
+
+**Risk Level**: HIGH - Single point of failure for all rule file resolution
+
+**Related**: See Gemini audit in `feat/autonomous-local-mode-separation` plan (2026-01-17)
+
+---
+
 ## Documentation Structure
 
 This repository uses a structured documentation approach:
