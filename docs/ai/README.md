@@ -89,12 +89,3 @@ Run the validation script to check mode separation:
 ```bash
 ./scripts/validate-mode-separation.sh
 ```
-
-## Historical Context
-
-**Pre-2026-01-17:** Used a router pattern in CLAUDE.md with "if local load X, if autonomous load Y" instructions and repo-specific override mechanisms. This created confusion about which files were loaded when.
-
-**Current (2026-01-17+):** Clean separation with shared base + mode extensions. SessionStart hooks directly load the appropriate files. No cross-references, no overrides, predictable behavior.
-
-**Archived Files:**
-- None (AGENTS.md was removed completely, not archived)
