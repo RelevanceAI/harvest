@@ -125,18 +125,21 @@ graph TD
 
 ```mermaid
 graph TD
-    subgraph "User Entry Points"
+    subgraph "User Interface"
         A0[Relevance Workforce<br/>Chat Interface]
-        A1[Direct Chat UI]
+    end
+
+    subgraph "External Triggers"
         A2[Slack Bot]
         A3[GitHub Webhooks]
     end
 
-    subgraph "Relevance Infrastructure"
+    subgraph "Relevance Backend"
         B0[Project Keys DB<br/>Encrypted]
-        B1[TriggerRunner]
-        B2[ConversationManager]
-        B3[BackgroundCoderPresetAgent]
+        B1[Sync Services<br/>OAuth/Webhooks]
+        B2[TriggerRunner]
+        B3[ConversationManager]
+        B4[BackgroundCoderPresetAgent]
     end
 
     subgraph "Harvest Runtime TypeScript"
@@ -170,13 +173,13 @@ graph TD
         G4[Git Operations]
     end
 
-    A0 --> B1
-    A1 --> B1
+    A0 --> B2
     A2 --> B1
     A3 --> B1
     B1 --> B2
     B2 --> B3
-    B3 --> C1
+    B3 --> B4
+    B4 --> C1
     C1 --> C2
     C2 --> D1
     D1 --> D2
@@ -194,9 +197,8 @@ graph TD
     F3 --> G4
 
     F1 -.->|stdout stream| C2
-    C2 -.->|yield chunks| B2
-    B2 -.->|toolviewer| A0
-    B2 -.->|toolviewer| A1
+    C2 -.->|yield chunks| B3
+    B3 -.->|toolviewer| A0
 
     B0 ==>|GetUserProjectKey| C1
     C1 ==>|subprocess args| C2
@@ -215,18 +217,25 @@ graph TD
 ```
 
 **Architecture layers:**
-- **User Entry Points**: Relevance Workforce (primary), direct Chat UI, Slack Bot, GitHub webhooks send user prompts
-- **Relevance Infrastructure**: Routes messages, manages conversations, streams output to UI, **stores encrypted project keys**
+- **User Interface**: Relevance Workforce (chat interface for direct interaction and task monitoring)
+- **External Triggers**: Slack Bot and GitHub Webhooks send events to backend
+- **Relevance Backend**:
+  - Sync Services handle OAuth/webhook endpoints for external triggers
+  - TriggerRunner creates and manages Workforce tasks
+  - ConversationManager streams output to Workforce UI
+  - BackgroundCoderPresetAgent invokes Harvest
+  - **Project Keys DB stores encrypted credentials**
 - **Harvest Runtime**: TypeScript layer retrieves secrets via GetUserProjectKey, spawns Python subprocess with credentials
 - **harvest-client**: Thin Python wrapper receives credentials as CLI args, calls Modal API
 - **Modal Container**: Creates modal.Secret from credentials, injects as env vars, manages PTY/queue/hooks/memory
 - **Claude CLI**: Interactive session uses CLAUDE_CODE_OAUTH_TOKEN, MCP servers use GITHUB_TOKEN/etc.
-- **Bidirectional streaming**: Output flows back through all layers to Chat UI right pane
 
 **Data flows:**
-- **User prompts** (solid lines): Flow down from triggers → Relevance → TypeScript → Python → Modal → Claude CLI
-- **Claude output** (dotted lines): Streams back up through all layers to Chat UI toolviewer
-- **Secrets** (thick arrows `==>`): Retrieved from encrypted DB → subprocess args → Modal API → env vars → Claude/MCP
+- **User prompts** (solid lines):
+  - Direct: Workforce → TriggerRunner → ConversationManager → BackgroundCoderPresetAgent → Harvest
+  - External: Slack/GitHub → Sync Services → TriggerRunner → ConversationManager → BackgroundCoderPresetAgent → Harvest
+- **Claude output** (dotted lines): Streams back through all layers to Workforce UI toolviewer
+- **Secrets** (thick arrows `==>`): Retrieved from encrypted DB → GetUserProjectKey → subprocess args → Modal API → env vars → Claude/MCP
 - **Stop hook** (red): `<<<CLAUDE_DONE>>>` marker signals completion, triggers next queued message
 
 ---
