@@ -13,8 +13,13 @@
 
 - [Git Workflow](docs/ai/shared/git-workflow.md): Safe-Carry-Forward sync, snapshots, checkpoints, squashing
 - [Code Comments](docs/ai/shared/code-comments.md): Explain WHY not WHAT; preserve existing comments
-- [Planning Guidelines](docs/ai/shared/planning.md): Research before coding, use Gemini for adversarial review
-- [Documentation Standards](docs/ai/shared/documentation.md): Update docs with changes, capture gotchas
+- [Planning Guidelines](docs/ai/shared/planning.md): Research before coding, use Gemini for adversarial review, hierarchical planning
+- [Problem-Solving](docs/ai/shared/problem-solving.md): Find proper solutions, avoid hacks, check official APIs first
+- [Documentation Standards](docs/ai/shared/documentation.md): Update docs with changes, capture gotchas, avoid stale values
+- [Complexity Heuristic](docs/ai/shared/complexity-heuristic.md): Decide when to invoke brainstorming based on task complexity
+- [Verification](docs/ai/shared/verification.md): Smart verification (tests for logic, appropriate checks for non-logic)
+- [Debugging](docs/ai/shared/debugging.md): Systematic debugging with failure escalation (fail-forward → systematic → panic)
+- [Finishing Workflow](docs/ai/shared/finishing-workflow.md): 4-option completion framework with test verification gate
 - [Pull Request Guidelines](docs/ai/shared/pull-requests.md): PR conventions and review standards
 
 ## MCP Server Guides
