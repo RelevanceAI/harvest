@@ -133,28 +133,57 @@ This repository uses a structured documentation approach:
 - MCP server integration
 - Loaded alongside context-specific extensions
 
-### For AI Agents
+### AI Agent Architecture
 
-**Shared Base Rules** (`.claude/claude.md`):
-- MCP tools index
-- Quick reference to shared rules via @ references
-- Loaded in both local and autonomous modes
+Harvest uses a **shared base + mode-specific extensions** architecture with complete separation between local and autonomous modes.
 
-**Shared Rules** (`docs/ai/shared/`):
-- `git-workflow.md` - Safe-Carry-Forward sync, checkpoints, squashing
-- `code-comments.md` - Explain WHY not WHAT; preserve existing comments
-- `planning.md` - Research before coding, use Gemini for adversarial review
-- `documentation.md` - Update docs with changes, capture gotchas, avoid stale values
+#### Local Development Mode
 
-**Context-Specific Rules** (`docs/ai/`):
-- `local-development.md` - Rules for local Claude CLI usage
-- `autonomous-agent.md` - Rules for background agent in Modal sandbox
+**Entry Point:** `.claude/settings.json` (SessionStart hook)
 
-**MCP Server Guides** (`docs/mcp/`):
-- `gemini.md` - Plan review and web research workflows
-- `github.md` - PR/issue management patterns
-- `linear.md` - Task tracking integration
-- `chrome.md` - Browser automation for testing
+**Loaded Files:**
+1. `.claude/claude.md` (shared base rules)
+2. `docs/ai/local-development.md` (local mode extensions)
+
+**Characteristics:**
+- Human judgment available
+- Interactive brainstorming for complex tasks
+- Can pause for feedback
+- All shared rules loaded via `@docs/ai/shared/*.md` references
+
+#### Autonomous Agent Mode (Modal Sandbox)
+
+**Entry Point:** Modal sandbox creates settings file programmatically
+
+**Loaded Files:**
+1. `/app/claude.md` (shared base, baked into image)
+2. `/app/autonomous-agent.md` (autonomous extensions, baked into image)
+
+**Characteristics:**
+- Maximum autonomy
+- Execute without asking
+- Fail forward pattern
+- All shared rules loaded via `@docs/ai/shared/*.md` references (resolve from `/app/`)
+
+#### Design Principle: Intent vs Execution
+
+**Local and autonomous modes differ in PURPOSE/INTENT, but share EXECUTION unless intent requires different execution.**
+
+- **Shared rules** (`docs/ai/shared/*.md`) = EXECUTION (how to do things)
+- **Mode files** (`local-development.md`, `autonomous-agent.md`) = INTENT differences (why execution differs)
+- **Don't duplicate** - reference shared rules, add only intent-specific notes
+
+#### Architecture Rules
+
+1. **NO cross-references** between `local-development.md` and `autonomous-agent.md`
+2. **SessionStart hooks** are the ONLY way to load mode-specific files
+3. **Shared rules** are loaded via `@` references in mode-specific files
+4. **Router patterns** (like "if local/if autonomous") are not used
+
+**Validation:**
+```bash
+./scripts/validate-mode-separation.sh
+```
 
 ### For Developers
 
