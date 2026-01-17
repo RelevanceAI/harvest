@@ -61,8 +61,6 @@ Harvest uses skills from the obra/superpowers framework. These are available via
 
 ## MCP Tools Index
 
-Your available MCP tools depend on context:
-
 | Server | Purpose | When to Use | Documentation |
 |--------|---------|-------------|---------------|
 | **github** | GitHub API (PRs, issues) | Creating PRs, managing issues, checking CI | Built-in |
@@ -195,7 +193,7 @@ See `@docs/ai/shared/code-comments.md` for full policy.
 
 ## Philosophy
 
-**Always follow your session workflow.** Always: research → plan → validate → execute 
+**Always follow your session workflow: research → plan → validate → execute** 
 
 Exception: If you're executing an approved plan, you're already past planning.
 
