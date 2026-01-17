@@ -129,61 +129,42 @@ As a [user type], I want [goal] so that [benefit].
 
 ## Labels and Metadata
 
-### Relevance AI Label Taxonomy
+### Label Strategy
 
-**Type Labels:**
-- `Bug` - Defects in existing functionality
-- `Feature` - New functionality
-- `Improvement` - Enhancements to existing features
-- `Refactor` - Code restructuring (no behavior change)
-- `Spike` - R&D/exploratory work
+**Always check available labels first:**
+```typescript
+const labels = await list_issue_labels({ team: "Chat" })
+```
 
-**Component Labels:**
-- `App` - Frontend application
-- `API` - Backend API
-- `Orchestration` - Agent orchestration layer
-- `Design` - Design-related work
-- `Testing` - Test infrastructure/coverage
-- `Logging` - Logging/observability
+Use what exists - don't hardcode assumptions about available labels.
 
-**Performance (Grouped Label):**
-- `Performance → Network requests`
-- `Performance → UI/UX`
-- `Performance → CPU profiling`
-- `Performance → Code analysis`
+**Common type labels:** `Bug`, `Feature`, `Improvement`, `Refactor`, `Spike`
 
-**Status/Special:**
-- `Blocked` - Cannot proceed
-- `Before release` - Must be done before release
-- `Client request` - Customer-driven
-- `Good First Bug` - Good for new contributors
+**Priority:** Use Linear's built-in priority field (0-4), NOT priority labels
+- 0 = None
+- 1 = Urgent
+- 2 = High
+- 3 = Medium (default when uncertain)
+- 4 = Low
 
-**Priority:** Use Linear's built-in priority field (Urgent/High/Medium/Low), NOT labels
-
-### AI Labeling Strategy
+### Example
 
 ```typescript
-// Check available labels first
-const labels = await list_issue_labels({ team: "Chat" })
+// 1. Fetch available labels
+const availableLabels = await list_issue_labels({ team: "Chat" })
 
-// Apply based on content analysis
-const typeLabel = inferTypeFromDescription(description) // Bug, Feature, Improvement, etc.
-const componentLabels = inferComponentsFromContext(description) // App, API, etc.
-
-// Create with labels - NO priority labels (use priority field instead)
+// 2. Apply appropriate labels based on content
 create_issue({
-  labels: ["Bug", "API", "Orchestration"],
-  priority: 2, // Only if confident: 0=none, 1=urgent, 2=high, 3=medium, 4=low
+  labels: ["Bug", "API"], // Use labels that actually exist
+  priority: 3, // Medium - let humans escalate if needed
   ...
 })
 ```
 
 **Guidelines:**
-- Use Linear's **priority field** (0-4), NOT priority labels
-- Check existing labels before creating new ones
+- Always query available labels before applying them
 - Let humans set Urgent/High priority unless explicitly instructed
-- Use grouped labels for Performance issues (e.g., `Performance → Network requests`)
-- Apply `Client request` when issue comes from customer feedback
+- Use grouped labels if they exist (e.g., `Performance → Network requests`)
 - Assign to specific person when known
 
 ---
