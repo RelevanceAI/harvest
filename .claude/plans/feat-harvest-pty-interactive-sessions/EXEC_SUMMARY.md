@@ -144,12 +144,12 @@ graph TD
 
     subgraph "Harvest Runtime TypeScript"
         C1[HarvestRuntime.ts<br/>GetUserProjectKey]
-        C2[Spawn Python Subprocess<br/>--github-token<br/>--claude-token]
+        C2[Spawn Python Subprocess<br/>env: GITHUB_TOKEN<br/>CLAUDE_OAUTH_TOKEN]
     end
 
     subgraph "harvest-client Python"
-        D1[HarvestClient<br/>CLI args]
-        D2[Modal API Call<br/>+ credentials]
+        D1[HarvestClient<br/>reads env vars]
+        D2[Modal API Call<br/>HTTPS + credentials]
     end
 
     subgraph "Modal Container HarvestSandbox"
@@ -201,12 +201,12 @@ graph TD
     B3 -.->|toolviewer| A0
 
     B0 ==>|GetUserProjectKey| C1
-    C1 ==>|subprocess args| C2
-    C2 ==>|CLI args| D1
-    D1 ==>|Modal API| D2
-    D2 ==>|secrets| E0
-    E0 ==>|env vars| F1
-    E0 ==>|env vars| F2
+    C1 ==>|subprocess env vars| C2
+    C2 ==>|env vars| D1
+    D1 ==>|Modal API HTTPS| D2
+    D2 ==>|modal.Secret| E0
+    E0 ==>|sandbox env vars| F1
+    E0 ==>|sandbox env vars| F2
 
     style E1 fill:#e1f5ff
     style F1 fill:#fff4e1
@@ -225,8 +225,8 @@ graph TD
   - ConversationManager streams output to Workforce UI
   - BackgroundCoderPresetAgent invokes Harvest
   - **Project Keys DB stores encrypted credentials**
-- **Harvest Runtime**: TypeScript layer retrieves secrets via GetUserProjectKey, spawns Python subprocess with credentials
-- **harvest-client**: Thin Python wrapper receives credentials as CLI args, calls Modal API
+- **Harvest Runtime**: TypeScript layer retrieves secrets via GetUserProjectKey, spawns Python subprocess with credentials as env vars
+- **harvest-client**: Thin Python wrapper reads credentials from env vars, calls Modal API over HTTPS
 - **Modal Container**: Creates modal.Secret from credentials, injects as env vars, manages PTY/queue/hooks/memory
 - **Claude CLI**: Interactive session uses CLAUDE_CODE_OAUTH_TOKEN, MCP servers use GITHUB_TOKEN/etc.
 
@@ -235,7 +235,7 @@ graph TD
   - Direct: Workforce → TriggerRunner → ConversationManager → BackgroundCoderPresetAgent → Harvest
   - External: Slack/GitHub → Sync Services → TriggerRunner → ConversationManager → BackgroundCoderPresetAgent → Harvest
 - **Claude output** (dotted lines): Streams back through all layers to Workforce UI toolviewer
-- **Secrets** (thick arrows `==>`): Retrieved from encrypted DB → GetUserProjectKey → subprocess args → Modal API → env vars → Claude/MCP
+- **Secrets** (thick arrows `==>`): Retrieved from encrypted DB → GetUserProjectKey → subprocess env vars → Modal API (HTTPS) → modal.Secret → sandbox env vars → Claude/MCP
 - **Stop hook** (red): `<<<CLAUDE_DONE>>>` marker signals completion, triggers next queued message
 
 ---
@@ -265,10 +265,10 @@ sequenceDiagram
     HarvestRuntime->>Relevance: GetUserProjectKey(projectId, "google")
     Relevance-->>HarvestRuntime: AIza_xxxxx (optional)
 
-    HarvestRuntime->>harvest-client: subprocess spawn with:<br/>--github-token ghp_xxxxx<br/>--claude-token oauth_xxxxx<br/>--gemini-key AIza_xxxxx
-    Note over harvest-client: CLI args (process.argv)
+    HarvestRuntime->>harvest-client: subprocess spawn with env vars:<br/>GITHUB_TOKEN=ghp_xxxxx<br/>CLAUDE_OAUTH_TOKEN=oauth_xxxxx<br/>GEMINI_API_KEY=AIza_xxxxx
+    Note over harvest-client: Reads from process.env
 
-    harvest-client->>Modal: API call with credentials
+    harvest-client->>Modal: API call with credentials (HTTPS)
     Note over Modal: Creates modal.Secret.from_dict({<br/>  GITHUB_TOKEN: "ghp_xxxxx",<br/>  CLAUDE_CODE_OAUTH_TOKEN: "oauth_xxxxx",<br/>  GEMINI_API_KEY: "AIza_xxxxx"<br/>})
 
     Modal->>Sandbox: Inject as environment variables
@@ -294,11 +294,11 @@ sequenceDiagram
 **Security measures:**
 - ✅ Secrets stored encrypted in Relevance database
 - ✅ Retrieved per-request (no caching in application layer)
-- ✅ Passed via process args (not environment variables in Node.js layer)
+- ✅ Passed to subprocess via environment variables (not CLI args - invisible to `ps`)
+- ✅ Transmitted to Modal API over HTTPS (encrypted in transit)
 - ✅ Modal secrets isolated per sandbox (no cross-contamination)
 - ✅ Secrets auto-destroyed when sandbox terminates
 - ✅ No secrets logged or written to disk
-- ⚠️ Process args visible in `ps` output (mitigated: Modal containers isolated, short-lived)
 
 **Code reference (from Phase 3 implementation):**
 ```typescript
@@ -315,14 +315,16 @@ export const HarvestRuntime = async (convo: ConversationManager) => {
     throw new Error("GitHub and Anthropic tokens required. Add to project secrets.");
   }
 
-  // Spawn harvest-client with credentials
-  const harvestProcess = spawn("python", [
-    "-m", "harvest_client",
-    "--session-id", conversationId,
-    "--github-token", githubToken,
-    "--claude-token", claudeToken,
-    ...(geminiKey ? ["--gemini-key", geminiKey] : []),
-  ]);
+  // Spawn harvest-client with credentials as env vars
+  const harvestProcess = spawn("python", ["-m", "harvest_client"], {
+    env: {
+      ...process.env,
+      SESSION_ID: conversationId,
+      GITHUB_TOKEN: githubToken,
+      CLAUDE_OAUTH_TOKEN: claudeToken,
+      ...(geminiKey ? { GEMINI_API_KEY: geminiKey } : {}),
+    },
+  });
 
   // Stream output...
 };
