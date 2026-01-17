@@ -182,7 +182,11 @@ Harvest uses a **shared base + mode-specific extensions** architecture with comp
 
 **Validation:**
 ```bash
-./scripts/validate-mode-separation.sh
+# Run all validation tests
+for script in scripts/tests/*.sh; do bash "$script"; done
+
+# Or run specific test
+bash scripts/tests/validate-mode-separation.sh
 ```
 
 ### For Developers

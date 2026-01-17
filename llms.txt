@@ -24,7 +24,6 @@
 
 ## MCP Server Guides
 
-- [MCP Overview](docs/mcp/README.md): Model Context Protocol server index
 - [Gemini MCP](docs/mcp/gemini.md): Plan review and adversarial analysis workflows
 - [DevTools MCP](docs/mcp/devtools.md): Chrome DevTools Protocol for browser automation
 - [Playwright MCP](docs/mcp/playwright.md): End-to-end testing workflows
