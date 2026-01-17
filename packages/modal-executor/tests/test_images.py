@@ -14,11 +14,13 @@ class TestBaseImage:
         assert image is not None
 
     def test_config_dir_exists(self):
-        """Test that config directory with files exists."""
-        from modal_executor.images import _CONFIG_DIR
+        """Test that config directory and required rule files exist."""
+        from modal_executor.images import _CONFIG_DIR, _ROOT_DIR
 
         assert _CONFIG_DIR.exists()
-        assert (_CONFIG_DIR / "AGENTS.md").exists()
+        # autonomous-agent.md is now baked from docs/ai/ instead of config/AGENTS.md
+        autonomous_md = _ROOT_DIR / "docs" / "ai" / "autonomous-agent.md"
+        assert autonomous_md.exists(), "autonomous-agent.md must exist for image build"
         assert (_CONFIG_DIR / "memory-seed.json").exists()
         # Template is documentation only - actual settings generated at runtime
         assert (_CONFIG_DIR / "settings.json.template").exists()
