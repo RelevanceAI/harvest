@@ -28,6 +28,7 @@ All agents follow these core rules:
 | **Git Workflow** | `@docs/ai/shared/git-workflow.md` | Safe-Carry-Forward sync, snapshots, checkpoints, squashing |
 | **Code Comments** | `@docs/ai/shared/code-comments.md` | Explain WHY not WHAT; preserve existing comments |
 | **Planning** | `@docs/ai/shared/planning.md` | Research before coding, use Gemini for adversarial review, hierarchical planning |
+| **Problem-Solving** | `@docs/ai/shared/problem-solving.md` | Find proper solutions, avoid hacks, check official APIs first |
 | **Documentation** | `@docs/ai/shared/documentation.md` | Update docs with changes, capture gotchas, avoid stale values |
 | **Complexity Heuristic** | `@docs/ai/shared/complexity-heuristic.md` | Decide when to invoke brainstorming based on task complexity |
 | **Verification** | `@docs/ai/shared/verification.md` | Smart verification (tests for logic, appropriate checks for non-logic) |
@@ -178,6 +179,21 @@ const ratio = window.devicePixelRatio;
 - Preserve all comments exactly as they are
 
 See `@docs/ai/shared/code-comments.md` for full policy.
+
+---
+
+## Problem-Solving: Proper Solutions Over Hacks
+
+**Order of operations when hitting a problem:**
+
+1. ✅ **Check for official APIs** (grep exports, TypeScript definitions)
+2. ✅ **Search existing solutions** (GitHub issues, Stack Overflow, docs)
+3. ✅ **Consider alternatives** (different approaches, wrappers)
+4. ❌ **NEVER as first resort:** `patch-package`, `--no-verify`, `@ts-ignore`, patching `node_modules`
+
+**Red flag:** "Let me patch this..." or "I'll bypass this..." → STOP and find the proper solution.
+
+See `@docs/ai/shared/problem-solving.md` for full guidance.
 
 ---
 
