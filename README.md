@@ -6,7 +6,23 @@ Build your AI Workforce with Harvest - the background coding agent that tends to
 
 Harvest is a background coding agent service built on the architecture that powers [Ramp's Inspect](https://builders.ramp.com/post/why-we-built-our-background-agent), designed specifically for the **Relevance AI** ecosystem.
 
-### Core Capabilities
+---
+
+## Status at a Glance
+
+| Component | Status | Documentation |
+|-----------|--------|---------------|
+| **Modal Sandboxes** | ✅ Production | [`packages/modal-executor/`](packages/modal-executor/) |
+| **Claude CLI Integration** | ✅ Production | [`docs/ai/`](docs/ai/) |
+| **Git Workflow** | ✅ Production | [`docs/ai/shared/git-workflow.md`](docs/ai/shared/git-workflow.md) |
+| **MCP Servers** | ✅ Production | [MCP table](#mcp-servers) |
+| **PTY Interactive Sessions** | 🚧 In Progress | [EXEC_SUMMARY.md](.claude/plans/feat-harvest-pty-interactive-sessions/EXEC_SUMMARY.md) |
+| **API Layer** | ⏳ Planned | [`docs/plans/IMPLEMENTATION_PLAN.md`](docs/plans/IMPLEMENTATION_PLAN.md) |
+| **Slack/Web Client** | ⏳ Planned | [`docs/plans/IMPLEMENTATION_PLAN.md`](docs/plans/IMPLEMENTATION_PLAN.md) |
+
+---
+
+## Core Capabilities
 
 - **Autonomous Development**: Works continuously across repositories without human intervention
 - **Sandbox Orchestration**: Spins up isolated Modal sandboxes for each session
@@ -15,216 +31,152 @@ Harvest is a background coding agent service built on the architecture that powe
 - **Session Continuity**: SQLite-backed conversation state persists across sandbox restarts
 - **Continuous Harvesting**: Generates pull requests, fixes bugs, and improves code while you focus on other work
 
-### Architecture Overview
-
-```
-┌──────────────────┐         ┌──────────────────┐         ┌──────────────────┐
-│  Slack/Web UI    │────────►│  Harvest API     │────────►│  Modal Sandboxes │
-│  Clients         │         │  Orchestrator    │         │  (Isolated Env)  │
-└──────────────────┘         └──────────────────┘         └──────────────────┘
-         │                            │                            │
-         │                            │                            │
-         ▼                            ▼                            ▼
-┌──────────────────┐         ┌──────────────────┐         ┌──────────────────┐
-│  Relevance AI    │         │  Claude Code CLI │────────►│  GitHub          │
-│  Workforce Mgmt  │         │  + MCP Servers   │         │  Repositories    │
-└──────────────────┘         └──────────────────┘         └──────────────────┘
-                                       │
-                                       ├── GitHub MCP (PR/Issue mgmt)
-                                       ├── Linear MCP (Task tracking)
-                                       ├── Gemini MCP (Plan review)
-                                       └── Chrome MCP (Browser testing)
-```
-
-## Current Status
-
-**Phase 1 - Foundation**: 🟢 **Partially Complete** (Updated: January 2026)
-
-### ✅ Completed (Phase 1.1 + 1.3)
-
-Harvest infrastructure is production-ready:
-- ✅ **Modal sandboxes** with full development environment
-- ✅ **Claude Code CLI integration** with OAuth + JSON streaming
-- ✅ **Session state persistence** (SQLite on Modal volumes)
-- ✅ **Conversation continuity** (last 10 messages context)
-- ✅ **Git workflow** with Safe-Carry-Forward patterns
-- ✅ **Git credential security** (helper-based, no token exposure)
-- ✅ **MCP servers** (memory, filesystem, playwright, devtools, github, gemini, sentry, linear)
-- ✅ **30-minute cron** for image refresh
-- ✅ **Pre-commit hooks** for linting/formatting
-- ✅ **1,927 lines** of production code with tests
-
-**Implementation**: `packages/modal-executor/` ([source](packages/modal-executor/))
-
-### 🚧 Current Blocker
-
-**`harvest-client` Package** (Estimated: 2-4 hours)
-- Thin Python wrapper around `HarvestSandbox` for external consumption
-- Required for integration with Relevance's NodeAPI
-- Blocks Phase 2 (API Layer) work
-
-### ❌ Not Started
-
-- Phase 1.2: Session orchestration and lifecycle management
-- Phase 2: API Layer (Cloudflare Workers + Durable Objects)
-- Phase 3: Client (Slack bot, web dashboard)
-- Phase 4: Intelligence (agent tools, metrics)
-
 ---
 
-## Critical Technical TODOs
+## Proposed Architecture
 
-### 🚨 WORKDIR Verification & Guardrails (Modal Sandbox)
+```mermaid
+graph TD
+    subgraph "User Interface"
+        A0[Relevance Workforce<br/>Chat Interface]
+    end
 
-**Context**: The autonomous agent relies on `WORKDIR /app/` for `@docs/` reference resolution in baked rule files. If Claude CLI runs from a different directory, all rule references will fail.
+    subgraph "External Triggers"
+        A2[Slack Bot]
+        A3[GitHub Webhooks]
+    end
 
-**Required Actions**:
+    subgraph "Relevance Backend"
+        B0[Project Keys DB<br/>Encrypted]
+        B1[Sync Services<br/>OAuth/Webhooks]
+        B2[TriggerRunner]
+        B3[ConversationManager]
+        B4[BackgroundCoderPresetAgent]
+    end
 
-1. **Verify Modal WORKDIR Configuration**
-   - Confirm Modal respects `WORKDIR /app/` in container definition
-   - Test that working directory persists across all execution contexts
-   - Document Modal-specific WORKDIR configuration mechanism
+    subgraph "Harvest Runtime TypeScript"
+        C1[HarvestRuntime.ts<br/>GetUserProjectKey]
+        C2[Spawn Python Subprocess<br/>env: GITHUB_TOKEN<br/>CLAUDE_OAUTH_TOKEN]
+    end
 
-2. **Add Defensive Working Directory Enforcement**
-   - Add `os.chdir('/app')` at the start of sandbox execution
-   - Add explicit working directory check before every Claude CLI invocation
-   - Log `os.getcwd()` before CLI calls for debugging
+    subgraph "harvest-client Python"
+        D1[HarvestClient<br/>reads env vars]
+        D2[Modal API Call<br/>HTTPS + credentials]
+    end
 
-3. **Test Edge Cases**
-   - Verify `@docs/` resolution after cloning a repository
-   - Test working directory stability during git operations
-   - Ensure subprocess calls don't pollute working directory
+    subgraph "Modal Container HarvestSandbox"
+        E0[modal.Secret.from_dict<br/>ENV vars]
+        E1[PTY Manager]
+        E2[asyncio.Queue]
+        E3[Stop Hook Detection]
+        E4[Memory Monitor]
+    end
 
-4. **Add Guardrails**
-   ```python
-   # Before every Claude CLI invocation
-   assert os.getcwd() == '/app/', f"Working directory must be /app/, got {os.getcwd()}"
-   ```
+    subgraph "Claude Code CLI"
+        F1[Interactive Session<br/>CLAUDE_CODE_OAUTH_TOKEN]
+        F2[MCP Servers<br/>GITHUB_TOKEN, etc.]
+        F3[Tool Execution]
+    end
 
-**Risk Level**: HIGH - Single point of failure for all rule file resolution
+    subgraph "External Services"
+        G1[GitHub API]
+        G2[Gemini API]
+        G3[Linear API]
+        G4[Git Operations]
+    end
 
-**Related**: See Gemini audit in `feat/autonomous-local-mode-separation` plan (2026-01-17)
+    A0 --> B2
+    A2 --> B1
+    A3 --> B1
+    B1 --> B2
+    B2 --> B3
+    B3 --> B4
+    B4 --> C1
+    C1 --> C2
+    C2 --> D1
+    D1 --> D2
+    D2 --> E1
+    E1 --> E2
+    E2 --> F1
+    F1 --> E3
+    E3 -.->|<<<CLAUDE_DONE>>>| E2
+    E1 --> E4
+    F1 --> F2
+    F2 --> F3
+    F3 --> G1
+    F3 --> G2
+    F3 --> G3
+    F3 --> G4
 
----
+    F1 -.->|stdout stream| C2
+    C2 -.->|yield chunks| B3
+    B3 -.->|toolviewer| A0
 
-## Documentation Structure
+    B0 ==>|GetUserProjectKey| C1
+    C1 ==>|subprocess env vars| C2
+    C2 ==>|env vars| D1
+    D1 ==>|Modal API HTTPS| D2
+    D2 ==>|modal.Secret| E0
+    E0 ==>|sandbox env vars| F1
+    E0 ==>|sandbox env vars| F2
 
-This repository uses a structured documentation approach:
+    style E1 fill:#e1f5ff
+    style F1 fill:#fff4e1
+    style E3 fill:#ffe1e1
+    style B2 fill:#e8f5e9
+    style B0 fill:#fff3e0
+    style E0 fill:#fff3e0
+```
 
-| Directory | Audience | Purpose |
-|-----------|----------|---------|
-| `.claude/` | AI Agent (Claude) | Project-level rules loaded into Claude's context |
-| `.claude/plans/` | Developers & AI | Planning workflow (Research → Plan → Implementation) |
-| `docs/ai/` | AI Agent (Claude) | Context-specific agent rules and workflows |
-| `docs/mcp/` | AI Agent (Claude) | Detailed MCP server documentation |
-| `docs/plans/` | Developers | Implementation plans and current work |
-| `docs/architecture/` | Developers | Technical documentation |
+**Current implementation attempt**: See [PTY Interactive Sessions proposal](.claude/plans/feat-harvest-pty-interactive-sessions/EXEC_SUMMARY.md)
 
-### AI Agent Architecture
+### Agent Modes
 
-Harvest uses a **shared base + mode-specific extensions** architecture with complete separation between local and autonomous modes.
+Harvest uses **shared base + mode-specific extensions** architecture:
 
-#### Local Development Mode
-
-**Entry Point:** `.claude/settings.json` (SessionStart hook)
-
-**Loaded Files:**
-1. `.claude/claude.md` (shared base rules)
-2. `docs/ai/local-development.md` (local mode extensions)
-
-**Characteristics:**
-- Human judgment available
+**Local Development Mode** (Your machine):
 - Interactive brainstorming for complex tasks
-- Can pause for feedback
-- All shared rules loaded via `@docs/ai/shared/*.md` references
+- Can pause for human feedback
+- Human judgment available
 
-#### Autonomous Agent Mode (Modal Sandbox)
-
-**Entry Point:** Modal sandbox creates settings file programmatically
-
-**Loaded Files:**
-1. `/app/claude.md` (shared base, baked into image)
-2. `/app/autonomous-agent.md` (autonomous extensions, baked into image)
-
-**Characteristics:**
-- Maximum autonomy
+**Autonomous Agent Mode** (Modal sandbox):
+- Maximum autonomy, no human in loop
 - Execute without asking
-- Fail forward pattern
-- All shared rules loaded via `@docs/ai/shared/*.md` references (resolve from `/app/`)
+- Fail forward pattern (try alternatives when blocked)
 
-#### Design Principle: Intent vs Execution
+Both modes share execution rules (`docs/ai/shared/*.md`) but differ in intent/approach.
 
-**Local and autonomous modes differ in PURPOSE/INTENT, but share EXECUTION unless intent requires different execution.**
+---
 
-- **Shared rules** (`docs/ai/shared/*.md`) = EXECUTION (how to do things)
-- **Mode files** (`local-development.md`, `autonomous-agent.md`) = INTENT differences (why execution differs)
-- **Don't duplicate** - reference shared rules, add only intent-specific notes
+## MCP Servers
 
-#### Architecture Rules
-
-1. **NO cross-references** between `local-development.md` and `autonomous-agent.md`
-2. **SessionStart hooks** are the ONLY way to load mode-specific files
-3. **Shared rules** are loaded via `@` references in mode-specific files
-4. **Router patterns** (like "if local/if autonomous") are not used
-
-**Validation:**
-```bash
-# Run all validation tests
-for script in scripts/tests/*.sh; do bash "$script"; done
-
-# Or run specific test
-bash scripts/tests/validate-mode-separation.sh
-```
-
-### For Developers
-
-#### Planning Workflow
-
-Harvest uses a three-phase planning workflow:
-
-**Directory Structure:**
-```
-.claude/plans/
-└── [branch-name]/
-    ├── research_YYYY-MM-DD_HHMM.md
-    ├── plan_YYYY-MM-DD_HHMM.md
-    └── implementation_YYYY-MM-DD_HHMM.md
-```
-
-**Phase 1 - Research:**
-- Explore the problem space, understand constraints
-- Document findings in `research_YYYY-MM-DD_HHMM.md`
-- Commit and push
-
-**Phase 2 - Planning:**
-- Create detailed implementation plan in `plan_YYYY-MM-DD_HHMM.md`
-- Open PR with `[PLAN]` prefix for review
-- Iterate on feedback (new timestamped files, don't overwrite)
-- Once approved: close PR, proceed to implementation
-
-**Phase 3 - Implementation:**
-- Execute approved plan
-- Document results in `implementation_YYYY-MM-DD_HHMM.md`
-- Create implementation PR referencing plan PR number
-- Merge when approved
-
-**Why timestamps:** Agent self-awareness ("which iteration?"), audit trail, easy sorting.
-
-**Detailed guidelines:** See `docs/ai/shared/planning.md` for full process, Gemini review, and hierarchical planning.
-
-#### Implementation Plans
-
-See [`docs/plans/`](docs/plans/) for overall roadmap:
-- [`IMPLEMENTATION_PLAN.md`](docs/plans/IMPLEMENTATION_PLAN.md) - Overall phased approach
-- [`phase-1.1-modal-sandbox.md`](docs/plans/phase-1.1-modal-sandbox.md) - Modal sandbox implementation
-
-#### Architecture Documentation
-
-See [`docs/architecture/`](docs/architecture/) for technical documentation.
+| Server | Package | Required Secret | Permissions | Where to Get |
+|--------|---------|-----------------|-------------|--------------|
+| **Memory** | `@modelcontextprotocol/server-memory` | None | - | - |
+| **Filesystem** | `@modelcontextprotocol/server-filesystem` | None | - | - |
+| **Playwright** | `@anthropic-ai/mcp-server-playwright` | None | - | - |
+| **DevTools** | `chrome-devtools-mcp` | None | - | - |
+| **GitHub** | `@anthropic-ai/mcp-server-github` | `GITHUB_TOKEN` | Contents: R/W, PRs: R/W, Issues: R/W | [github.com/settings/tokens](https://github.com/settings/tokens?type=beta) |
+| **Linear** | `@modelcontextprotocol/server-linear` | `LINEAR_API_KEY` | Full access | [linear.app/settings/api](https://linear.app/settings/api) |
+| **Gemini** | `@houtini/gemini-mcp` | `GEMINI_API_KEY` | - | [aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey) |
+| **Sentry** | `@sentry/mcp-server` | `SENTRY_AUTH_TOKEN` | project:read, event:read, issue:read | [sentry.io/settings/account/api/auth-tokens](https://sentry.io/settings/account/api/auth-tokens/) |
 
 ---
 
 ## Getting Started
+
+### Quick Setup (One Command)
+
+```bash
+git clone https://github.com/RelevanceAI/harvest.git && \
+cd harvest && \
+bash scripts/setup-git-hooks.sh && \
+cd packages/modal-executor && \
+uv venv --allow-existing && \
+source .venv/bin/activate && \
+uv pip install -e ".[dev]" && \
+pre-commit install
+```
 
 ### Prerequisites
 
@@ -232,235 +184,49 @@ See [`docs/architecture/`](docs/architecture/) for technical documentation.
 - [uv](https://github.com/astral-sh/uv) package manager
 - Modal account ([modal.com](https://modal.com))
 - GitHub account with PAT
-- Claude Code CLI (`brew install claude` or see [claude.ai/download](https://claude.ai/download))
+- Claude Code CLI ([claude.ai/download](https://claude.ai/download))
 
-### Development Setup
+### Claude Code Setup
 
-```bash
-# Clone the repository
-git clone https://github.com/RelevanceAI/harvest.git
-cd harvest
-
-# IMPORTANT: Set up git hooks (prevents commits to protected branches)
-bash scripts/setup-git-hooks.sh
-
-# Setup modal-executor package
-cd packages/modal-executor
-uv venv --allow-existing
-source .venv/bin/activate
-uv pip install -e ".[dev]"
-
-# Install pre-commit hooks (catches linting/formatting issues locally)
-pre-commit install
-
-# Test hooks on all files
-pre-commit run --all-files
-```
-
-**What the git hooks do:**
-- **Prevent commits to main/master/develop** - Forces feature branch workflow
-- **Warn on misconfiguration** - Post-checkout hook reminds you if hooks aren't set up
-- **Apply to all worktrees** - One-time setup per repository clone
-
-### Claude Code Configuration (Local Development)
-
-To enable Harvest AI rules and superpowers skills when working locally with Claude Code:
+Enable Harvest AI rules and superpowers skills:
 
 ```bash
-# 1. Add the Claude plugins marketplace
 claude plugins add claude-plugins-official https://github.com/anthropics/claude-plugins-official
-
-# 2. Install superpowers plugin
 claude plugins install claude-plugins-official/superpowers
-
-# 3. Copy the template settings file
 cp .claude/settings.json.template .claude/settings.json
-
-# This enables:
-# - Automatic loading of Harvest rules on session start
-# - Superpowers skills (/brainstorming, /finishing-a-development-branch, etc.)
 ```
 
-**What this does:**
-- **SessionStart hook**: Automatically loads `.claude/claude.md` (shared base) and `docs/ai/local-development.md` (local extensions) with project rules and workflow guidance
-- **Superpowers plugin**: Enables workflow skills for planning, debugging, and finishing work
+Configure MCP servers in `~/.claude/mcp.json` - see [MCP table](#mcp-servers) for API keys and permissions.
 
-**Note**: `.claude/settings.json` is gitignored (local settings only). The template is committed for easy setup.
-
-### Running Tests
+### Testing & Code Quality
 
 ```bash
+# Run tests
 cd packages/modal-executor
-
-# Run unit tests
 uv run pytest tests/ -v
 
-# Run integration tests (requires Modal credentials)
-uv run pytest tests/ -m modal -v
-
-# Run with coverage
-uv run pytest tests/ --cov=modal_executor --cov-report=term-missing
-```
-
-### Code Quality
-
-Pre-commit hooks automatically run:
-- **Ruff**: Fast Python linter
-- **Black**: Code formatter
-- **Mypy**: Static type checker (non-blocking)
-
-Manual checks:
-```bash
-# Linting
+# Linting & formatting
 uv run ruff check src/ tests/
-
-# Formatting
 uv run black src/ tests/
-
-# Type checking
-uv run mypy src/ --ignore-missing-imports
 ```
 
 ---
 
-## Roadmap
+## Documentation
 
-Based on the [Ramp Inspect architecture](https://builders.ramp.com/post/why-we-built-our-background-agent):
-
-### Phase 1: Foundation (In Progress)
-- [x] Planning complete
-- [x] **Phase 1.1**: Modal sandbox infrastructure with Claude Code CLI
-- [ ] **Phase 1.2**: Session orchestration and lifecycle management
-- [ ] **Phase 1.3**: GitHub App integration
-
-### Phase 2: API Layer
-- [ ] Cloudflare Workers + Durable Objects
-- [ ] REST & WebSocket API
-- [ ] Session management endpoints
-
-### Phase 3: Client
-- [ ] Slack bot (primary interface)
-- [ ] Web dashboard
-
-### Phase 4: Intelligence
-- [ ] Core agent tools (test runner, slack updates)
-- [ ] Metrics and observability
-- [ ] Multi-repo memory
-
-See [`docs/plans/IMPLEMENTATION_PLAN.md`](docs/plans/IMPLEMENTATION_PLAN.md) for the full roadmap.
-
----
-
-## How It Works
-
-### Sandbox Architecture
-
-Each Harvest session runs in an isolated Modal sandbox with:
-
-**Sandbox Environment**:
-```
-/workspace/{repo-name}/     # Cloned repository (ephemeral)
-/mnt/state/sessions/        # Session state databases (persistent Modal volume)
-/root/.git-credentials      # Git authentication (secure permissions)
-~/.claude/                  # Claude CLI config
-```
-
-**Session Lifecycle**:
-
-1. **Setup Phase** (runs once per session):
-   - Configure git identity with "(Harvest)" attribution
-   - Setup git credential helper with secure permissions
-   - Clone repository using credential helper (no tokens in args)
-   - Initialize Claude CLI with OAuth token
-   - Seed session state database
-
-2. **Execution Phase** (per user prompt):
-   - Load conversation history from SQLite (last 10 messages)
-   - Build context-enriched prompt with history
-   - Stream Claude CLI output in real-time
-   - Track modified files
-   - Persist conversation to SQLite
-
-3. **Persistence**:
-   - Modal volumes: `/mnt/state/` persists across sandbox restarts
-   - Session database: `/mnt/state/sessions/{session-id}.db`
-   - Conversation continuity without memory loss
-
-### Session State Management
-
-SQLite-backed state provides:
-- **Conversation History**: Last 10 messages for context
-- **Modified Files**: Track changes across agent turns
-- **Persistence**: Survives sandbox restarts via Modal Volume
-- **Isolation**: One database per session
-
-Example:
-```python
-state = SessionState(session_id="pr-123")
-state.add_exchange("Fix the bug", "I fixed it by...")
-context = state.build_context_prompt("What did you change?")
-# Returns: "Previous conversation:\nuser: Fix the bug\nassistant: I fixed it by...\n\nUser: What did you change?"
-```
-
-### Security Model
-
-**Credential Management**:
-- Ephemeral secrets via `Modal.Secret.from_dict()`
-- No credentials in dataclass repr (all fields have `repr=False`)
-- Credential redaction in error logs (regex-based sanitization)
-- Git credentials stored with secure permissions (chmod 600)
-- Git credential helper configured before cloning (no tokens in process args)
-
-**Isolation**:
-- Each session gets isolated Modal sandbox
-- No cross-session data leakage
-- Sandboxes terminated after session completion
-
-### MCP Servers Configuration
-
-| Server | Package | Required Secrets | Where to Get API Key |
-|--------|---------|------------------|----------------------|
-| **Memory** | `@modelcontextprotocol/server-memory` | None | Not required |
-| **Filesystem** | `@modelcontextprotocol/server-filesystem` | None | Not required |
-| **Playwright** | `@anthropic-ai/mcp-server-playwright` or `@playwright/mcp` | None | Not required |
-| **DevTools** | `chrome-devtools-mcp` | None | Not required |
-| **GitHub** | `@anthropic-ai/mcp-server-github` | `GITHUB_TOKEN` | [Create fine-grained PAT](https://github.com/settings/tokens?type=beta) with repo access |
-| **Linear** | `@modelcontextprotocol/server-linear` | `LINEAR_API_KEY` | [Linear API settings](https://linear.app/settings/api) |
-| **Gemini** | `@houtini/gemini-mcp` | `GEMINI_API_KEY` (optional) | [Google AI Studio API keys](https://aistudio.google.com/app/apikey) - free tier available |
-| **Sentry** | `@sentry/mcp-server` | `SENTRY_AUTH_TOKEN` (optional) | [Sentry auth tokens](https://sentry.io/settings/account/api/auth-tokens/) with read scopes |
-
-**Note**: Servers marked "optional" are gracefully skipped if the API key is not configured. They enhance agent capabilities but are not required for basic operation.
-
-### Adding MCP Servers
-
-**All servers need:**
-1. Entry in MCP Tools Index (`.claude/CLAUDE.md`)
-2. Configuration in Modal sandbox setup
-
-**Heavy servers (complex workflows) also need:**
-3. Dedicated doc file: `docs/mcp/{server-name}.md`
-
-**Decision criteria:**
-- **Create separate doc when:** Documentation exceeds ~50 lines, complex workflows, multi-step patterns
-- **Keep in quick reference when:** Straightforward usage (1-3 tools), simple one-liners
-
-**Example structure for docs/mcp/{server}.md:**
-- When to use
-- Common workflows
-- Code examples
-- Gotchas and limitations
+| Directory | Purpose |
+|-----------|---------|
+| [`docs/setup/`](docs/setup/) | Setup and configuration guides |
+| [`docs/plans/`](docs/plans/) | Implementation plans |
+| [`docs/ai/`](docs/ai/) | AI agent rules and workflows |
+| [`docs/mcp/`](docs/mcp/) | MCP server documentation |
+| [`.claude/`](.claude/) | Project-level AI agent rules |
 
 ---
 
 ## Contributing
 
-Contributions are welcome! Please:
-
-1. Read implementation plans in `docs/plans/`
-2. Follow the git workflow in `docs/ai/shared/git-workflow.md`
-3. Install pre-commit hooks (`pre-commit install`)
-4. Ensure all tests pass before submitting PR
-5. Follow code comment policy (`docs/ai/shared/code-comments.md`)
+Use Claude, it knows everything it needs to know.
 
 ---
 
