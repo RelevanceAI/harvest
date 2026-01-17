@@ -39,6 +39,9 @@ markers = [
     "modal: marks tests that require Modal credentials (deselect with '-m \"not modal\"')",
 ]
 testpaths = ["tests"]
+# Skip Modal integration tests by default (require credentials)
+# To run Modal tests: pytest -m modal
+addopts = "-m 'not modal'"
 
 [tool.ruff.lint]
 # Enable Pylint's import-outside-top-level rule to prevent imports inside functions
