@@ -9,6 +9,17 @@ You are working on the Harvest codebase locally with Claude (OpenCode).
 
 All shared rules from `@docs/ai/shared/*.md` apply (loaded via `.claude/CLAUDE.md`).
 
+**Core Principles:** See `@docs/ai/shared/agent-core-principles.md` for mode detection and foundational rules.
+
+**Git Hooks (Local Development Only):**
+
+Run the setup script after cloning (see README.md Development Setup):
+```bash
+bash scripts/setup-git-hooks.sh
+```
+
+This configures `core.hooksPath` to use `.githooks/` for all worktrees in this repository clone. Prevents commits to main/master/develop.
+
 ## MCP Tools Available
 
 - **github**: GitHub API for PRs, issues, checks
@@ -22,15 +33,10 @@ All shared rules from `@docs/ai/shared/*.md` apply (loaded via `.claude/CLAUDE.m
 
 **Solution:** Use git worktrees to create isolated workspaces for each feature.
 
-**When to use:**
+- You are already in a worktree for the current change
 - Starting new feature work (especially if other Claude instances might be running)
 - Complex changes that need dedicated workspace
 - When you want to preserve main branch state while experimenting
-
-**When NOT to use:**
-- Quick fixes on existing branches
-- Documentation-only changes
-- You're confident only one Claude instance is active
 
 **How to set up:**
 
@@ -47,11 +53,15 @@ Use the `/superpowers:using-git-worktrees` skill, which will:
 
 ## Workflow
 
-### 1. Before You Start
+### 1. Before You Make Any Changes
 
-- **Read the existing code**: Understand patterns, naming conventions, test style
-- **Check project rules**: Review `docs/ai/` and `docs/architecture/` for guidance
-- **Plan for non-trivial work**: Research the problem, draft a plan, validate with Gemini if uncertain
+Git hooks prevent commits to main/master/develop automatically.
+
+Follow the planning workflow in `@docs/ai/shared/planning.md`:
+1. **Research** - Read existing code, understand patterns, identify constraints
+2. **Plan** - Draft plan with file paths, changes, success criteria
+3. **Validate** - Use Gemini for adversarial review if complex
+4. **Execute** - Implement with confidence
 
 ### 2. While You Code
 

@@ -254,6 +254,9 @@ See [`docs/architecture/`](docs/architecture/) for technical documentation.
 git clone https://github.com/RelevanceAI/harvest.git
 cd harvest
 
+# IMPORTANT: Set up git hooks (prevents commits to protected branches)
+bash scripts/setup-git-hooks.sh
+
 # Setup modal-executor package
 cd packages/modal-executor
 uv venv --allow-existing
@@ -266,6 +269,11 @@ pre-commit install
 # Test hooks on all files
 pre-commit run --all-files
 ```
+
+**What the git hooks do:**
+- **Prevent commits to main/master/develop** - Forces feature branch workflow
+- **Warn on misconfiguration** - Post-checkout hook reminds you if hooks aren't set up
+- **Apply to all worktrees** - One-time setup per repository clone
 
 ### Claude Code Configuration (Local Development)
 

@@ -25,6 +25,7 @@ All agents follow these core rules:
 
 | Rule | Location | Purpose |
 |------|----------|---------|
+| **Agent Core Principles** | `@docs/ai/shared/agent-core-principles.md` | Mode detection, never commit to main, research before changes, Safe-Carry-Forward |
 | **Git Workflow** | `@docs/ai/shared/git-workflow.md` | Safe-Carry-Forward sync, snapshots, checkpoints, squashing |
 | **Code Comments** | `@docs/ai/shared/code-comments.md` | Explain WHY not WHAT; preserve existing comments |
 | **Planning** | `@docs/ai/shared/planning.md` | Research before coding, use Gemini for adversarial review, hierarchical planning |

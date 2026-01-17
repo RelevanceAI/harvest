@@ -1,0 +1,12 @@
+#!/bin/bash
+# Prevent commits to protected branches
+
+BRANCH=$(git branch --show-current)
+PROTECTED_BRANCHES="^(main|master|develop)$"
+
+if [[ "$BRANCH" =~ $PROTECTED_BRANCHES ]]; then
+  echo "❌ ERROR: Direct commits to '$BRANCH' are not allowed."
+  echo "   Create a feature branch first: git checkout -b <type>/<description>"
+  echo "   Example: git checkout -b feat/add-feature"
+  exit 1
+fi
