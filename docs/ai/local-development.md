@@ -89,16 +89,6 @@ Modal sandboxes are ephemeral and auto-terminate. For local development:
 - **Pre-commit hooks**: Run automatically on commit (no server to stop)
 - **pytest**: Tests run and exit automatically
 
-### Project Structure
-
-```
-packages/modal-executor/
-├── src/modal_executor/    # Source code
-├── tests/                 # Test files
-├── pyproject.toml         # Package configuration
-└── .venv/                 # Virtual environment (created by uv venv)
-```
-
 ### Requirements
 
 - Python 3.11+

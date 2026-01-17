@@ -186,10 +186,10 @@ See `@docs/ai/shared/code-comments.md` for full policy.
 
 **Order of operations when hitting a problem:**
 
-1. ✅ **Check for official APIs** (grep exports, TypeScript definitions)
+1. ✅ **Check for official APIs** (library documentation, config options, exports)
 2. ✅ **Search existing solutions** (GitHub issues, Stack Overflow, docs)
 3. ✅ **Consider alternatives** (different approaches, wrappers)
-4. ❌ **NEVER as first resort:** `patch-package`, `--no-verify`, `@ts-ignore`, patching `node_modules`
+4. ❌ **NEVER as first resort:** Patching dependencies, skip flags, error suppression
 
 **Red flag:** "Let me patch this..." or "I'll bypass this..." → STOP and find the proper solution.
 

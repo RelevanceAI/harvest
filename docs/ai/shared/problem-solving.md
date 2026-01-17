@@ -5,27 +5,30 @@
 When you hit a problem, your first instinct should NOT be to patch or bypass. Follow this order:
 
 1. **Check for official APIs** - Most libraries export configuration/customization functions
-   - Example: `grep "export" node_modules/@package/dist/index.js`
-   - Check TypeScript definitions for available options
-   - Read official documentation for configuration patterns
+   - Search library documentation for configuration options
+   - Examine public API exports and method signatures
+   - Check for environment variables or config files
+   - Read official documentation for extension patterns
 
 2. **Search for existing solutions** - GitHub issues, Stack Overflow, docs
    - Check the project's issue tracker for similar problems
    - Look for official guidance in documentation
    - Search for established patterns in the community
+   - Review changelog for relevant changes
 
 3. **Only if no official way exists** - Consider alternatives, wrappers, or different approaches
    - Evaluate alternative libraries that provide the functionality
    - Consider wrapper patterns that don't modify external code
    - Rethink the approach if monkey-patching feels necessary
+   - Discuss with the team before proceeding
 
 **NEVER do these without exhausting the above:**
-- ❌ Patch `node_modules/` files
-- ❌ Use `patch-package` as first resort
-- ❌ Bypass hooks with `--no-verify`
-- ❌ Disable errors with `@ts-ignore` or `any`
-- ❌ Modify vendored dependencies directly
-- ❌ Hack around type errors instead of fixing root cause
+- ❌ Patch dependency source files directly
+- ❌ Use dependency patching tools as first resort
+- ❌ Bypass linters/hooks with skip flags
+- ❌ Disable type checking or suppress errors
+- ❌ Modify vendored dependencies
+- ❌ Hack around errors instead of fixing root cause
 
 **Red flag:** If you're thinking "let me patch this..." or "I'll bypass this..." → STOP and find the proper solution.
 
@@ -34,71 +37,82 @@ When you hit a problem, your first instinct should NOT be to patch or bypass. Fo
 ### ❌ Bad: Patching a Library
 
 ```bash
-# Modifying node_modules directly
-vim node_modules/some-lib/dist/index.js
-# then using patch-package
+# Modifying dependency source files directly
+vim .venv/lib/python3.12/site-packages/some_lib/module.py
+# or editing node_modules/some-lib/dist/index.js
+# then using a patching tool to persist changes
 ```
 
 **Why it's bad:**
-- Breaks on `npm install`
-- Hard to maintain
+- Breaks when dependencies reinstall
+- Hard to maintain and track
 - Unclear to other developers
 - May conflict with library updates
+- Not reproducible across environments
 
 ### ✅ Good: Using Official APIs
 
-```typescript
-// Check the library's exports
-import { configure } from 'some-lib';
+```python
+# Check the library's documentation for configuration
+from some_lib import configure
 
-// Use the official configuration API
-configure({
-  customBehavior: true,
-  option: 'value'
-});
+# Use the official configuration API
+configure(
+    custom_behavior=True,
+    option='value'
+)
 ```
 
-### ❌ Bad: Bypassing Type Errors
+### ❌ Bad: Suppressing Type/Lint Errors
 
-```typescript
-// @ts-ignore
-const result = unsafeOperation();
+```python
+# type: ignore
+result = unsafe_operation()
+
+# Or in other languages:
+# @ts-ignore, #[allow(clippy::all)], //nolint, etc.
 ```
 
 **Why it's bad:**
-- Hides real type issues
+- Hides real type/safety issues
 - Makes refactoring dangerous
-- No IDE support
+- Loses tooling support
+- Technical debt accumulates
 
 ### ✅ Good: Fixing the Root Cause
 
-```typescript
-// Properly type the operation
-const result: ExpectedType = safeOperation();
+```python
+# Properly type the operation
+result: ExpectedType = safe_operation()
 
-// Or if types are genuinely wrong, contribute to DefinitelyTyped
-// Or create proper type declarations
+# Or if types are genuinely wrong, contribute fixes upstream
+# Or create proper type stubs/declarations
 ```
 
-### ❌ Bad: Skipping Git Hooks
+### ❌ Bad: Skipping Linters/Hooks
 
 ```bash
 git commit --no-verify -m "quick fix"
+# Or: pytest -x --no-cov
+# Or: eslint --no-inline-config
 ```
 
 **Why it's bad:**
-- Bypasses linting and tests
+- Bypasses quality checks
 - Can break CI
 - Creates technical debt
+- Defeats the purpose of automation
 
 ### ✅ Good: Fixing the Issue
 
 ```bash
 # Fix the linting error
-npm run lint -- --fix
+ruff check --fix .
+# Or: npm run lint -- --fix
+# Or: go fmt ./...
 
-# Or if the hook is genuinely wrong, update the hook configuration
-# Edit .pre-commit-config.yaml or .husky/ scripts
+# Or if the check is genuinely wrong, update the configuration
+# Edit .pre-commit-config.yaml, .eslintrc, pyproject.toml, etc.
 ```
 
 ## When Workarounds Are Acceptable
@@ -149,13 +163,13 @@ This problem-solving approach integrates with:
 ## Red Flags That Should Trigger Research
 
 If you find yourself:
-- Looking up how to patch `node_modules`
-- Searching for `patch-package` tutorials
-- Adding `@ts-ignore` comments
-- Using `--no-verify` flags
+- Looking up how to patch dependency directories
+- Searching for dependency patching tool tutorials
+- Adding error suppression comments
+- Using skip/bypass flags for quality tools
 - Modifying vendored dependencies
-- Copying code from `node_modules` into your project
-- Writing wrappers to bypass type checking
+- Copying code from dependencies into your project
+- Writing wrappers to bypass safety checks
 
 **STOP.** Go back to step 1: Check for official APIs.
 
@@ -165,12 +179,12 @@ If you find yourself:
 
 **Bad:** "I'll just patch this file quickly."
 
-**Good:** "This type error indicates a real problem. Let me understand what's wrong."
+**Good:** "This error indicates a real problem. Let me understand what's wrong."
 
-**Bad:** "I'll just use `any` to make it compile."
+**Bad:** "I'll just suppress this error to make it compile."
 
 **Good:** "The pre-commit hook caught a real issue. Let me fix it."
 
-**Bad:** "I'll use `--no-verify` to commit faster."
+**Bad:** "I'll use --no-verify to commit faster."
 
 Proper solutions take slightly more time upfront but save massive time in maintenance, debugging, and onboarding.
