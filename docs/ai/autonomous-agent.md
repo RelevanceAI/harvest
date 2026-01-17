@@ -351,9 +351,9 @@ Brainstorm with user: "Two approaches: (1) LLM-based or (2) keyword matching?"
 User clarifies: "LLM-based, use Fast Model"
   ↓
 Draft hierarchical plan:
-  Task 1: Core classifier logic (45 min)
-  Task 2: Slack integration (30 min)
-  Task 3: Testing & validation (40 min)
+  Task 1: Core classifier logic
+  Task 2: Slack integration
+  Task 3: Testing & validation
   ↓
 Gemini review: "Approach sound, consider edge case: ambiguous messages"
 Address BLOCKER: Add confidence scoring + fallback
