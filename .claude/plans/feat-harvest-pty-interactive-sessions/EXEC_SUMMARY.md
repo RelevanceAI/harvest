@@ -121,33 +121,36 @@ graph TD
 
 ## Complete System Architecture
 
-**End-to-end flow showing all components from user input to code execution:**
+**End-to-end flow showing all components from user input to code execution, including secrets hand-off:**
 
 ```mermaid
 graph TD
-    subgraph "External Triggers"
-        A1[Chat UI]
+    subgraph "User Entry Points"
+        A0[Relevance Workforce<br/>Chat Interface]
+        A1[Direct Chat UI]
         A2[Slack Bot]
         A3[GitHub Webhooks]
     end
 
     subgraph "Relevance Infrastructure"
+        B0[Project Keys DB<br/>Encrypted]
         B1[TriggerRunner]
         B2[ConversationManager]
         B3[BackgroundCoderPresetAgent]
     end
 
     subgraph "Harvest Runtime TypeScript"
-        C1[HarvestRuntime.ts]
-        C2[Spawn Python Subprocess]
+        C1[HarvestRuntime.ts<br/>GetUserProjectKey]
+        C2[Spawn Python Subprocess<br/>--github-token<br/>--claude-token]
     end
 
     subgraph "harvest-client Python"
-        D1[HarvestClient]
-        D2[Modal API Call]
+        D1[HarvestClient<br/>CLI args]
+        D2[Modal API Call<br/>+ credentials]
     end
 
     subgraph "Modal Container HarvestSandbox"
+        E0[modal.Secret.from_dict<br/>ENV vars]
         E1[PTY Manager]
         E2[asyncio.Queue]
         E3[Stop Hook Detection]
@@ -155,8 +158,8 @@ graph TD
     end
 
     subgraph "Claude Code CLI"
-        F1[Interactive Session]
-        F2[MCP Servers]
+        F1[Interactive Session<br/>CLAUDE_CODE_OAUTH_TOKEN]
+        F2[MCP Servers<br/>GITHUB_TOKEN, etc.]
         F3[Tool Execution]
     end
 
@@ -167,6 +170,7 @@ graph TD
         G4[Git Operations]
     end
 
+    A0 --> B1
     A1 --> B1
     A2 --> B1
     A3 --> B1
@@ -191,24 +195,39 @@ graph TD
 
     F1 -.->|stdout stream| C2
     C2 -.->|yield chunks| B2
+    B2 -.->|toolviewer| A0
     B2 -.->|toolviewer| A1
+
+    B0 ==>|GetUserProjectKey| C1
+    C1 ==>|subprocess args| C2
+    C2 ==>|CLI args| D1
+    D1 ==>|Modal API| D2
+    D2 ==>|secrets| E0
+    E0 ==>|env vars| F1
+    E0 ==>|env vars| F2
 
     style E1 fill:#e1f5ff
     style F1 fill:#fff4e1
     style E3 fill:#ffe1e1
     style B2 fill:#e8f5e9
+    style B0 fill:#fff3e0
+    style E0 fill:#fff3e0
 ```
 
 **Architecture layers:**
-- **External Triggers**: Chat UI, Slack, GitHub webhooks send user prompts
-- **Relevance Infrastructure**: Routes messages, manages conversations, streams output to UI
-- **Harvest Runtime**: TypeScript layer spawns Python subprocess
-- **harvest-client**: Thin Python wrapper calls Modal API
-- **Modal Container**: PTY manager, message queue, Stop hook detection, memory monitoring
-- **Claude CLI**: Interactive session with MCP servers for GitHub, Gemini, Linear, etc.
+- **User Entry Points**: Relevance Workforce (primary), direct Chat UI, Slack Bot, GitHub webhooks send user prompts
+- **Relevance Infrastructure**: Routes messages, manages conversations, streams output to UI, **stores encrypted project keys**
+- **Harvest Runtime**: TypeScript layer retrieves secrets via GetUserProjectKey, spawns Python subprocess with credentials
+- **harvest-client**: Thin Python wrapper receives credentials as CLI args, calls Modal API
+- **Modal Container**: Creates modal.Secret from credentials, injects as env vars, manages PTY/queue/hooks/memory
+- **Claude CLI**: Interactive session uses CLAUDE_CODE_OAUTH_TOKEN, MCP servers use GITHUB_TOKEN/etc.
 - **Bidirectional streaming**: Output flows back through all layers to Chat UI right pane
 
-**Key insight:** User prompt flows down (blue), Claude output streams back up (dotted), Stop hook signals completion (red)
+**Data flows:**
+- **User prompts** (solid lines): Flow down from triggers → Relevance → TypeScript → Python → Modal → Claude CLI
+- **Claude output** (dotted lines): Streams back up through all layers to Chat UI toolviewer
+- **Secrets** (thick arrows `==>`): Retrieved from encrypted DB → subprocess args → Modal API → env vars → Claude/MCP
+- **Stop hook** (red): `<<<CLAUDE_DONE>>>` marker signals completion, triggers next queued message
 
 ---
 
