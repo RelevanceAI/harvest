@@ -34,6 +34,8 @@ All agents follow these core rules:
 | **Verification** | `@docs/ai/shared/verification.md` | Smart verification (tests for logic, appropriate checks for non-logic) |
 | **Debugging** | `@docs/ai/shared/debugging.md` | Systematic debugging with failure escalation (fail-forward → systematic → panic) |
 | **Finishing Workflow** | `@docs/ai/shared/finishing-workflow.md` | 4-option completion framework with test verification gate |
+| **Pull Requests** | `@docs/ai/shared/pull-requests.md` | PR structure, review responses, conventions |
+| **Linear Issues** | `@docs/ai/shared/linear-issues.md` | Clean, scannable issues; when to create vs update; AI attribution |
 
 ---
 
@@ -65,7 +67,7 @@ Harvest uses skills from the obra/superpowers framework. These are available via
 | Server | Purpose | When to Use | Documentation |
 |--------|---------|-------------|---------------|
 | **github** | GitHub API (PRs, issues) | Creating PRs, managing issues, checking CI | Built-in |
-| **linear** | Linear issue tracking | Linking to issues, updating progress | Built-in |
+| **linear** | Linear issue tracking | Creating/updating issues, linking PRs, managing project work | `@docs/ai/shared/linear-issues.md` |
 | **gemini** | Plan review & web research | Adversarial review of plans | `@docs/mcp/gemini.md` |
 | **context7** | Up-to-date code documentation | Current framework/library docs and examples | `@docs/mcp/context7.md` |
 | **playwright** | Browser automation | E2E testing, visual verification | `@docs/mcp/playwright.md` |
@@ -76,13 +78,12 @@ Harvest uses skills from the obra/superpowers framework. These are available via
 ### Quick Reference for Lightweight MCPs
 
 **Linear:**
-```python
-# Update an issue
-linear_update_issue(issueId="ENG-123", status="In Progress")
-
-# List issues assigned to you
-linear_list_issues(assignee="me")
-```
+See `@docs/ai/shared/linear-issues.md` for comprehensive guidance on:
+- When to create vs update issues
+- Issue templates (BUG/FEAT/TASK)
+- AI attribution (always use 🤖)
+- Avoiding duplicates
+- MCP tools reference
 
 **PostHog:**
 ```python
