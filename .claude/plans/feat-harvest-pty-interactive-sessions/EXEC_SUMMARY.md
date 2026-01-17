@@ -212,6 +212,96 @@ graph TD
 
 ---
 
+## Secrets & Credentials Hand-Off
+
+**Security-critical flow showing how API keys and tokens flow from Relevance to Modal sandbox:**
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Relevance
+    participant HarvestRuntime
+    participant harvest-client
+    participant Modal
+    participant Sandbox
+
+    User->>Relevance: Configure project keys
+    Note over Relevance: Stores in encrypted DB:<br/>github_access_token<br/>anthropic<br/>google (Gemini)
+
+    User->>Relevance: Send prompt
+    Relevance->>HarvestRuntime: Invoke with conversation_id
+    HarvestRuntime->>Relevance: GetUserProjectKey(projectId, "github_access_token")
+    Relevance-->>HarvestRuntime: ghp_xxxxx
+    HarvestRuntime->>Relevance: GetUserProjectKey(projectId, "anthropic")
+    Relevance-->>HarvestRuntime: oauth_xxxxx
+    HarvestRuntime->>Relevance: GetUserProjectKey(projectId, "google")
+    Relevance-->>HarvestRuntime: AIza_xxxxx (optional)
+
+    HarvestRuntime->>harvest-client: subprocess spawn with:<br/>--github-token ghp_xxxxx<br/>--claude-token oauth_xxxxx<br/>--gemini-key AIza_xxxxx
+    Note over harvest-client: CLI args (process.argv)
+
+    harvest-client->>Modal: API call with credentials
+    Note over Modal: Creates modal.Secret.from_dict({<br/>  GITHUB_TOKEN: "ghp_xxxxx",<br/>  CLAUDE_CODE_OAUTH_TOKEN: "oauth_xxxxx",<br/>  GEMINI_API_KEY: "AIza_xxxxx"<br/>})
+
+    Modal->>Sandbox: Inject as environment variables
+    Note over Sandbox: Secrets available to:<br/>- Claude CLI (CLAUDE_CODE_OAUTH_TOKEN)<br/>- MCP servers (GITHUB_TOKEN, etc.)<br/>- Git operations (GITHUB_TOKEN)
+
+    Sandbox-->>Modal: Session complete
+    Modal-->>harvest-client: Response stream
+    harvest-client-->>HarvestRuntime: stdout chunks
+    HarvestRuntime-->>Relevance: yield chunks
+    Relevance-->>User: Display in Chat UI
+```
+
+**Credential mapping:**
+
+| Harvest Requires | Relevance Has | Retrieval Method | Required? |
+|---|---|---|---|
+| `github_token` | `github_access_token` | `GetUserProjectKey(projectId, "github_access_token", false)` | ✅ Yes |
+| `claude_oauth_token` | `anthropic` | `GetUserProjectKey(projectId, "anthropic", false)` | ✅ Yes |
+| `gemini_api_key` | `google` | `GetUserProjectKey(projectId, "google", false)` | Optional |
+| `sentry_auth_token` | - | To be added to project keys | Optional |
+| `linear_api_key` | OAuth only | To be added to project keys | Optional |
+
+**Security measures:**
+- ✅ Secrets stored encrypted in Relevance database
+- ✅ Retrieved per-request (no caching in application layer)
+- ✅ Passed via process args (not environment variables in Node.js layer)
+- ✅ Modal secrets isolated per sandbox (no cross-contamination)
+- ✅ Secrets auto-destroyed when sandbox terminates
+- ✅ No secrets logged or written to disk
+- ⚠️ Process args visible in `ps` output (mitigated: Modal containers isolated, short-lived)
+
+**Code reference (from Phase 3 implementation):**
+```typescript
+// apps/nodeapi/src/agent/preset_agents/background_coder/harvest_runtime.ts
+export const HarvestRuntime = async (convo: ConversationManager) => {
+  const projectId = convo.a.project as string;
+
+  // Retrieve credentials
+  const githubToken = await GetUserProjectKey(projectId, "github_access_token", false);
+  const claudeToken = await GetUserProjectKey(projectId, "anthropic", false);
+  const geminiKey = await GetUserProjectKey(projectId, "google", false);
+
+  if (!githubToken || !claudeToken) {
+    throw new Error("GitHub and Anthropic tokens required. Add to project secrets.");
+  }
+
+  // Spawn harvest-client with credentials
+  const harvestProcess = spawn("python", [
+    "-m", "harvest_client",
+    "--session-id", conversationId,
+    "--github-token", githubToken,
+    "--claude-token", claudeToken,
+    ...(geminiKey ? ["--gemini-key", geminiKey] : []),
+  ]);
+
+  // Stream output...
+};
+```
+
+---
+
 ## Critical Implementation Files
 
 If approved, Phase 1 focuses on these 5 files:
