@@ -29,24 +29,46 @@ All shared rules from `@docs/ai/shared/*.md` apply (loaded via baked rule files 
 
 Harvest operates in two distinct sessions for complex tasks:
 
-### Session 1: Research + Planning (Interactive Where Needed)
+### Session 1: Research + Planning (Get It Right)
 
-1. **Complexity Evaluation**: Use `@docs/ai/shared/complexity-heuristic.md` to decide if brainstorming is needed
-2. **Interactive Brainstorming** (if complex): Use `/superpowers:brainstorming` to explore approaches with user
-3. **Autonomous Plan Writing**: Create hierarchical plan with 5-10 high-level tasks (see `@docs/ai/shared/planning.md`)
-4. **Optional Gemini Review**: Use adversarial review for validation
-5. **Create [PLAN] PR**: Submit plan for human approval
-6. **Session ends**: Wait for human approval
+**CRITICAL:** Planning quality > speed. Handoff context may be incomplete. If you need human interaction, use it.
+
+**For complex/unclear tasks:**
+1. **Research thoroughly**: Understand the problem, constraints, edge cases
+2. **Interactive brainstorming**: Use `/superpowers:brainstorming` to explore approaches with user
+3. **Ask clarifying questions**: If requirements are ambiguous, ask via Slack/brainstorming
+4. **Draft hierarchical plan**: 5-10 high-level tasks (see `@docs/ai/shared/planning.md`)
+5. **Adversarial review**: Use Gemini MCP for plan validation (see `@docs/mcp/gemini.md`)
+6. **Create [PLAN] PR**: Submit for human approval
+7. **Wait for approval**: If rejected, iterate on plan with feedback and repeat from step 4
+
+**For simple/clear tasks:**
+1. **Autonomous planning**: If handoff has everything, plan independently
+   - **If complexity emerges**: Switch to complex task flow (research + brainstorming)
+2. **Skip brainstorming**: No need for interaction on straightforward tasks
+3. **Adversarial review**: Use Gemini MCP to validate plan autonomously
+4. **Create [PLAN] PR**: Submit for approval
+5. **Wait for approval**: If rejected, iterate on plan with feedback and repeat from step 1
+
+**Guiding principle:** Better to ask during Session 1 than guess. Get the plan right.
 
 ### Session 2: Execution (Fully Autonomous)
+
+**No interaction.** Approved plan, autonomous execution, fail-forward.
 
 1. **Load approved plan**: Read from `.claude/plans/[branch]/`
 2. **Execute tasks**: Break down high-level tasks into 2-5 min subtasks dynamically
 3. **Verification**: Follow `@docs/ai/shared/verification.md` guidelines
-4. **Debugging**: Use `@docs/ai/shared/debugging.md` escalation hierarchy
+4. **Debugging**: Use `@docs/ai/shared/debugging.md` escalation hierarchy (3 attempts to fix)
 5. **Completion**: Use `@docs/ai/shared/finishing-workflow.md` for final steps
 6. **Memory updates**: Record patterns in ComplexityDecisions, VerificationPatterns, SuccessfulWorkflows
 7. **Session ends**: Post PR link or panic report to Slack
+
+**If unrecoverable error occurs:**
+- Attempt autonomous recovery (3 attempts per `@docs/ai/shared/debugging.md`)
+- If recovery fails: Hit Panic Button (see below)
+- Create checkpoint branch, post detailed error to Slack
+- Never abandon work - always preserve recovery point
 
 ## Executing Plans (Autonomous Mode)
 
@@ -64,46 +86,13 @@ Batch 2 complete: Updated 2 files. Continuing to batch 3...
 All batches complete. Using finishing-a-development-branch...
 ```
 
-## Task Lifecycle
-
-### 1. Session Startup
+## Session Startup
 
 - User sends `@harvest <task description>` in Slack
 - Classifier extracts repo + intent
 - If intent is ambiguous → quick-reply agent queries user in Slack
 - Once clarified → Modal sandbox spins up with full codebase
-- You wake up with task context and complete autonomy
-
-### 2. Research & Plan
-
-- **Read the codebase** to understand architecture and patterns
-- **Identify relevant code** (files, modules, existing solutions)
-- **Draft a plan** (what you'll change, why, how you'll validate)
-- **If uncertain**: Use Gemini for adversarial review of your plan
-
-**No back-and-forth with user.** You have the full codebase; use it.
-
-### 3. Implementation
-
-- **Code autonomously**: Write the solution, test it, iterate
-- **Follow project conventions**: Match existing patterns (naming, style, test structure)
-- **Commit frequently**: Use Safe-Carry-Forward snapshots before risky operations
-- **Test continuously**: Run tests after changes, fix failures immediately
-
-### 4. Validation
-
-- **Run full test suite**: Ensure nothing broke
-- **Verify success criteria**: Does the code solve the original task?
-- **Manual testing if needed**: Browser, API calls, edge cases
-- **Code review yourself**: Spot-check for issues, readability, maintainability
-
-### 5. Completion
-
-- **Squash commits**: Collapse WIP snapshots into one clean commit
-- **Push to GitHub**: Create branch, push changes
-- **Create PR**: Title, description, link to Linear if applicable
-- **Post to Slack**: "✅ Done! PR: [link]"
-- **Session ends**: All work is persisted in GitHub
+- You wake up with task context and enter Session 1 (Research + Planning)
 
 ## Git Workflow
 
@@ -333,41 +322,66 @@ This prevents unbounded accumulation of checkpoint branches.
 
 ## Comparison to Local Development
 
-| Aspect | Autonomous | Local (You + Claude) |
-|--------|-----------|------------|
-| **Decision-making** | Autonomous, no back-and-forth | Human judgment available |
-| **Error handling** | Fail-forward (3 attempts then Panic) | Debug carefully, iterate thoughtfully |
-| **Time pressure** | Complete the loop efficiently | No time pressure |
-| **Escalation** | Post to Slack when stuck | Ask human directly |
-| **Code review** | Self-review before push | Can ask for human feedback |
+| Aspect | Autonomous (Session 1) | Autonomous (Session 2) | Local (You + Claude) |
+|--------|------------------------|------------------------|----------------------|
+| **Interaction** | Interactive if needed (brainstorm, clarify) | No interaction | Human judgment always available |
+| **Decision-making** | Get plan right, ask if unclear | Autonomous, fail-forward | Iterative with human |
+| **Planning** | CRITICAL - quality > speed | Execute approved plan | Flexible, can revise |
+| **Error handling** | Can ask for clarification | Fail-forward (3 attempts then Panic) | Debug carefully with human |
+| **Escalation** | Ask via brainstorming/Slack | Post to Slack when stuck | Ask human directly |
 
-**The rules are identical. The context differs.** You have full autonomy and must complete end-to-end. You + Claude have human judgment and can take time to think.
+**Key differences:**
+- **Autonomous Session 1:** Interaction ENCOURAGED to get plan right
+- **Autonomous Session 2:** Fully autonomous execution of approved plan
+- **Local:** Human available throughout, no session separation
 
-## Example: Complete Workflow
+## Example: Complete Two-Session Workflow
 
+**Session 1 (Research + Planning):**
 ```
-Session Starts
+Session 1 Starts
   ↓
 Read task: "Add repo classifier to Slack bot"
   ↓
 Research codebase: Find existing classifier patterns, Slack integration
   ↓
-Draft plan: "I'll add function classify(message) in src/classifier.ts
-                that uses Fast Model to pick repo from 10 options"
+Complexity check: Medium complexity → Interactive brainstorming
   ↓
-Gemini review: "Your approach is good but consider edge case of ambiguous messages"
+Brainstorm with user: "Two approaches: (1) LLM-based or (2) keyword matching?"
+User clarifies: "LLM-based, use Fast Model"
   ↓
-Implement: Write classifier, add tests, iterate until tests pass
+Draft hierarchical plan:
+  Task 1: Core classifier logic (45 min)
+  Task 2: Slack integration (30 min)
+  Task 3: Testing & validation (40 min)
   ↓
-Validate: Run full test suite, manual testing with sample messages
+Gemini review: "Approach sound, consider edge case: ambiguous messages"
+Address BLOCKER: Add confidence scoring + fallback
+  ↓
+Create [PLAN] PR with updated plan
+  ↓
+Session 1 Ends → Wait for human approval
+```
+
+**Session 2 (Execution - After Plan Approved):**
+```
+Session 2 Starts
+  ↓
+Load approved plan from .claude/plans/feat-classifier/plan_*.md
+  ↓
+Execute Task 1: Write classifier, add tests, iterate until passing
+  ↓
+Execute Task 2: Add to Slack bot, test integration
+  ↓
+Execute Task 3: Run full suite, manual testing
   ↓
 Commit: git reset --soft, clean commit message
   ↓
-Push: Create PR with clear description
+Push: Create implementation PR
   ↓
 Slack: "✅ Classifier added. PR: github.com/RelevanceAI/harvest/pull/42"
   ↓
-Session Ends (work persists in GitHub)
+Session 2 Ends
 ```
 
-Simple. Complete. Autonomous.
+**Key:** Session 1 = Get plan right (interactive OK). Session 2 = Execute autonomously (no interaction).
