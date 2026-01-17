@@ -8,7 +8,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cat \"$CLAUDE_PROJECT_DIR/.claude/CLAUDE.md\""
+            "command": "cat \"$CLAUDE_PROJECT_DIR/.claude/claude.md\""
           },
           {
             "type": "command",
