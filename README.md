@@ -12,10 +12,10 @@ Harvest is a background coding agent service built on the architecture that powe
 
 | Component | Status | Documentation |
 |-----------|--------|---------------|
-| **Modal Sandboxes** | ✅ Production | [`packages/modal-executor/`](packages/modal-executor/) |
-| **Claude CLI Integration** | ✅ Production | [`docs/ai/`](docs/ai/) |
-| **Git Workflow** | ✅ Production | [`docs/ai/shared/git-workflow.md`](docs/ai/shared/git-workflow.md) |
-| **MCP Servers** | ✅ Production | [MCP table](#mcp-servers) |
+| **Modal Sandboxes** | ✅ Ready | [`packages/modal-executor/`](packages/modal-executor/) |
+| **Claude CLI Integration** | ✅ Ready | [`docs/ai/`](docs/ai/) |
+| **Git Workflow** | ✅ Ready | [`docs/ai/shared/git-workflow.md`](docs/ai/shared/git-workflow.md) |
+| **MCP Servers** | ✅ Ready | [MCP table](#mcp-servers) |
 | **PTY Interactive Sessions** | 🚧 In Progress | [EXEC_SUMMARY.md](.claude/plans/feat-harvest-pty-interactive-sessions/EXEC_SUMMARY.md) |
 | **API Layer** | ⏳ Planned | [`docs/plans/IMPLEMENTATION_PLAN.md`](docs/plans/IMPLEMENTATION_PLAN.md) |
 | **Slack/Web Client** | ⏳ Planned | [`docs/plans/IMPLEMENTATION_PLAN.md`](docs/plans/IMPLEMENTATION_PLAN.md) |
