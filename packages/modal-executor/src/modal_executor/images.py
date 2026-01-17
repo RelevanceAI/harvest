@@ -135,6 +135,8 @@ _base_image = (
     .run_commands(
         # GitHub - repo operations (also have gh CLI)
         "npm install -g @anthropic-ai/mcp-server-github@latest || true",
+        # Linear - issue tracking and project management
+        "npm install -g @modelcontextprotocol/server-linear || true",
         # Gemini - plan review & web research
         "npm install -g @houtini/gemini-mcp || true",
         # Sentry - error tracking
@@ -223,7 +225,7 @@ def get_base_image() -> modal.Image:
     - Playwright with Chromium for browser automation
     - Claude Code CLI for AI agent operation
     - All required MCP servers (memory, filesystem, playwright, devtools)
-    - Optional MCP servers (github, gemini, sentry, context7)
+    - Optional MCP servers (github, linear, gemini, sentry, context7)
     - GitHub CLI for repository operations
 
     Returns:
