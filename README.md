@@ -120,19 +120,6 @@ This repository uses a structured documentation approach:
 | `docs/plans/` | Developers | Implementation plans and current work |
 | `docs/architecture/` | Developers | Technical documentation |
 
-### LLM-Accessible Documentation
-
-**Documentation Index** (`llms.txt`):
-- Emerging standard for LLM-accessible documentation
-- Categorized index of all markdown documentation
-- Enables efficient documentation discovery by LLMs
-- Useful for both AI tools and human developers
-
-**Claude Code Configuration** (`.claude/claude.md`):
-- Shared base rules for all contexts
-- MCP server integration
-- Loaded alongside context-specific extensions
-
 ### AI Agent Architecture
 
 Harvest uses a **shared base + mode-specific extensions** architecture with complete separation between local and autonomous modes.
@@ -415,16 +402,6 @@ context = state.build_context_prompt("What did you change?")
 # Returns: "Previous conversation:\nuser: Fix the bug\nassistant: I fixed it by...\n\nUser: What did you change?"
 ```
 
-### Git Workflow
-
-Harvest follows a strict git workflow (see `docs/ai/shared/git-workflow.md`):
-
-- **Never** uses `git pull` or `git stash`
-- Uses **Safe-Carry-Forward** pattern with snapshot commits
-- Creates **checkpoint branches** before risky operations
-- Commits attributed with `Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>`
-- Squashes WIP commits before pushing clean history
-
 ### Security Model
 
 **Credential Management**:
@@ -438,13 +415,6 @@ Harvest follows a strict git workflow (see `docs/ai/shared/git-workflow.md`):
 - Each session gets isolated Modal sandbox
 - No cross-session data leakage
 - Sandboxes terminated after session completion
-
-**MCP Servers**:
-- **GitHub**: PR creation, issue management, code search
-- **Linear**: Issue tracking and progress updates
-- **Gemini**: Adversarial plan review and web research
-- **Context7**: Up-to-date framework/library documentation and code examples
-- **Chrome/DevTools**: Browser automation and visual testing
 
 ### MCP Servers Configuration
 
