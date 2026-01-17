@@ -10,17 +10,20 @@ import pytest
 class TestAgentConfig:
     """Tests for agent configuration files."""
 
-    def test_agents_md_has_key_sections(self):
-        """Test AGENTS.md has required instruction sections."""
-        agents_path = (
-            Path(__file__).parent.parent / "src/modal_executor/config/AGENTS.md"
-        )
-        content = agents_path.read_text()
+    def test_autonomous_agent_md_has_key_sections(self):
+        """Test autonomous-agent.md has required instruction sections."""
+        from modal_executor.images import _ROOT_DIR
 
-        assert "Git Workflow" in content
-        assert "Safe-Carry-Forward" in content
-        assert "Panic Button" in content
-        assert "MCP Servers" in content
+        autonomous_path = _ROOT_DIR / "docs" / "ai" / "autonomous-agent.md"
+        content = autonomous_path.read_text()
+
+        # Check for key autonomous agent concepts and structure
+        assert "Autonomous" in content, "Should mention autonomous operation"
+        assert "Modal" in content, "Should reference Modal sandbox environment"
+        assert (
+            "Execute" in content or "execute" in content
+        ), "Should emphasize execution autonomy"
+        assert "@docs/ai/shared/" in content, "Should reference shared rules"
 
     def test_memory_seed_json_valid(self):
         """Test memory-seed.json has required entities."""
