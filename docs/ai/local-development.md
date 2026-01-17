@@ -16,6 +16,35 @@ All shared rules from `@docs/ai/shared/*.md` apply (loaded via `.claude/CLAUDE.m
 - **chrome**: Browser automation for testing UI changes
 - **gemini**: Plan review and adversarial analysis
 
+## Workspace Isolation (Git Worktrees)
+
+**Problem:** Multiple Claude instances on the same repo cause conflicts (file changes, git state, test runs).
+
+**Solution:** Use git worktrees to create isolated workspaces for each feature.
+
+**When to use:**
+- Starting new feature work (especially if other Claude instances might be running)
+- Complex changes that need dedicated workspace
+- When you want to preserve main branch state while experimenting
+
+**When NOT to use:**
+- Quick fixes on existing branches
+- Documentation-only changes
+- You're confident only one Claude instance is active
+
+**How to set up:**
+
+Use the `/superpowers:using-git-worktrees` skill, which will:
+1. Create isolated workspace at `.worktrees/<branch-name>/`
+2. Verify `.worktrees` is in `.gitignore` (already configured for Harvest)
+3. Run `npm install` and baseline tests
+4. Report ready when clean
+
+**Harvest-specific notes:**
+- This is **LOCAL MODE ONLY** - autonomous agents run in isolated Modal sandboxes
+- Worktrees are already configured for this repo (`.worktrees/` directory exists)
+- Cleanup happens via `/superpowers:finishing-a-development-branch` skill
+
 ## Workflow
 
 ### 1. Before You Start
