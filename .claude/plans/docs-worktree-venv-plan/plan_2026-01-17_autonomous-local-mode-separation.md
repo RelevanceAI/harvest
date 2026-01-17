@@ -31,10 +31,11 @@ Mode Extensions (loaded based on context)
 
 ### BLOCKER Concerns Addressed
 
-1. **Repo Override Mechanism Undefined** ✅
-   - Added comprehensive "Repo Override Mechanism" section explaining how autonomous agents load overrides
-   - Documented merge behavior (baked defaults + optional repo overrides)
-   - Provided example use cases and repo override file structure
+1. **Simplified Architecture** ✅
+   - Removed repo-specific override mechanism for clarity
+   - Autonomous agent loads only baked files from `/app/`
+   - No runtime file resolution or conditional loading
+   - Simple, predictable behavior
 
 2. **Missing Comprehensive Codebase Scan** ✅
    - Added Task 2: "Comprehensive Codebase Scan for References"
@@ -75,7 +76,7 @@ The plan acknowledges these concerns to be monitored during implementation:
 
 3. **Template file uses `{repo}` placeholder** - `packages/modal-executor/src/modal_executor/config/settings.json.template` has misleading placeholders because actual code in `sandbox.py` uses `self.session.repo_path` at runtime.
 
-4. **References break for other repos** - `@docs/ai/shared/*.md` references work when Harvest is cloned but fail when autonomous agent works on other repos (they don't have these files). Rules need to be baked into the image.
+4. **@ references need baked files** - `@docs/ai/shared/*.md` references need the target files to exist. Since autonomous agent may not have these files in the repo being worked on, rules need to be baked into the Modal image at `/app/`.
 
 ### Industry Research Findings
 
@@ -120,12 +121,11 @@ Research into how companies like Ramp, Vercel, and others handle containerized A
 2. SessionStart: `docs/ai/local-development.md` (local extensions)
 3. References resolve to local files in repo
 
-**Autonomous Agent (Modal sandbox, works on OTHER repos only):**
+**Autonomous Agent (Modal sandbox):**
 1. Container working directory: `/app/` (set via WORKDIR in Dockerfile)
 2. SessionStart: `/app/CLAUDE.md` (shared base with relative `@docs/` paths - baked as-is)
 3. SessionStart: `/app/autonomous-agent.md` (Harvest extensions - baked as-is)
-4. SessionStart (optional): `{repo}/docs/ai/autonomous-agent.md` (repo-specific overrides if exists)
-5. Relative `@docs/` references resolve from `/app/` to `/app/docs/ai/shared/*.md` and `/app/docs/mcp/*.md`
+4. Relative `@docs/` references resolve from `/app/` to `/app/docs/ai/shared/*.md` and `/app/docs/mcp/*.md`
 
 **Files Baked Into Image:**
 - `/app/CLAUDE.md` (no transformation - keeps relative `@docs/` paths)
@@ -141,43 +141,8 @@ Research into how companies like Ramp, Vercel, and others handle containerized A
 - ✅ CLAUDE.md = shared base (keep for compaction workaround)
 - ✅ Mode files = extensions (not routers, not duplicates)
 - ✅ No cross-references between local-development.md ↔ autonomous-agent.md
-- ✅ Harvest development = local only (no autonomous agent on Harvest itself)
-- ✅ Autonomous agent = other repos only (uses baked Harvest rules)
-
-### Repo Override Mechanism (Autonomous Mode)
-
-**How it works:**
-1. **Default rules**: Harvest's `docs/ai/autonomous-agent.md` is baked into Modal image at `/app/autonomous-agent.md`
-2. **Optional overrides**: After cloning the repo, `sandbox.py::_create_user_settings()` checks if `{repo}/docs/ai/autonomous-agent.md` exists
-3. **Load order**:
-   - First: `/app/autonomous-agent.md` (always loaded)
-   - Second: `{repo}/docs/ai/autonomous-agent.md` (loaded if exists via conditional bash command)
-4. **Merge behavior**: Claude CLI concatenates both files in SessionStart output, with repo overrides appearing after defaults (allowing repos to extend or override instructions)
-
-**Use cases for repo overrides:**
-- Repo-specific workflows (e.g., "Always run `npm run build` before committing")
-- Additional verification steps (e.g., "Check API compatibility with Python client")
-- Custom git hooks or branch policies
-- Project-specific coding standards
-
-**Example repo override** (`harvest/docs/ai/autonomous-agent.md`):
-```markdown
-# Harvest-Specific Agent Overrides
-
-## Pre-commit Requirements
-
-Before creating commits in Harvest:
-1. Run `uv run pytest packages/modal-executor/tests/ -v`
-2. Run `.venv/bin/black` on all modified Python files
-3. Verify no secrets in `.env` files
-
-## Branch Naming
-
-Always use prefixes:
-- `feat/` for features
-- `fix/` for bug fixes
-- `docs/` for documentation
-```
+- ✅ Autonomous agent uses baked Harvest rules from Modal image
+- ✅ Simple architecture: load two files from `/app/`, no overrides
 
 ---
 
@@ -674,14 +639,11 @@ async def _create_user_settings(self) -> None:
     SessionStart hooks load (in order):
     1. /app/CLAUDE.md (Harvest shared base rules, baked into image)
     2. /app/autonomous-agent.md (Harvest autonomous extensions, baked into image)
-    3. {repo}/docs/ai/autonomous-agent.md (repo-specific overrides, if exists)
 
     This follows the shared base + extensions architecture where CLAUDE.md provides
     common rules for all modes, and autonomous-agent.md adds full-autonomy workflows.
     """
-    # Build SessionStart hooks with absolute paths
-    repo_autonomous_md = f"{self.session.repo_path}/docs/ai/autonomous-agent.md"
-
+    # Build SessionStart hooks with absolute paths to baked files
     hooks = [
         # Load Harvest's shared base rules (baked into image)
         {
@@ -694,12 +656,6 @@ async def _create_user_settings(self) -> None:
             "type": "command",
             "comment": "Load Harvest autonomous agent extensions from image",
             "command": "cat /app/autonomous-agent.md",
-        },
-        # Optionally load repo-specific overrides if they exist
-        {
-            "type": "command",
-            "comment": "Load repo-specific autonomous-agent.md overrides (if exists)",
-            "command": f"[ -f {repo_autonomous_md} ] && cat {repo_autonomous_md} || true",
         },
     ]
 ```
@@ -723,10 +679,9 @@ os.chdir('/app')
 
 ### Step 3: Verify hook structure
 
-The updated hooks should load exactly 3 files:
+The updated hooks should load exactly 2 files:
 1. `/app/CLAUDE.md` (shared base with relative `@docs/` paths)
 2. `/app/autonomous-agent.md` (autonomous extensions with relative `@docs/` paths)
-3. Optional repo overrides (if that repo has `docs/ai/autonomous-agent.md`)
 
 When Claude CLI runs from `/app/`, relative `@docs/` references resolve to `/app/docs/ai/shared/*.md` and `/app/docs/mcp/*.md`.
 
@@ -740,11 +695,11 @@ Expected: Tests should pass with new hook configuration
 
 ```bash
 git add packages/modal-executor/src/modal_executor/sandbox.py
-git commit -m "fix: update autonomous SessionStart hooks in sandbox
+git commit -m "fix: simplify autonomous SessionStart hooks in sandbox
 
-- Load /app/CLAUDE.md and /app/autonomous-agent.md from image
+- Load only /app/CLAUDE.md and /app/autonomous-agent.md from image
+- Remove repo-specific override mechanism for simplicity
 - Ensure working directory set to /app/ for relative path resolution
-- Optionally load repo-specific overrides
 - Files use relative @docs/ paths that resolve from /app/
 - Add clear docstring for hook behavior"
 ```
@@ -767,7 +722,7 @@ Edit `packages/modal-executor/src/modal_executor/config/settings.json.template`:
 {
   "__comment__": "DOCUMENTATION ONLY - This template shows the structure of settings.json",
   "__comment__": "Actual settings.json is generated at runtime in sandbox.py::_create_user_settings()",
-  "__comment__": "Paths use absolute runtime values (e.g., /workspace/harvest/docs/ai/autonomous-agent.md)",
+  "__comment__": "All rules are baked into Modal image at /app/",
 
   "permissions": {
     "allow": ["*"],
@@ -779,13 +734,13 @@ Edit `packages/modal-executor/src/modal_executor/config/settings.json.template`:
         "hooks": [
           {
             "type": "command",
-            "comment": "Load Harvest autonomous agent rules from image",
-            "command": "cat /app/autonomous-agent.md"
+            "comment": "Load Harvest shared base rules from image",
+            "command": "cat /app/CLAUDE.md"
           },
           {
             "type": "command",
-            "comment": "Load repo-specific overrides (path resolved at runtime)",
-            "command": "[ -f /workspace/<REPO_NAME>/docs/ai/autonomous-agent.md ] && cat /workspace/<REPO_NAME>/docs/ai/autonomous-agent.md || true"
+            "comment": "Load Harvest autonomous agent extensions from image",
+            "command": "cat /app/autonomous-agent.md"
           }
         ]
       }
@@ -806,12 +761,12 @@ Create or update comments in `packages/modal-executor/src/modal_executor/config/
 
 **Purpose:** Documentation reference showing the structure of the autonomous agent's Claude CLI settings.
 
-**Important:** This is NOT used at runtime. The actual `settings.json` is generated dynamically in `sandbox.py::_create_user_settings()` with runtime-resolved paths.
+**Important:** This is NOT used at runtime. The actual `settings.json` is generated dynamically in `sandbox.py::_create_user_settings()`.
 
 **Runtime behavior:**
-- `/app/autonomous-agent.md` is baked into the Modal image
-- Repo-specific path uses `session.repo_path` (e.g., `/workspace/harvest/docs/ai/autonomous-agent.md`)
-- Placeholders like `<REPO_NAME>` are for documentation only
+- All Harvest rules are baked into the Modal image at `/app/`
+- SessionStart hooks load `/app/CLAUDE.md` and `/app/autonomous-agent.md`
+- No repo-specific overrides - simple and predictable
 
 **Why template exists:**
 - Shows developers what settings structure looks like
@@ -832,10 +787,11 @@ assert (_CONFIG_DIR / "settings.json.template").exists()
 
 ```bash
 git add packages/modal-executor/src/modal_executor/config/settings.json.template packages/modal-executor/src/modal_executor/config/README.md packages/modal-executor/tests/test_images.py
-git commit -m "docs: clarify settings.json.template is documentation only
+git commit -m "docs: simplify settings.json.template
 
+- Remove repo-specific override mechanism
+- Show only 2 SessionStart hooks (CLAUDE.md + autonomous-agent.md)
 - Add comments explaining runtime generation
-- Replace {repo} with <REPO_NAME> for clarity
 - Document template purpose in README
 - Update test comments"
 ```
@@ -980,8 +936,10 @@ Search for references to AGENTS.md and update to autonomous-agent.md:
 
 ```markdown
 The Modal sandbox loads rules via SessionStart hooks:
-1. `/app/autonomous-agent.md` (baked into image from `docs/ai/autonomous-agent.md`)
-2. `{repo}/docs/ai/autonomous-agent.md` (repo overrides, if exists)
+1. `/app/CLAUDE.md` (shared base rules, baked into image)
+2. `/app/autonomous-agent.md` (autonomous extensions, baked into image)
+
+All rules are baked at build time - no runtime overrides.
 ```
 
 ### Step 4: Verify no broken links
@@ -1131,14 +1089,16 @@ Harvest uses a **two-mode architecture** with complete separation:
 **Entry Point:** Modal sandbox `sandbox.py::_create_user_settings()`
 
 **Loaded Files:**
-1. `/app/autonomous-agent.md` (baked into image from `docs/ai/autonomous-agent.md`)
-2. `{repo}/docs/ai/autonomous-agent.md` (repo overrides, optional)
+1. `/app/CLAUDE.md` (shared base, baked into image)
+2. `/app/autonomous-agent.md` (autonomous extensions, baked into image)
+
+**Working Directory:** `/app/` (set via WORKDIR)
 
 **Characteristics:**
 - Maximum autonomy
 - Execute without asking
 - Fail forward pattern
-- All shared rules loaded via `@docs/ai/shared/*.md` references
+- All shared rules loaded via `@docs/ai/shared/*.md` references (resolve from `/app/`)
 
 ## Shared Rules
 
