@@ -17,11 +17,6 @@
 - [Documentation Standards](docs/ai/shared/documentation.md): Update docs with changes, capture gotchas
 - [Pull Request Guidelines](docs/ai/shared/pull-requests.md): PR conventions and review standards
 
-## Context-Specific Rules
-
-- [Local Development Rules](docs/ai/local-development.md): Working locally with Claude CLI
-- [Autonomous Agent Rules](docs/ai/autonomous-agent.md): Background agent in Modal sandbox
-
 ## MCP Server Guides
 
 - [Gemini MCP](docs/mcp/gemini.md): Plan review and adversarial analysis workflows
