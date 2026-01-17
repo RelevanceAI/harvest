@@ -20,7 +20,7 @@ class TestBaseImage:
         assert _CONFIG_DIR.exists()
         assert (_CONFIG_DIR / "AGENTS.md").exists()
         assert (_CONFIG_DIR / "memory-seed.json").exists()
-        # settings.json.template is reference only, not baked into image
+        # Template is documentation only - actual settings generated at runtime
         assert (_CONFIG_DIR / "settings.json.template").exists()
 
 

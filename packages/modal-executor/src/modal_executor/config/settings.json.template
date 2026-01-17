@@ -1,4 +1,8 @@
 {
+  "__comment__": "DOCUMENTATION ONLY - This template shows the structure of settings.json",
+  "__comment__": "Actual settings.json is generated at runtime in sandbox.py::_create_user_settings()",
+  "__comment__": "All rules are baked into Modal image at /app/",
+
   "permissions": {
     "allow": ["*"],
     "defaultMode": "bypassPermissions"
@@ -9,17 +13,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cat /app/AGENTS.md"
+            "command": "cat /app/claude.md"
           },
           {
             "type": "command",
-            "comment": "Load repo's CLAUDE.md if exists (path injected at runtime)",
-            "command": "[ -f /workspace/{repo}/.claude/CLAUDE.md ] && cat /workspace/{repo}/.claude/CLAUDE.md || true"
-          },
-          {
-            "type": "command",
-            "comment": "Load repo's autonomous-agent.md if exists (path injected at runtime)",
-            "command": "[ -f /workspace/{repo}/docs/ai/autonomous-agent.md ] && cat /workspace/{repo}/docs/ai/autonomous-agent.md || true"
+            "command": "cat /app/autonomous-agent.md"
           }
         ]
       }
