@@ -302,22 +302,24 @@ See function signatures in Claude Code for full parameters.
 
 ## Common Mistakes
 
-❌ **Vague titles** - Be specific
-❌ **Creating duplicates** - Search first
-❌ **Missing repro steps** - Every bug needs them
-❌ **No acceptance criteria** - Features need clear "done" definition
-❌ **Chatty comments** - Be informative, not conversational
-❌ **Wrong priority** - Don't mark everything Urgent/High (use Medium as default)
-❌ **Stale descriptions** - Update when context changes
-❌ **Using priority labels** - Use the priority field, not labels
+**General:**
+- Vague titles - be specific about what/where
+- Creating duplicates - search first with `list_issues`
+- Missing repro steps - every bug needs them
+- No acceptance criteria - features need clear "done"
+- Chatty comments - be informative, not conversational
+- Stale descriptions - update when context changes
 
-### AI-Specific Pitfalls
+**Priority:**
+- Don't mark everything Urgent/High (default to Medium)
+- Use priority field (0-4), NOT labels
 
-❌ **Over-automation** - Don't create circular updates
-❌ **Insufficient search** - Leads to duplicates
-❌ **Acting on ambiguity** - Ask instead
-❌ **Losing context** - Read full issue before commenting
-❌ **Ignoring rate limits** - Batch operations when possible
+**AI-Specific:**
+- Insufficient search → duplicates
+- Acting on ambiguity → ask user first
+- Losing context → read full issue before commenting
+- Over-automation → circular updates
+- Ignoring rate limits → batch operations
 
 ---
 
