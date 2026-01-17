@@ -10,7 +10,7 @@ Linear issues are team communication tools, not dumping grounds. Keep them clean
 - Update before creating
 - Search before duplicating
 - Ask before acting if uncertain
-- Always prefix AI contributions with 🤖
+- Always prefix AI comments with 🤖
 
 **AI Boundaries:**
 - Never close issues without approval (except confirmed duplicates)
@@ -311,7 +311,7 @@ See function signatures in Claude Code for full parameters.
 
 ---
 
-## Decision Tree: Should I Act?
+## Decision Tree: Should I Act on Linear?
 
 ```
 Is info complete and unambiguous?
@@ -325,4 +325,4 @@ Is info complete and unambiguous?
               └─ YES → Create with confidence
 ```
 
-**When in doubt: Ask, don't act.**
+**For Linear actions: When in doubt, ask the user before creating/updating.**
