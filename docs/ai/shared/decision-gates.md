@@ -37,11 +37,14 @@ fi
 **Action if on protected branch:**
 1. STOP immediately - abort current action
 2. Report to user: "I'm on [$CURRENT_BRANCH]. I must create a feature branch first."
-3. Ask: "Should I create branch [suggested-name]?" (unless user already gave branch name)
-4. WAIT for explicit approval (or branch name)
-5. Create branch: `git checkout -b [name]`
-6. Verify: `git branch --show-current` confirms new branch
-7. Only then proceed with original action
+3. Follow `@docs/ai/shared/git-workflow.md` branch naming convention:
+   - Format: `<type>/<description>` (e.g., `feat/slack-classifier`, `fix/modal-context`)
+   - With Linear: `<type>/<linear-id>-<description>` (e.g., `feat/ENG-123-classifier`)
+4. Ask user: "Should I create branch [suggested-name]?"
+5. WAIT for explicit approval
+6. Create branch: `git checkout -b [approved-name]`
+7. Verify: `git branch --show-current` confirms new branch
+8. Only then proceed with original action
 
 **Under NO circumstances:**
 - Commit to main/master/develop
