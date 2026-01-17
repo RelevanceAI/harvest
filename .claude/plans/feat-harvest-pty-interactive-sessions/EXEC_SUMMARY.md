@@ -77,8 +77,28 @@ graph TD
 | Risk | Impact | Mitigation | Status |
 |------|--------|------------|--------|
 | **Memory leaks** (Claude CLI can leak tens of GBs) | High | 6GB container limit + 24hr session timeout + 5min idle timeout | ✅ Built-in safety |
-| **Stop hook doesn't fire** | High | 30min timeout fallback (assume done if no marker) | ✅ Graceful degradation |
+| **Stop hook doesn't fire** | High | Adaptive timeout: 2-5min with activity monitoring (CPU/memory/stdout heuristics) | ✅ Graceful degradation |
 | **Modal cold starts** | Medium | Memory snapshots reduce to <3s | ✅ Acceptable UX |
+
+### Timeout Strategy Details
+
+**Primary Timeouts:**
+- **Response start:** 2 minutes (Claude must begin responding)
+- **Idle stdout:** 60 seconds (maximum time between output)
+- **Total maximum:** 30 minutes (hard limit for overnight tasks)
+
+**Activity Monitoring:**
+- Monitor stdout for output every 10 seconds
+- Track last output timestamp
+- Warn user at 2 minutes if stalled
+- Terminate at 5 minutes if no activity
+
+**Progressive User Feedback:**
+1. 2min: "Claude appears to be taking longer than usual..."
+2. 5min: "No response detected. Terminating session..."
+3. User option to extend timeout for known long-running tasks
+
+This prevents the poor UX of 30-minute hangs while still supporting genuinely long-running operations.
 
 **Cost optimization:** 5-minute idle timeout terminates containers (saves ~80% compute cost vs always-on). Session can run up to 24 hours for overnight tasks like "refactor entire auth system."
 
@@ -86,16 +106,16 @@ graph TD
 
 ## 5. Implementation Phases
 
-**Phase 1: PTY Infrastructure** (Harvest repo, 1 week)
+**Phase 1: PTY Infrastructure** (Harvest repo)
 - Add `PTYWrapper` class for bidirectional communication
 - Implement Stop hook detection and message queue
 - Add memory monitoring and idle timeout
 
-**Phase 2: harvest-client Package** (3 days)
+**Phase 2: harvest-client Package**
 - Python subprocess wrapper for Relevance API consumption
 - Thin client that streams to stdout
 
-**Phase 3: Relevance Integration** (1 week)
+**Phase 3: Relevance Integration**
 - `BackgroundCoderPresetAgent` with `HarvestRuntime`
 - Cancel endpoint for mid-execution termination
 - Route through Relevance API (server-to-server, no CORS)
@@ -115,7 +135,7 @@ graph TD
 3. ✅ **Approve timeout strategy?**
    5min idle, 24hr session max (supports overnight work, saves cost)
 
-**Next step if approved:** Proceed with Phase 1 implementation (est. 1 week)
+**Next step if approved:** Proceed with Phase 1 implementation
 
 ---
 
@@ -300,6 +320,8 @@ sequenceDiagram
 - ✅ Secrets auto-destroyed when sandbox terminates
 - ✅ No secrets logged or written to disk
 
+**CRITICAL SECURITY NOTE:** Never use `...process.env` when spawning subprocesses. This exposes ALL parent environment variables (AWS credentials, database strings, internal API keys) to the subprocess. Always use explicit whitelisting.
+
 **Code reference (from Phase 3 implementation):**
 ```typescript
 // apps/nodeapi/src/agent/preset_agents/background_coder/harvest_runtime.ts
@@ -318,11 +340,12 @@ export const HarvestRuntime = async (convo: ConversationManager) => {
   // Spawn harvest-client with credentials as env vars
   const harvestProcess = spawn("python", ["-m", "harvest_client"], {
     env: {
-      ...process.env,
+      // Explicit whitelist - only pass required secrets
       SESSION_ID: conversationId,
       GITHUB_TOKEN: githubToken,
       CLAUDE_OAUTH_TOKEN: claudeToken,
       ...(geminiKey ? { GEMINI_API_KEY: geminiKey } : {}),
+      // NO process.env spreading - prevents credential leakage
     },
   });
 
@@ -350,6 +373,53 @@ If approved, Phase 1 focuses on these 5 files:
 
 5. **`apps/nodeapi/src/agent/preset_agents/background_coder/harvest_runtime.ts`**
    NEW file, spawn Python subprocess + stream to ConversationManager (~80 lines)
+
+---
+
+## Audit Findings & Future Optimizations
+
+**Audit Date:** 2026-01-17
+**Audit Tool:** Gemini 2.5 Flash (deep research, 7 iterations)
+**Audit Plan:** `@.claude/plans/dapper-coalescing-lamport.md`
+
+### Critical Issues Identified & Addressed
+
+1. ✅ **FIXED**: Environment variable inheritance vulnerability
+   - **Issue:** `...process.env` spreading exposed all parent secrets
+   - **Fix:** Explicit whitelisting in code examples (see line 322-328)
+   - **Impact:** Prevents AWS credentials, DB strings, internal keys from leaking to subprocess
+
+2. ✅ **FIXED**: 30-minute stop hook timeout
+   - **Issue:** Unacceptable UX for stalled sessions
+   - **Fix:** Adaptive 2-5 minute timeout with activity monitoring (see Risk Mitigation table)
+   - **Impact:** Better user experience, faster failure detection
+
+### Future Optimization Opportunity
+
+**Modal JavaScript SDK Alternative:**
+- **Discovery:** Modal provides `modal` npm package (v0.6.0, beta) with TypeScript support
+- **Benefit:** Could eliminate `harvest-client` Python subprocess entirely
+  - Simpler architecture (one less process boundary)
+  - Better TypeScript integration
+  - Explicit env var whitelisting enforced
+  - Reduced attack surface
+- **Unknown:** Real-time streaming support needs POC validation
+- **Status:** Deferred to future work (tracked in audit plan)
+- **Decision:** Proceed with current Python subprocess approach with security fixes applied
+
+**Compatibility Confirmed:**
+- ✅ Relevance-api-node runs Node.js 22 (Modal requires 22+)
+- ✅ TypeScript ES2022 with full async/await support
+- ✅ Existing Modal integration patterns (ModalRequestHandler.ts)
+- ✅ ConversationManager streaming infrastructure ready
+
+**POC Required Before Adoption:**
+1. Test `for await (const chunk of process.stdout)` pattern
+2. Verify <100ms latency for real-time streaming
+3. Confirm no buffering until completion
+4. Test abort/cancellation mid-stream
+
+See full audit at `@.claude/plans/dapper-coalescing-lamport.md` for details.
 
 ---
 
