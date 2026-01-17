@@ -12,7 +12,7 @@ Harvest is a background coding agent service built on the architecture that powe
 
 | Component | Status | Documentation |
 |-----------|--------|---------------|
-| **Modal Sandboxes** | ✅ Ready | [`packages/modal-executor/`](packages/modal-executor/) |
+| **Modal Sandboxes** | ⚠️ Ready (not fully tested) | [`packages/modal-executor/`](packages/modal-executor/) |
 | **Claude CLI Integration** | ✅ Ready | [`docs/ai/`](docs/ai/) |
 | **Git Workflow** | ✅ Ready | [`docs/ai/shared/git-workflow.md`](docs/ai/shared/git-workflow.md) |
 | **MCP Servers** | ✅ Ready | [MCP table](#mcp-servers) |
