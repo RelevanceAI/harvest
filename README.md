@@ -128,17 +128,17 @@ This repository uses a structured documentation approach:
 - Enables efficient documentation discovery by LLMs
 - Useful for both AI tools and human developers
 
-**Claude Code Configuration** (`.claude/CLAUDE.md`):
-- Project rules loaded into Claude's context
+**Claude Code Configuration** (`.claude/claude.md`):
+- Shared base rules for all contexts
 - MCP server integration
-- Context-aware rule loading (local dev vs. autonomous agent)
+- Loaded alongside context-specific extensions
 
 ### For AI Agents
 
-**Project Rules** (`.claude/CLAUDE.md`):
-- Context detection (local dev vs autonomous agent)
+**Shared Base Rules** (`.claude/claude.md`):
 - MCP tools index
-- Quick reference for shared rules
+- Quick reference to shared rules via @ references
+- Loaded in both local and autonomous modes
 
 **Shared Rules** (`docs/ai/shared/`):
 - `git-workflow.md` - Safe-Carry-Forward sync, checkpoints, squashing
@@ -222,7 +222,7 @@ cp .claude/settings.json.template .claude/settings.json
 ```
 
 **What this does:**
-- **SessionStart hook**: Automatically loads `.claude/CLAUDE.md` and `docs/ai/local-development.md` with project rules and local workflow guidance
+- **SessionStart hook**: Automatically loads `.claude/claude.md` (shared base) and `docs/ai/local-development.md` (local extensions) with project rules and workflow guidance
 - **Superpowers plugin**: Enables workflow skills for planning, debugging, and finishing work
 
 **Note**: `.claude/settings.json` is gitignored (local settings only). The template is committed for easy setup.

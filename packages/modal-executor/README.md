@@ -199,8 +199,12 @@ This prevents Claude from showing trust prompts when working with any repository
 ```
 /workspace/           # Repository root
   {repo-name}/        # Cloned repository
-/app/                 # Harvest config (read-only)
-  AGENTS.md           # Agent instructions
+/app/                 # Harvest config (baked into image)
+  claude.md           # Shared base rules
+  autonomous-agent.md # Autonomous mode extensions
+  docs/               # Referenced documentation
+    ai/shared/        # Shared rules (@docs/ai/shared/)
+    mcp/              # MCP server guides (@docs/mcp/)
   memory-seed.json    # Initial memory entities
 /root/
   .claude/            # Claude Code CLI config
@@ -258,16 +262,19 @@ The validation script is located at `scripts/validate_claude_cli.py` for easy di
 
 ## Configuration Files
 
-Configuration files are baked into the image:
+Configuration files are baked into the Modal image:
 
 **App Config** (`/app/`):
-- **AGENTS.md**: Agent instructions (git workflow, panic button, etc.)
+- **claude.md**: Shared base rules (loaded in both local and autonomous modes)
+- **autonomous-agent.md**: Autonomous mode extensions (full autonomy workflows)
+- **docs/ai/shared/**: Shared rules (@docs/ai/shared/ references)
+- **docs/mcp/**: MCP server documentation (@docs/mcp/ references)
 - **memory-seed.json**: Initial knowledge graph entities
 
 **Claude Settings** (`/root/.claude/`):
-- **settings.json**: Claude Code user settings (enables superpowers plugin)
+- **settings.json**: Generated at runtime in sandbox.py (enables superpowers plugin, loads /app/ rules via SessionStart hooks)
 
-See `src/modal_executor/config/` for the source files.
+See `src/modal_executor/config/` for source files and `.claude/claude.md` + `docs/ai/` for rule files.
 
 ## Environment Variables
 
