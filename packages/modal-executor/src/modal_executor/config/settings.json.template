@@ -10,6 +10,16 @@
           {
             "type": "command",
             "command": "cat /app/AGENTS.md"
+          },
+          {
+            "type": "command",
+            "comment": "Load repo's CLAUDE.md if exists (path injected at runtime)",
+            "command": "[ -f /workspace/{repo}/.claude/CLAUDE.md ] && cat /workspace/{repo}/.claude/CLAUDE.md || true"
+          },
+          {
+            "type": "command",
+            "comment": "Load repo's autonomous-agent.md if exists (path injected at runtime)",
+            "command": "[ -f /workspace/{repo}/docs/ai/autonomous-agent.md ] && cat /workspace/{repo}/docs/ai/autonomous-agent.md || true"
           }
         ]
       }

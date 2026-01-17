@@ -556,13 +556,29 @@ EOF
 
     async def _create_user_settings(self) -> None:
         """Create ~/.claude/settings.json with permissions, hooks, and plugins."""
+        # Build SessionStart hooks with absolute paths
+        # Repo is already cloned at this point, so we can reference repo_path
+        repo_claude_md = f"{self.session.repo_path}/.claude/CLAUDE.md"
+        repo_autonomous_md = f"{self.session.repo_path}/docs/ai/autonomous-agent.md"
+
+        hooks = [
+            # Always load Harvest's core agent instructions (baked into image)
+            {"type": "command", "command": "cat /app/AGENTS.md"},
+            # Load repo's CLAUDE.md if it exists
+            {
+                "type": "command",
+                "command": f"[ -f {repo_claude_md} ] && cat {repo_claude_md} || true",
+            },
+            # Load repo's autonomous-agent.md if it exists
+            {
+                "type": "command",
+                "command": f"[ -f {repo_autonomous_md} ] && cat {repo_autonomous_md} || true",
+            },
+        ]
+
         config = {
             "permissions": {"allow": ["*"], "defaultMode": "bypassPermissions"},
-            "hooks": {
-                "SessionStart": [
-                    {"hooks": [{"type": "command", "command": "cat /app/AGENTS.md"}]}
-                ]
-            },
+            "hooks": {"SessionStart": [{"hooks": hooks}]},
             "enabledPlugins": {"superpowers@claude-plugins-official": True},
         }
 
