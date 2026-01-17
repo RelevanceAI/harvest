@@ -555,25 +555,23 @@ EOF
         logger.debug("Created ~/.claude/.claude.json")
 
     async def _create_user_settings(self) -> None:
-        """Create ~/.claude/settings.json with permissions, hooks, and plugins."""
-        # Build SessionStart hooks with absolute paths
-        # Repo is already cloned at this point, so we can reference repo_path
-        repo_claude_md = f"{self.session.repo_path}/.claude/CLAUDE.md"
-        repo_autonomous_md = f"{self.session.repo_path}/docs/ai/autonomous-agent.md"
+        """Create ~/.claude/settings.json with permissions, hooks, and plugins.
 
+        SessionStart hooks load (in order):
+        1. /app/claude.md (Harvest shared base rules, baked into image)
+        2. /app/autonomous-agent.md (Harvest autonomous extensions, baked into image)
+
+        This follows the shared base + extensions architecture where claude.md provides
+        common rules for all modes, and autonomous-agent.md adds full-autonomy workflows.
+
+        Files use relative @docs/ paths that resolve from /app/ to baked documentation.
+        """
+        # Build SessionStart hooks with absolute paths to baked files
         hooks = [
-            # Always load Harvest's core agent instructions (baked into image)
-            {"type": "command", "command": "cat /app/AGENTS.md"},
-            # Load repo's CLAUDE.md if it exists
-            {
-                "type": "command",
-                "command": f"[ -f {repo_claude_md} ] && cat {repo_claude_md} || true",
-            },
-            # Load repo's autonomous-agent.md if it exists
-            {
-                "type": "command",
-                "command": f"[ -f {repo_autonomous_md} ] && cat {repo_autonomous_md} || true",
-            },
+            # Load Harvest's shared base rules (baked into image)
+            {"type": "command", "command": "cat /app/claude.md"},
+            # Load Harvest's autonomous agent extensions (baked into image)
+            {"type": "command", "command": "cat /app/autonomous-agent.md"},
         ]
 
         config = {
