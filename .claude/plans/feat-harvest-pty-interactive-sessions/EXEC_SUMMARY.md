@@ -119,21 +119,96 @@ graph TD
 
 ---
 
-## System Architecture
+## Complete System Architecture
+
+**End-to-end flow showing all components from user input to code execution:**
 
 ```mermaid
-graph LR
-    A[Chat UI] --> B[Relevance API]
-    B --> C[harvest-client subprocess]
-    C --> D[Modal: HarvestSandbox]
-    D --> E[Claude CLI PTY]
-    E --> F[Stop Hook Detection]
-    F --> G[asyncio.Queue]
-    G --> E
+graph TD
+    subgraph "External Triggers"
+        A1[Chat UI]
+        A2[Slack Bot]
+        A3[GitHub Webhooks]
+    end
 
-    style D fill:#e1f5ff
-    style E fill:#fff4e1
+    subgraph "Relevance Infrastructure"
+        B1[TriggerRunner]
+        B2[ConversationManager]
+        B3[BackgroundCoderPresetAgent]
+    end
+
+    subgraph "Harvest Runtime TypeScript"
+        C1[HarvestRuntime.ts]
+        C2[Spawn Python Subprocess]
+    end
+
+    subgraph "harvest-client Python"
+        D1[HarvestClient]
+        D2[Modal API Call]
+    end
+
+    subgraph "Modal Container HarvestSandbox"
+        E1[PTY Manager]
+        E2[asyncio.Queue]
+        E3[Stop Hook Detection]
+        E4[Memory Monitor]
+    end
+
+    subgraph "Claude Code CLI"
+        F1[Interactive Session]
+        F2[MCP Servers]
+        F3[Tool Execution]
+    end
+
+    subgraph "External Services"
+        G1[GitHub API]
+        G2[Gemini API]
+        G3[Linear API]
+        G4[Git Operations]
+    end
+
+    A1 --> B1
+    A2 --> B1
+    A3 --> B1
+    B1 --> B2
+    B2 --> B3
+    B3 --> C1
+    C1 --> C2
+    C2 --> D1
+    D1 --> D2
+    D2 --> E1
+    E1 --> E2
+    E2 --> F1
+    F1 --> E3
+    E3 -.->|<<<CLAUDE_DONE>>>| E2
+    E1 --> E4
+    F1 --> F2
+    F2 --> F3
+    F3 --> G1
+    F3 --> G2
+    F3 --> G3
+    F3 --> G4
+
+    F1 -.->|stdout stream| C2
+    C2 -.->|yield chunks| B2
+    B2 -.->|toolviewer| A1
+
+    style E1 fill:#e1f5ff
+    style F1 fill:#fff4e1
+    style E3 fill:#ffe1e1
+    style B2 fill:#e8f5e9
 ```
+
+**Architecture layers:**
+- **External Triggers**: Chat UI, Slack, GitHub webhooks send user prompts
+- **Relevance Infrastructure**: Routes messages, manages conversations, streams output to UI
+- **Harvest Runtime**: TypeScript layer spawns Python subprocess
+- **harvest-client**: Thin Python wrapper calls Modal API
+- **Modal Container**: PTY manager, message queue, Stop hook detection, memory monitoring
+- **Claude CLI**: Interactive session with MCP servers for GitHub, Gemini, Linear, etc.
+- **Bidirectional streaming**: Output flows back through all layers to Chat UI right pane
+
+**Key insight:** User prompt flows down (blue), Claude output streams back up (dotted), Stop hook signals completion (red)
 
 ---
 
