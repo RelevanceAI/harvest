@@ -25,7 +25,6 @@ All agents follow these core rules:
 
 | Rule | Location | Purpose |
 |------|----------|---------|
-| **Agent Core Principles** | `@docs/ai/shared/agent-core-principles.md` | Mode detection, never commit to main, research before changes, Safe-Carry-Forward |
 | **Git Workflow** | `@docs/ai/shared/git-workflow.md` | Safe-Carry-Forward sync, snapshots, checkpoints, squashing |
 | **Code Comments** | `@docs/ai/shared/code-comments.md` | Explain WHY not WHAT; preserve existing comments |
 | **Planning** | `@docs/ai/shared/planning.md` | Research before coding, use Gemini for adversarial review, hierarchical planning |
@@ -64,8 +63,6 @@ Harvest uses skills from the obra/superpowers framework. These are available via
 
 Your available MCP tools depend on context:
 
-### Local Development (You + Claude)
-
 | Server | Purpose | When to Use | Documentation |
 |--------|---------|-------------|---------------|
 | **github** | GitHub API (PRs, issues) | Creating PRs, managing issues, checking CI | Built-in |
@@ -75,10 +72,6 @@ Your available MCP tools depend on context:
 | **devtools** | Chrome DevTools Protocol | Debugging, performance analysis | `@docs/mcp/devtools.md` |
 | **memory** | Knowledge graph | Persistent learning across sessions | `@docs/mcp/memory.md` |
 
-### Autonomous Agent (Modal Sandbox)
-
-Same MCP tools as local development, plus:
-- Full bash/git/filesystem access within sandbox
 
 ### Quick Reference for Lightweight MCPs
 
@@ -202,7 +195,11 @@ See `@docs/ai/shared/code-comments.md` for full policy.
 
 ## Philosophy
 
-**Never lose work. Commit frequently. Sync safely. Complete autonomously.**
+**Always follow your session workflow.** Always: research → plan → validate → execute 
+
+Exception: If you're executing an approved plan, you're already past planning.
+
+**Never lose work. Commit frequently. Sync safely. Never commit to main.**
 
 Snapshots are your black box recorder. Checkpoints are your undo buttons. Squashing maintains clean history. Panic Button ensures you never get truly stuck.
 

@@ -18,12 +18,6 @@ All shared rules from `@docs/ai/shared/*.md` apply (loaded via baked rule files 
 - **Lifetime**: Session spins up per Slack request, shuts down after task complete
 - **Persistence**: Only committed work persists (pushed to GitHub)
 
-**Workspace isolation:**
-- Modal sandboxes are already isolated (one container per session)
-- **DO NOT use git worktrees** - unnecessary overhead in autonomous mode
-- Work directly on feature branches in the main workspace (`/workspace/` or repo root)
-- Worktrees are a LOCAL MODE feature for handling multiple Claude instances on the same repo
-
 ## Core Principles
 
 1. **Execute, don't ask**: Make decisions autonomously. Only pause for genuinely ambiguous requirements.

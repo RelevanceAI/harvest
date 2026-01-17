@@ -9,8 +9,6 @@ You are working on the Harvest codebase locally with Claude (OpenCode).
 
 All shared rules from `@docs/ai/shared/*.md` apply (loaded via `.claude/CLAUDE.md`).
 
-**Core Principles:** See `@docs/ai/shared/agent-core-principles.md` for mode detection and foundational rules.
-
 **Git Hooks (Local Development Only):**
 
 Run the setup script after cloning (see README.md Development Setup):
