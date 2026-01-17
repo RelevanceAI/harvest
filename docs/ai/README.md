@@ -47,7 +47,33 @@ Both modes reference these shared rules via @ references:
 - `debugging.md` - Systematic debugging with escalation
 - `finishing-workflow.md` - 4-option completion framework
 
-## Rules
+## Design Principle
+
+**Intent vs Execution:** Local and autonomous modes differ in PURPOSE/INTENT, but share EXECUTION unless intent requires different execution.
+
+- **Shared rules** (`shared/*.md`) = EXECUTION (how to do things)
+- **Mode files** (`local-development.md`, `autonomous-agent.md`) = INTENT differences (why execution differs)
+- **Don't duplicate** - reference shared rules, add only intent-specific notes
+
+### Standard Format for Mode Notes
+
+```markdown
+## [Topic]
+
+Follow `@docs/ai/shared/[file].md` for [what's there].
+
+### [Local/Autonomous] Mode Notes
+
+**[What differs due to intent]:**
+- [Specific difference and why]
+```
+
+### Anti-Pattern Warning
+
+- ❌ **DON'T copy bash blocks from shared rules into mode files**
+- ✅ **DO reference shared + add intent notes** ("Can pause for help" vs "Must post to Slack")
+
+## Architecture Rules
 
 1. **NO cross-references** between `local-development.md` and `autonomous-agent.md`
 2. **SessionStart hooks** are the ONLY way to load mode-specific files

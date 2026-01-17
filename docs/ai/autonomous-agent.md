@@ -2,6 +2,13 @@
 
 You are running in a Modal sandbox as the Harvest background agent. You have maximum autonomy and full codebase context.
 
+## Context
+
+**Mode:** Autonomous (background agent in Modal sandbox)
+**Intent:** Complete end-to-end tasks without human intervention, fail forward, maximize autonomy
+
+All shared rules from `@docs/ai/shared/*.md` apply (loaded via baked rule files in container).
+
 ## Operating Environment
 
 - **Deployment**: Modal sandbox with full development environment
@@ -98,63 +105,28 @@ All batches complete. Using finishing-a-development-branch...
 - **Post to Slack**: "✅ Done! PR: [link]"
 - **Session ends**: All work is persisted in GitHub
 
-## Git Workflow (Autonomous-Specific)
+## Git Workflow
 
-Follow `@docs/ai/shared/git-workflow.md` strictly. This is your lifeline.
+Follow `@docs/ai/shared/git-workflow.md` strictly for Safe-Carry-Forward sync, checkpoint patterns, and squashing.
 
-### Safe-Carry-Forward Pattern
+### Autonomous Mode Notes
 
-Before any risky operation (rebase, conflict resolution, force-push):
+**Non-interactive execution:**
+- Squashing MUST use: `git reset --soft origin/<branch>` then `git commit -m "msg"`
+- No interactive editor prompts (sandbox environment constraint)
+- Always use `-m` flag for commit messages (never rely on editor)
 
-```bash
-# 1. Snapshot all current work
-git add -A && git commit -m "wip: snapshot before sync" --no-verify
+**Checkpoint mandate:**
+- REQUIRED for all risky operations (no human backup available)
+- Must create checkpoint before complex rebases, conflict resolution, force operations
+- Cleanup before session ends: `git branch -D checkpoint-*` on success
+- On failure: Leave checkpoint intact, report branch name to Slack
 
-# 2. Fetch latest
-git fetch origin
-
-# 3. Rebase autonomously (you own this branch)
-git rebase origin/<branch>
-
-# 4. Test if changes were made
-npm test
-
-# 5. If failed: checkpoint → attempt fix → retry (max 3 times)
-# If passing: continue
-```
-
-### Checkpoint Pattern (Your Undo Button)
-
-When attempting risky operations (complex rebase, conflict resolution):
-
-```bash
-CURRENT=$(git branch --show-current)
-git checkout -b "checkpoint-$CURRENT-$(date +%s)"
-git checkout "$CURRENT"
-
-# Now attempt the risky operation
-# ... rebase, resolve conflicts, etc. ...
-
-# If successful and tests pass: delete checkpoint
-git branch -D checkpoint-*
-
-# If failed after 3 attempts:
-# - Leave checkpoint intact
-# - Post to Slack: "Git operation failed. Checkpoint: checkpoint-feat-xyz-1704123456"
-# - Include what went wrong and what human intervention is needed
-```
-
-### Squash Before Final Push
-
-Collapse all WIP snapshots into one clean commit:
-
-```bash
-git reset --soft origin/<branch>
-git commit -m "feat: descriptive message explaining the change"
-git push origin <branch>
-```
-
-This is **non-interactive** (no editor), so it works in sandboxes without Vim/Nano.
+**Escalation via Slack:**
+- If git operation fails after 3 attempts, post to Slack:
+  - "Git operation failed. Checkpoint: checkpoint-feat-xyz-1704123456"
+  - Include what went wrong and what human intervention is needed
+- Never abandon work - always preserve recovery point
 
 ## High-Autonomy Problem Solving
 
@@ -169,47 +141,21 @@ Use the **Validation Loop**. Don't stop for errors; fix them.
 
 **Key point**: You have 3 attempts to fix an issue before escalating.
 
-## Code Quality Rules
+## Planning
 
-Follow shared rules for all work:
+Follow `@docs/ai/shared/planning.md` for all planning workflows (research, draft plan, Gemini review, implementation).
 
-- `@docs/ai/shared/code-comments.md` — Explain WHY, not WHAT/HOW. Preserve existing comments.
-- `@docs/ai/shared/planning.md` — Research before coding, use Gemini if uncertain. Hierarchical planning for complex tasks.
-- `@docs/ai/shared/documentation.md` — Update docs with changes, capture gotchas, avoid stale values.
-- `@docs/ai/shared/complexity-heuristic.md` — Decide when to invoke brainstorming based on task complexity.
-- `@docs/ai/shared/verification.md` — Smart verification (tests for logic, appropriate checks for non-logic).
-- `@docs/ai/shared/debugging.md` — Systematic debugging with failure escalation (fail-forward → systematic → panic).
-- `@docs/ai/shared/finishing-workflow.md` — 4-option completion framework with test verification gate.
+### Autonomous Mode Notes
 
-## Planning & Adversarial Review
+**Plan completeness requirement:**
+- Plan must be complete before Session 2 execution starts (no mid-flight changes)
+- Two-session pattern: Session 1 = planning + approval, Session 2 = execution
+- Cannot pause execution to ask user for requirements clarification
 
-For non-trivial changes, use Gemini before implementing:
-
-```
-gemini_chat(
-  message="Plan: I want to implement [feature/fix]...
-
-Files to change:
-- src/classifier.ts (add intent detection)
-- src/api.ts (add session endpoint)
-- tests/classifier.test.ts (add test cases)
-
-Specific changes:
-- Add function x() that does y
-- Change endpoint /foo to /bar
-
-Assumptions:
-- All repos have standard setup
-- Slack context is always provided",
-  system_prompt="You are an adversarial code reviewer. Analyze this plan and identify concerns. Categorize as:\n- BLOCKER: Must fix\n- SHOULD: Should address\n- CONSIDER: Optional\n\nBe specific and actionable."
-)
-```
-
-### Acting on Feedback
-
-1. **BLOCKER concerns**: Address before implementing (they indicate fundamental issues)
-2. **SHOULD concerns**: Incorporate if feasible (balance scope)
-3. **CONSIDER concerns**: Optional (implement if adds clear value)
+**Gemini review mandate:**
+- REQUIRED for non-trivial changes (no human fallback for plan validation)
+- Use adversarial review to catch blockers before implementation
+- Address BLOCKER concerns before proceeding to Session 2
 
 ## The Panic Button (When to Stop)
 

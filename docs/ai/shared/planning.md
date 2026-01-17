@@ -102,19 +102,54 @@ Before implementing or committing:
 
 ## Plan Storage & Organization
 
-Plans are stored in the `.claude/plans/` directory with timestamped files organized by branch name.
+Plans are stored in `.claude/plans/` organized by branch name with three phases:
 
-See [`.claude/plans/README.md`](../../../.claude/plans/README.md) for:
-- Directory structure and naming conventions
-- Three-phase workflow (research → plan → implementation)
-- Versioning strategy (timestamps for iterations)
-- How to discover and reference plans
-- Integration with GitHub PRs
+1. **Research** (`research_YYYY-MM-DD_HHMM.md`) - Exploration, understanding, context
+2. **Plan** (`plan_YYYY-MM-DD_HHMM.md`) - Detailed proposal (approval gate)
+3. **Implementation** (`implementation_YYYY-MM-DD_HHMM.md`) - Execution record, lessons learned
 
-This infrastructure enables:
-- **Agent self-awareness**: Timestamps help track "which iteration?" across sessions
-- **Clear approval gates**: Plans reviewed before implementation
-- **Feedback loops**: Completed plans stay in git history for reference
+### Directory Structure
+
+```
+.claude/plans/
+└── [branch-name]/
+    ├── research_YYYY-MM-DD_HHMM.md
+    ├── plan_YYYY-MM-DD_HHMM.md
+    └── implementation_YYYY-MM-DD_HHMM.md
+```
+
+**Branch naming:** Replace `/` with `-` (e.g., `feat/auth` → `feat-auth/`)
+
+### Finding Plans
+
+```bash
+# See all active work
+ls .claude/plans/
+
+# Latest plan for current branch
+ls -ltr .claude/plans/[branch-name]/plan_*.md | tail -1
+```
+
+### Workflow
+
+**Phase 1 - Research:**
+1. Create `.claude/plans/[branch-name]/research_YYYY-MM-DD_HHMM.md`
+2. Document findings, constraints, approach options
+3. Commit and push
+
+**Phase 2 - Planning:**
+1. Create `plan_YYYY-MM-DD_HHMM.md` with detailed implementation
+2. Open PR with `[PLAN]` prefix for review
+3. If feedback: create new `plan_YYYY-MM-DD_HHMM.md` (don't overwrite)
+4. Once approved: close PR, proceed to implementation
+
+**Phase 3 - Implementation:**
+1. Execute approved plan
+2. Create `implementation_YYYY-MM-DD_HHMM.md` with results
+3. Reference plan PR number in implementation PR
+4. Merge when approved
+
+**Why timestamps:** Agent self-awareness ("which iteration?"), audit trail, easy sorting
 
 ## Hierarchical Planning (New)
 
