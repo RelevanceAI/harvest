@@ -1,10 +1,6 @@
 # Context7 MCP Server
 
-This document guides interactions between the Harvest agent and Context7 via the Model Context Protocol, specifically for accessing up-to-date, version-specific code documentation and examples.
-
-**Server:** `@upstash/context7-mcp`
-**Required Secret:** `CONTEXT7_API_KEY` (optional - works without but with lower rate limits)
-**Auth:** API key from [context7.com/dashboard](https://context7.com/dashboard)
+Guidelines for using Context7 to access up-to-date, version-specific code documentation and examples.
 
 Provides access to Context7 for:
 1. **Up-to-date documentation** - Version-specific docs for frameworks and libraries
@@ -41,61 +37,6 @@ Context7 will automatically:
 2. Fetch version-specific documentation
 3. Inject relevant docs and examples into the context
 4. Provide current, accurate information
-
-## Configuration
-
-### Autonomous Mode (Modal Sandboxes)
-
-Context7 is automatically installed in Modal sandboxes via `images.py`:
-
-```python
-# Installed with other optional MCP servers
-"npm install -g @upstash/context7-mcp || true"
-```
-
-The MCP server is configured to run without an API key by default (lower rate limits). To enable higher rate limits, add the secret:
-
-```bash
-# Add to Modal secrets
-modal secret create harvest-context7 CONTEXT7_API_KEY=your_key_here
-```
-
-Then reference in sandbox configuration.
-
-### Local Development
-
-For local Claude Code usage, add Context7 to your MCP configuration:
-
-```bash
-# Using Claude CLI
-claude mcp add context7 -- npx -y @upstash/context7-mcp --api-key YOUR_API_KEY
-```
-
-Or manually configure in `~/.claude/mcp.json`:
-
-```json
-{
-  "mcpServers": {
-    "context7": {
-      "command": "npx",
-      "args": ["-y", "@upstash/context7-mcp", "--api-key", "YOUR_API_KEY"]
-    }
-  }
-}
-```
-
-**Without API key** (lower rate limits):
-
-```json
-{
-  "mcpServers": {
-    "context7": {
-      "command": "npx",
-      "args": ["-y", "@upstash/context7-mcp"]
-    }
-  }
-}
-```
 
 ## Usage Examples
 
@@ -134,20 +75,6 @@ Context7 will fetch:
 - Prisma 5 migration guide
 - Breaking changes between v4 and v5
 - Code examples showing before/after patterns
-
-## Rate Limits
-
-### Without API Key
-- Free tier with basic rate limits
-- Sufficient for occasional lookups
-- May hit limits during heavy usage
-
-### With API Key
-- Higher rate limits (see [context7.com/pricing](https://context7.com/pricing))
-- Recommended for autonomous agents
-- Required for production workloads
-
-**Get an API key:** [context7.com/dashboard](https://context7.com/dashboard)
 
 ## Supported Frameworks & Libraries
 
