@@ -15,6 +15,9 @@ import modal
 
 # Path to config files (relative to this module)
 _CONFIG_DIR = Path(__file__).parent / "config"
+# Path to Harvest repository root
+# (5 levels up: modal_executor -> src -> modal-executor -> packages -> harvest)
+_ROOT_DIR = Path(__file__).parent.parent.parent.parent.parent
 
 # =============================================================================
 # Base Image Definition
@@ -90,8 +93,7 @@ _base_image = (
         "curl https://get.volta.sh | bash -s -- --skip-setup",
         "echo 'export VOLTA_HOME=\"$HOME/.volta\"' >> /root/.bashrc",
         "echo 'export PATH=\"$VOLTA_HOME/bin:$PATH\"' >> /root/.bashrc",
-    )
-    .env(
+    ).env(
         {
             "VOLTA_HOME": "/root/.volta",
             "PATH": "/root/.volta/bin:/usr/local/bin:/usr/bin:/bin",
@@ -184,8 +186,24 @@ _base_image = (
     # -------------------------------------------------------------------------
     # Harvest Configuration Files (baked into image)
     # -------------------------------------------------------------------------
-    .add_local_file(str(_CONFIG_DIR / "AGENTS.md"), "/app/AGENTS.md")
+    # Bake rule files with relative @docs/ paths (no transformation needed)
+    # Working directory will be /app/, so @docs/ resolves to /app/docs/
+    # CLAUDE.md: Shared base rules (all contexts)
+    .add_local_file(str(_ROOT_DIR / ".claude" / "claude.md"), "/app/claude.md")
+    # autonomous-agent.md: Autonomous mode extensions
+    .add_local_file(
+        str(_ROOT_DIR / "docs" / "ai" / "autonomous-agent.md"),
+        "/app/autonomous-agent.md",
+    )
+    # Bake shared rules (targets of @docs/ai/shared/ references)
+    .add_local_dir(str(_ROOT_DIR / "docs" / "ai" / "shared"), "/app/docs/ai/shared")
+    # Bake MCP documentation (targets of @docs/mcp/ references)
+    .add_local_dir(str(_ROOT_DIR / "docs" / "mcp"), "/app/docs/mcp")
+    # Memory seed file
     .add_local_file(str(_CONFIG_DIR / "memory-seed.json"), "/app/memory-seed.json")
+    # Note: local-development.md is NOT baked (local mode only, never used by autonomous agent)
+    # Note: Claude config files (~/.claude.json, settings.json, etc.) are generated
+    # at runtime in sandbox.py::_initialize_claude_cli() to ensure version compatibility
 )
 
 

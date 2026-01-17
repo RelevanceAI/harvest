@@ -48,7 +48,7 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Validate llms.txt references
-      run: bash scripts/validate-llms-index.sh
+      run: bash scripts/tests/validate-llms-index.sh
 
   test:
     name: Test

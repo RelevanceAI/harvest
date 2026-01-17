@@ -2,25 +2,19 @@
 
 You are working on the Harvest codebase locally with Claude (OpenCode).
 
+## Context
+
+**Mode:** Local (human + Claude collaborative development)
+**Intent:** Human judgment available, interactive problem-solving, iterative refinement
+
+All shared rules from `@docs/ai/shared/*.md` apply (loaded via `.claude/CLAUDE.md`).
+
 ## MCP Tools Available
 
 - **github**: GitHub API for PRs, issues, checks
 - **linear**: Linear issue tracking and project management
 - **chrome**: Browser automation for testing UI changes
 - **gemini**: Plan review and adversarial analysis
-
-## Core Rules
-
-Follow these shared rules as your foundation:
-
-- `@docs/ai/shared/git-workflow.md` — Safe-Carry-Forward sync pattern, checkpoint branches, squashing
-- `@docs/ai/shared/code-comments.md` — WHY over WHAT/HOW, preserve existing comments
-- `@docs/ai/shared/planning.md` — Research before coding, use Gemini for adversarial review. Hierarchical planning for complex tasks.
-- `@docs/ai/shared/documentation.md` — Update docs with changes, capture gotchas, avoid stale values
-- `@docs/ai/shared/complexity-heuristic.md` — Decide when to invoke brainstorming based on task complexity
-- `@docs/ai/shared/verification.md` — Smart verification (tests for logic, appropriate checks for non-logic)
-- `@docs/ai/shared/debugging.md` — Systematic debugging with failure escalation
-- `@docs/ai/shared/finishing-workflow.md` — 4-option completion framework
 
 ## Workflow
 
@@ -50,85 +44,32 @@ Follow these shared rules as your foundation:
 - **Link to Linear**: Reference any issue numbers
 - **Be ready to iterate**: Address review feedback promptly
 
-## Git Workflow (Local-Specific)
+## Git Workflow
 
-### Safe-Carry-Forward Pattern
+Follow `@docs/ai/shared/git-workflow.md` for Safe-Carry-Forward sync, checkpoint patterns, and squashing.
 
-Before syncing with remote:
+### Local Mode Notes
 
-```bash
-# Snapshot all work
-git add -A && git commit -m "wip: snapshot before sync" --no-verify
+**Checkpoint flexibility:**
+- Optional for simple rebases (use judgment based on risk)
+- Can pause during conflict resolution to ask for help
+- Time available to verify squashed commits before pushing
 
-# Fetch latest
-git fetch origin
+**Escalation:**
+- If checkpoint recovery needed after 3 attempts, ask user for help directly
+- Can discuss git strategy before attempting risky operations
 
-# Rebase if you own the branch (safe on feature branches you created)
-git rebase origin/<branch>
+## Complexity Evaluation
 
-# Resolve conflicts if any, then test
-npm test
+Follow `@docs/ai/shared/complexity-heuristic.md` to evaluate task complexity and decide when to invoke brainstorming.
 
-# Squash WIP snapshots
-git reset --soft origin/<branch>
-git commit -m "feat: your clean message"
+### Local Mode Notes
 
-# Verify before push
-git log origin/<branch>..HEAD --oneline
-
-# Push
-git push origin <branch>
-```
-
-### Checkpoint Pattern (For Risky Operations)
-
-Before complex rebase or conflict resolution:
-
-```bash
-CURRENT=$(git branch --show-current)
-git checkout -b "checkpoint-$CURRENT-$(date +%s)"
-git checkout "$CURRENT"
-
-# Now attempt the risky operation (e.g., rebase, conflict resolution)
-
-# If successful: delete checkpoint
-git branch -D checkpoint-*
-
-# If failed after 3 attempts: keep checkpoint, report to team
-```
-
-See `@docs/ai/shared/git-workflow.md` for full details on when/how to use checkpoints.
-
-## Brainstorming Complex Tasks
-
-Before starting implementation, evaluate task complexity using `@docs/ai/shared/complexity-heuristic.md`:
-
-### When to Brainstorm
-
-Invoke `/superpowers:brainstorming` if the task involves:
-- Architectural changes or new modules
-- Changes spanning 3+ files across different subsystems
-- New features (not bug fixes or docs)
-- Uncertain approach with multiple valid solutions
-- High-risk areas (security, performance, auth, payments)
-
-### Brainstorming Flow
-
-1. **Present 2-3 approaches** with trade-offs
-2. **Discuss with user** to understand preferences and constraints
-3. **Validate incrementally** as design solidifies
-4. **Document chosen approach** in plan or design doc
-5. **Proceed to implementation** with confidence
-
-### When to Skip Brainstorming
-
-Skip if:
-- Bug fix in single file with clear root cause
-- Documentation or config changes only
-- Simple refactor (rename, extract function)
-- Clear, unambiguous task with obvious implementation
-
-When uncertain, ask: "This task seems [simple/complex]. Should I brainstorm the design approach, or proceed directly to planning?"
+**User override flexibility:**
+- Heuristic is a guideline, not a mandate
+- Can ask: "This task seems [simple/complex]. Should I brainstorm or proceed to planning?"
+- User may override based on their preferences or project context
+- Interactive discussion helps calibrate complexity assessment
 
 ## Executing Plans (Local Mode)
 
@@ -140,27 +81,17 @@ When using the executing-plans skill:
 
 The skill's checkpoints are opportunities to pause, not mandates.
 
-## Planning Workflow
+## Planning
 
-For non-trivial changes:
+Follow `@docs/ai/shared/planning.md` for all planning workflows (research, draft plan, Gemini review, implementation).
 
-1. **Research** the problem space (read existing code, understand dependencies)
-2. **Draft a plan** with file paths, specific changes, assumptions
-3. **Get adversarial feedback** (use Gemini if available)
-4. **Address blockers** before coding
-5. **Implement with confidence**
+### Local Mode Notes
 
-Example Gemini call:
-
-```
-gemini_chat(
-  message="Plan: I want to add a classifier layer to the Slack bot...
-[describe your approach with specific file paths and changes]",
-  system_prompt="You are an adversarial code reviewer. Identify BLOCKER, SHOULD, and CONSIDER concerns..."
-)
-```
-
-See `@docs/ai/shared/planning.md` for full guidance.
+**Iterative planning:**
+- Can iterate on plans with user before finalizing
+- User may provide additional context during planning phase
+- Gemini review is recommended but optional (human can review instead)
+- Can pause implementation to revise plan if requirements change
 
 ## Key Differences from Autonomous Agent
 

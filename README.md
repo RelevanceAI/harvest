@@ -72,6 +72,41 @@ Harvest infrastructure is production-ready:
 
 ---
 
+## Critical Technical TODOs
+
+### 🚨 WORKDIR Verification & Guardrails (Modal Sandbox)
+
+**Context**: The autonomous agent relies on `WORKDIR /app/` for `@docs/` reference resolution in baked rule files. If Claude CLI runs from a different directory, all rule references will fail.
+
+**Required Actions**:
+
+1. **Verify Modal WORKDIR Configuration**
+   - Confirm Modal respects `WORKDIR /app/` in container definition
+   - Test that working directory persists across all execution contexts
+   - Document Modal-specific WORKDIR configuration mechanism
+
+2. **Add Defensive Working Directory Enforcement**
+   - Add `os.chdir('/app')` at the start of sandbox execution
+   - Add explicit working directory check before every Claude CLI invocation
+   - Log `os.getcwd()` before CLI calls for debugging
+
+3. **Test Edge Cases**
+   - Verify `@docs/` resolution after cloning a repository
+   - Test working directory stability during git operations
+   - Ensure subprocess calls don't pollute working directory
+
+4. **Add Guardrails**
+   ```python
+   # Before every Claude CLI invocation
+   assert os.getcwd() == '/app/', f"Working directory must be /app/, got {os.getcwd()}"
+   ```
+
+**Risk Level**: HIGH - Single point of failure for all rule file resolution
+
+**Related**: See Gemini audit in `feat/autonomous-local-mode-separation` plan (2026-01-17)
+
+---
+
 ## Documentation Structure
 
 This repository uses a structured documentation approach:
@@ -93,47 +128,112 @@ This repository uses a structured documentation approach:
 - Enables efficient documentation discovery by LLMs
 - Useful for both AI tools and human developers
 
-**Claude Code Configuration** (`.claude/CLAUDE.md`):
-- Project rules loaded into Claude's context
+**Claude Code Configuration** (`.claude/claude.md`):
+- Shared base rules for all contexts
 - MCP server integration
-- Context-aware rule loading (local dev vs. autonomous agent)
+- Loaded alongside context-specific extensions
 
-### For AI Agents
+### AI Agent Architecture
 
-**Project Rules** (`.claude/CLAUDE.md`):
-- Context detection (local dev vs autonomous agent)
-- MCP tools index
-- Quick reference for shared rules
+Harvest uses a **shared base + mode-specific extensions** architecture with complete separation between local and autonomous modes.
 
-**Shared Rules** (`docs/ai/shared/`):
-- `git-workflow.md` - Safe-Carry-Forward sync, checkpoints, squashing
-- `code-comments.md` - Explain WHY not WHAT; preserve existing comments
-- `planning.md` - Research before coding, use Gemini for adversarial review
-- `documentation.md` - Update docs with changes, capture gotchas, avoid stale values
+#### Local Development Mode
 
-**Context-Specific Rules** (`docs/ai/`):
-- `local-development.md` - Rules for local Claude CLI usage
-- `autonomous-agent.md` - Rules for background agent in Modal sandbox
+**Entry Point:** `.claude/settings.json` (SessionStart hook)
 
-**MCP Server Guides** (`docs/mcp/`):
-- `gemini.md` - Plan review and web research workflows
-- `github.md` - PR/issue management patterns
-- `linear.md` - Task tracking integration
-- `chrome.md` - Browser automation for testing
+**Loaded Files:**
+1. `.claude/claude.md` (shared base rules)
+2. `docs/ai/local-development.md` (local mode extensions)
+
+**Characteristics:**
+- Human judgment available
+- Interactive brainstorming for complex tasks
+- Can pause for feedback
+- All shared rules loaded via `@docs/ai/shared/*.md` references
+
+#### Autonomous Agent Mode (Modal Sandbox)
+
+**Entry Point:** Modal sandbox creates settings file programmatically
+
+**Loaded Files:**
+1. `/app/claude.md` (shared base, baked into image)
+2. `/app/autonomous-agent.md` (autonomous extensions, baked into image)
+
+**Characteristics:**
+- Maximum autonomy
+- Execute without asking
+- Fail forward pattern
+- All shared rules loaded via `@docs/ai/shared/*.md` references (resolve from `/app/`)
+
+#### Design Principle: Intent vs Execution
+
+**Local and autonomous modes differ in PURPOSE/INTENT, but share EXECUTION unless intent requires different execution.**
+
+- **Shared rules** (`docs/ai/shared/*.md`) = EXECUTION (how to do things)
+- **Mode files** (`local-development.md`, `autonomous-agent.md`) = INTENT differences (why execution differs)
+- **Don't duplicate** - reference shared rules, add only intent-specific notes
+
+#### Architecture Rules
+
+1. **NO cross-references** between `local-development.md` and `autonomous-agent.md`
+2. **SessionStart hooks** are the ONLY way to load mode-specific files
+3. **Shared rules** are loaded via `@` references in mode-specific files
+4. **Router patterns** (like "if local/if autonomous") are not used
+
+**Validation:**
+```bash
+# Run all validation tests
+for script in scripts/tests/*.sh; do bash "$script"; done
+
+# Or run specific test
+bash scripts/tests/validate-mode-separation.sh
+```
 
 ### For Developers
 
-- **Planning Workflow**: See [`.claude/plans/README.md`](.claude/plans/README.md)
-  - Three-phase workflow: Research → Plan → Implementation
-  - Plans organized by branch in `.claude/plans/[branch-name]/`
-  - Timestamped files for versioning and audit trail
-  - Plans submitted as PRs with `[PLAN]` prefix for review
+#### Planning Workflow
 
-- **Implementation Plans**: See [`docs/plans/`](docs/plans/)
-  - [`IMPLEMENTATION_PLAN.md`](docs/plans/IMPLEMENTATION_PLAN.md) - Overall phased approach
-  - [`phase-1.1-modal-sandbox.md`](docs/plans/phase-1.1-modal-sandbox.md) - Modal sandbox implementation
+Harvest uses a three-phase planning workflow:
 
-- **Architecture Docs**: See [`docs/architecture/`](docs/architecture/)
+**Directory Structure:**
+```
+.claude/plans/
+└── [branch-name]/
+    ├── research_YYYY-MM-DD_HHMM.md
+    ├── plan_YYYY-MM-DD_HHMM.md
+    └── implementation_YYYY-MM-DD_HHMM.md
+```
+
+**Phase 1 - Research:**
+- Explore the problem space, understand constraints
+- Document findings in `research_YYYY-MM-DD_HHMM.md`
+- Commit and push
+
+**Phase 2 - Planning:**
+- Create detailed implementation plan in `plan_YYYY-MM-DD_HHMM.md`
+- Open PR with `[PLAN]` prefix for review
+- Iterate on feedback (new timestamped files, don't overwrite)
+- Once approved: close PR, proceed to implementation
+
+**Phase 3 - Implementation:**
+- Execute approved plan
+- Document results in `implementation_YYYY-MM-DD_HHMM.md`
+- Create implementation PR referencing plan PR number
+- Merge when approved
+
+**Why timestamps:** Agent self-awareness ("which iteration?"), audit trail, easy sorting.
+
+**Detailed guidelines:** See `docs/ai/shared/planning.md` for full process, Gemini review, and hierarchical planning.
+
+#### Implementation Plans
+
+See [`docs/plans/`](docs/plans/) for overall roadmap:
+- [`IMPLEMENTATION_PLAN.md`](docs/plans/IMPLEMENTATION_PLAN.md) - Overall phased approach
+- [`phase-1.1-modal-sandbox.md`](docs/plans/phase-1.1-modal-sandbox.md) - Modal sandbox implementation
+
+#### Architecture Documentation
+
+See [`docs/architecture/`](docs/architecture/) for technical documentation.
 
 ---
 
@@ -166,6 +266,31 @@ pre-commit install
 # Test hooks on all files
 pre-commit run --all-files
 ```
+
+### Claude Code Configuration (Local Development)
+
+To enable Harvest AI rules and superpowers skills when working locally with Claude Code:
+
+```bash
+# 1. Add the Claude plugins marketplace
+claude plugins add claude-plugins-official https://github.com/anthropics/claude-plugins-official
+
+# 2. Install superpowers plugin
+claude plugins install claude-plugins-official/superpowers
+
+# 3. Copy the template settings file
+cp .claude/settings.json.template .claude/settings.json
+
+# This enables:
+# - Automatic loading of Harvest rules on session start
+# - Superpowers skills (/brainstorming, /finishing-a-development-branch, etc.)
+```
+
+**What this does:**
+- **SessionStart hook**: Automatically loads `.claude/claude.md` (shared base) and `docs/ai/local-development.md` (local extensions) with project rules and workflow guidance
+- **Superpowers plugin**: Enables workflow skills for planning, debugging, and finishing work
+
+**Note**: `.claude/settings.json` is gitignored (local settings only). The template is committed for easy setup.
 
 ### Running Tests
 
@@ -311,6 +436,25 @@ Harvest follows a strict git workflow (see `docs/ai/shared/git-workflow.md`):
 - **Linear**: Issue tracking and progress updates
 - **Gemini**: Adversarial plan review and web research
 - **Chrome/DevTools**: Browser automation and visual testing
+
+### Adding MCP Servers
+
+**All servers need:**
+1. Entry in MCP Tools Index (`.claude/CLAUDE.md`)
+2. Configuration in Modal sandbox setup
+
+**Heavy servers (complex workflows) also need:**
+3. Dedicated doc file: `docs/mcp/{server-name}.md`
+
+**Decision criteria:**
+- **Create separate doc when:** Documentation exceeds ~50 lines, complex workflows, multi-step patterns
+- **Keep in quick reference when:** Straightforward usage (1-3 tools), simple one-liners
+
+**Example structure for docs/mcp/{server}.md:**
+- When to use
+- Common workflows
+- Code examples
+- Gotchas and limitations
 
 ---
 

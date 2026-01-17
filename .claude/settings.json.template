@@ -1,0 +1,21 @@
+{
+  "enabledPlugins": {
+    "superpowers@claude-plugins-official": true
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cat \"$CLAUDE_PROJECT_DIR/.claude/claude.md\""
+          },
+          {
+            "type": "command",
+            "command": "cat \"$CLAUDE_PROJECT_DIR/docs/ai/local-development.md\""
+          }
+        ]
+      }
+    ]
+  }
+}

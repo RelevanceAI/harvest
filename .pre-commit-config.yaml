@@ -51,12 +51,12 @@ repos:
       - id: check-merge-conflict
         name: check for merge conflicts
 
-  # Local hooks (custom scripts)
+  # Local hooks (custom validation scripts)
   - repo: local
     hooks:
-      - id: validate-llms-index
-        name: validate llms.txt references
-        entry: bash scripts/validate-llms-index.sh
+      - id: run-validation-tests
+        name: run all validation tests
+        entry: bash -c 'for script in scripts/tests/*.sh; do bash "$script" || exit 1; done'
         language: system
         pass_filenames: false
-        files: ^(llms\.txt|docs/.*|README\.md)$
+        files: ^(llms\.txt|docs/.*|README\.md|\.claude/.*)

@@ -18,6 +18,7 @@ import asyncio
 import json
 import logging
 import os
+import re
 from typing import AsyncIterator, Optional
 
 logger = logging.getLogger(__name__)
@@ -49,8 +50,6 @@ class ClaudeCliWrapper:
         Returns:
             Text with credentials redacted
         """
-        import re
-
         # Redact common token patterns
         text = re.sub(r"oauth_[a-zA-Z0-9_-]+", "oauth_REDACTED", text)
         text = re.sub(r"ghp_[a-zA-Z0-9]+", "ghp_REDACTED", text)
@@ -98,6 +97,7 @@ class ClaudeCliWrapper:
                 "--print",
                 "--output-format",
                 "stream-json",
+                "--dangerously-skip-permissions",
                 prompt,
                 cwd=cwd,
                 env=env,
