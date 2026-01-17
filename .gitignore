@@ -31,3 +31,4 @@ htmlcov/
 
 # Git worktrees
 .worktrees
+sesh-*
