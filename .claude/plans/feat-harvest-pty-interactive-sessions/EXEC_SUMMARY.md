@@ -76,7 +76,7 @@ graph TD
 
 | Risk | Impact | Mitigation | Status |
 |------|--------|------------|--------|
-| **Memory leaks** (Claude CLI can leak tens of GBs) | High | 6GB container limit + 24hr session timeout + 5min idle timeout | ✅ Built-in safety |
+| **Memory leaks** (Claude CLI can leak tens of GBs) | High | 6GB container limit + 12hr session timeout + 5min idle timeout | ✅ Built-in safety |
 | **Stop hook doesn't fire** | High | Adaptive timeout: 2-5min with activity monitoring (CPU/memory/stdout heuristics) | ✅ Graceful degradation |
 | **Modal cold starts** | Medium | Memory snapshots reduce to <3s | ✅ Acceptable UX |
 
@@ -100,7 +100,7 @@ graph TD
 
 This prevents the poor UX of 30-minute hangs while still supporting genuinely long-running operations.
 
-**Cost optimization:** 5-minute idle timeout terminates containers (saves ~80% compute cost vs always-on). Session can run up to 24 hours for overnight tasks like "refactor entire auth system."
+**Cost optimization:** 5-minute idle timeout terminates containers (saves ~80% compute cost vs always-on). Session can run up to 12 hours for overnight tasks like "refactor entire auth system."
 
 ---
 
@@ -133,7 +133,7 @@ This prevents the poor UX of 30-minute hangs while still supporting genuinely lo
    `conversation_id === session_id` (clean isolation vs sandbox pooling complexity)
 
 3. ✅ **Approve timeout strategy?**
-   5min idle, 24hr session max (supports overnight work, saves cost)
+   5min idle, 12hr session max (supports overnight work, saves cost)
 
 **Next step if approved:** Proceed with Phase 1 implementation
 

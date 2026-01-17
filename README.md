@@ -16,7 +16,7 @@ Harvest is a background coding agent service built on the architecture that powe
 | **Claude CLI Integration** | ✅ Ready | [`docs/ai/`](docs/ai/) |
 | **Git Workflow** | ✅ Ready | [`docs/ai/shared/git-workflow.md`](docs/ai/shared/git-workflow.md) |
 | **MCP Servers** | ✅ Ready | [MCP table](#mcp-servers) |
-| **PTY Interactive Sessions** | 🚧 In Progress | [EXEC_SUMMARY.md](.claude/plans/feat-harvest-pty-interactive-sessions/EXEC_SUMMARY.md) |
+| **PTY Interactive Sessions** | 🚧 Phase 1 Implementation | [EXEC_SUMMARY.md](.claude/plans/feat-harvest-pty-interactive-sessions/EXEC_SUMMARY.md) |
 | **API Layer** | ⏳ Planned | [`docs/plans/IMPLEMENTATION_PLAN.md`](docs/plans/IMPLEMENTATION_PLAN.md) |
 | **Slack/Web Client** | ⏳ Planned | [`docs/plans/IMPLEMENTATION_PLAN.md`](docs/plans/IMPLEMENTATION_PLAN.md) |
 
@@ -33,7 +33,11 @@ Harvest is a background coding agent service built on the architecture that powe
 
 ---
 
-## Proposed Architecture
+## System Architecture
+
+**Architecture Status**: Approved PTY-based architecture with interactive sessions, message queuing, and Stop hook detection.
+
+**Current Phase**: Phase 1 - PTY Infrastructure implementation (see [EXEC_SUMMARY.md](.claude/plans/feat-harvest-pty-interactive-sessions/EXEC_SUMMARY.md) § 5)
 
 ```mermaid
 graph TD
@@ -128,7 +132,15 @@ graph TD
     style E0 fill:#fff3e0
 ```
 
-**Current implementation attempt**: See [PTY Interactive Sessions proposal](.claude/plans/feat-harvest-pty-interactive-sessions/EXEC_SUMMARY.md)
+### Key Architectural Decisions
+
+- **Session Model**: `conversation_id === session_id` (one Modal sandbox per conversation)
+- **Message Queuing**: `asyncio.Queue` for sequential prompt processing
+- **Completion Detection**: Stop hook emits `<<<CLAUDE_DONE>>>` marker
+- **Timeout Strategy**: 5-minute idle timeout, 12-hour session max
+- **Security**: Explicit credential whitelisting via `modal.Secret.from_dict()`
+
+See [EXEC_SUMMARY.md](.claude/plans/feat-harvest-pty-interactive-sessions/EXEC_SUMMARY.md) for implementation phases, risk mitigation, and complete technical details
 
 ### Agent Modes
 
