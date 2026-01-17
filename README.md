@@ -137,7 +137,7 @@ graph TD
 - **Session Model**: `conversation_id === session_id` (one Modal sandbox per conversation)
 - **Message Queuing**: `asyncio.Queue` for sequential prompt processing
 - **Completion Detection**: Stop hook emits `<<<CLAUDE_DONE>>>` marker
-- **Timeout Strategy**: 5-minute idle timeout, 12-hour session max
+- **Timeout Strategy**: 5-minute idle timeout, 24-hour session max
 - **Security**: Explicit credential whitelisting via `modal.Secret.from_dict()`
 
 See [EXEC_SUMMARY.md](.claude/plans/feat-harvest-pty-interactive-sessions/EXEC_SUMMARY.md) for implementation phases, risk mitigation, and complete technical details
