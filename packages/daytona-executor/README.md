@@ -52,18 +52,23 @@ Tests:
 - Playwright + Chromium available
 - Configuration files baked in at `/app/`
 
-### Test Message Flow
+### Test the SDK
 
 ```bash
-# Requires CLAUDE_CODE_OAUTH_TOKEN
+# Requires CLAUDE_CODE_OAUTH_TOKEN (set in .env.local or environment)
 export CLAUDE_CODE_OAUTH_TOKEN=your_token_here
-./test-messages.sh
+
+# Interactive mode - chat with Claude
+./test.sh
+
+# Single prompt mode
+./test.sh "List files in /app and describe what you see"
 ```
 
-Demonstrates the JSON message stream that `relevance-api-node` receives:
+Streams the full message flow showing:
 - `system/init` - Session start, available tools
 - `assistant` - Claude's text and tool_use blocks
-- `user` - Tool results
+- `tool_result` - Tool execution results
 - `result` - Final status, cost tracking
 
 ## How It Works
@@ -169,7 +174,7 @@ packages/daytona-executor/
 │   ├── Dockerfile               # Main image definition
 │   ├── build.sh                 # Build script (copies config + builds)
 │   ├── test-snapshot.sh         # Validates image contents
-│   └── test-messages.sh         # Demonstrates SDK message flow
+│   └── test.sh                  # SDK test (interactive + single prompt)
 └── config/
     └── memory-seed.json         # Initial MCP memory graph
 ```
