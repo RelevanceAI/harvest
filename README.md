@@ -187,7 +187,7 @@ pnpm install
 - GitHub account with PAT
 - Claude Code CLI ([claude.ai/download](https://claude.ai/download))
 
-> **Note:** Harvest previously used Modal Labs for cloud sandboxes. We transitioned to Daytona for faster cold starts and better integration with the Claude Agent SDK's TypeScript ecosystem.
+> **Note:** Harvest previously used Modal Labs for cloud sandboxes. We transitioned to Daytona because Modal containers run as root, and the Claude Agent SDK blocks autonomous operation (`bypassPermissions`) with root privileges for security reasons. Daytona supports non-root containers, resolving this architectural constraint.
 
 ### Claude Code Setup
 
