@@ -1,11 +1,33 @@
-# Claude Agent SDK POC Scripts
+# Trials & Archived Plans
 
-**Investigation Date**: 2026-01-17
+Historical explorations, POC scripts, and superseded plans.
+
+---
+
+## Archived Plans (`plans/`)
+
+Superseded plans moved here from `.claude/plans/`:
+
+| Plan | Reason Archived |
+|------|-----------------|
+| `feat-harvest-pty-interactive-sessions/` | Superseded by Daytona approach |
+| `feat-modal-sandbox-block-1-1/` | Modal infrastructure superseded by Daytona |
+| `claude-agent-sdk-*.md` | SDK exploration docs (investigation complete) |
+| `phase-1.1-*.md` | Original Modal sandbox plans (superseded) |
+| `IMPLEMENTATION_PLAN.md` | Original implementation plan (superseded) |
+
+**Active plans remain in `.claude/plans/`** - only use this for historical reference.
+
+---
+
+## Claude Agent SDK POC Scripts
+
+**Investigation Date**: 2025-01-17
 **Status**: Archived (investigation complete)
 
 These scripts were used to investigate whether the Claude Agent SDK could replace Harvest's custom PTY wrapper.
 
-**Conclusion**: SDK is incompatible with Modal's architecture. See `.claude/plans/claude-agent-sdk-migration-decision.md` for full decision.
+**Conclusion**: SDK is incompatible with Modal's architecture. See `plans/claude-agent-sdk-migration-decision.md` for full decision.
 
 ---
 
