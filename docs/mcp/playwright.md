@@ -2,7 +2,7 @@
 
 High-level browser automation for testing UX changes and verifying visual output.
 
-**Server:** `@anthropic-ai/mcp-server-playwright`
+**Server:** `@playwright/mcp`
 **Browser:** Chromium (pre-installed in sandbox)
 **Auth:** None required
 
