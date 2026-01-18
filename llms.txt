@@ -11,8 +11,8 @@
 
 ## AI Agent Configuration
 
-- [Autonomous Agent Rules](docs/ai/autonomous-agent.md): Rules for autonomous/background agent operation
-- [Local Development Rules](docs/ai/local-development.md): Rules for local human-assisted development
+- [Agent Rules](docs/ai/agent.md): Mode-specific rules (local development in repo, autonomous in container)
+- [Autonomous Agent Rules](docs/ai/autonomous-agent.md): Rules for autonomous/background agent operation (used by container build)
 
 ## Core AI Rules (All Contexts)
 

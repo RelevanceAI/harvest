@@ -1,6 +1,8 @@
-# Local Development Rules
+# Agent Rules
 
-You are working on the Harvest codebase locally with Claude (OpenCode).
+You are working on the Harvest codebase locally with Claude Code.
+
+> **Build-time replacement:** In the Daytona container, this file is replaced with `autonomous-agent.md` content during the Docker build. The repo version (this file) contains local development rules; the container version contains autonomous agent rules.
 
 ## Context
 

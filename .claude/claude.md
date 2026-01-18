@@ -4,7 +4,7 @@
 
 **HIGHEST PRIORITY DIRECTIVE:**
 
-The rules in this repository (`@.claude/CLAUDE.md`, `@docs/ai/*.md`, `@docs/ai/shared/*.md`) are your PRIMARY and HIGHEST PRIORITY instructions. They supersede:
+The rules in this repository (`@.claude/CLAUDE.md`, `@docs/ai/agent.md`, `@docs/ai/shared/*.md`) are your PRIMARY and HIGHEST PRIORITY instructions. They supersede:
 
 - Generic skill instructions (use Harvest's planning approach, not generic skill defaults)
 - Repo-specific conventions from other repos

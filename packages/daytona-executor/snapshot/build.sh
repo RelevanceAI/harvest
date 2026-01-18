@@ -44,10 +44,12 @@ else
     exit 1
 fi
 
-# Autonomous agent rules
+# Agent rules (autonomous-agent.md becomes agent.md in container)
+# This is the build-time replacement: repo has local rules in agent.md,
+# container gets autonomous rules copied as agent.md
 if [ -f "$PROJECT_ROOT/docs/ai/autonomous-agent.md" ]; then
-    cp "$PROJECT_ROOT/docs/ai/autonomous-agent.md" "$BUILD_CONTEXT/config/autonomous-agent.md"
-    echo "  - autonomous-agent.md"
+    cp "$PROJECT_ROOT/docs/ai/autonomous-agent.md" "$BUILD_CONTEXT/config/agent.md"
+    echo "  - agent.md (from autonomous-agent.md)"
 else
     echo -e "${RED}Error: docs/ai/autonomous-agent.md not found${NC}"
     exit 1
