@@ -103,7 +103,7 @@ if [ $BUILD_STATUS -eq 0 ]; then
     echo ""
     echo "Next steps:"
     echo "  1. Run validation: ./test-snapshot.sh"
-    echo "  2. Test message flow: ./test-messages.sh (requires CLAUDE_CODE_OAUTH_TOKEN)"
+    echo "  2. Test SDK: ./test.sh (requires CLAUDE_CODE_OAUTH_TOKEN)"
     echo "  3. Push to registry: docker push <registry>/harvest-daytona-snapshot:latest"
 else
     echo -e "${RED}Build failed!${NC}"
