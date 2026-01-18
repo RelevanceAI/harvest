@@ -12,11 +12,12 @@ Harvest is a background coding agent service built on the architecture that powe
 
 | Component | Status | Documentation |
 |-----------|--------|---------------|
-| **Modal Sandboxes** | ⚠️ Ready (not fully tested) | [`packages/modal-executor/`](packages/modal-executor/) |
+| **Daytona Executor** | 🚧 MVP Ready | [`packages/daytona-executor/`](packages/daytona-executor/) |
+| **Modal Sandboxes** | ⏸️ Legacy | [`packages/modal-executor/`](packages/modal-executor/) |
+| **Claude Agent SDK** | ✅ POC Validated | [`trials/daytona-sdk-poc/`](trials/daytona-sdk-poc/) |
 | **Claude CLI Integration** | ✅ Ready | [`docs/ai/`](docs/ai/) |
 | **Git Workflow** | ✅ Ready | [`docs/ai/shared/git-workflow.md`](docs/ai/shared/git-workflow.md) |
 | **MCP Servers** | ✅ Ready | [MCP table](#mcp-servers) |
-| **PTY Interactive Sessions** | 🚧 Phase 1 Implementation | [EXEC_SUMMARY.md](.claude/plans/feat-harvest-pty-interactive-sessions/EXEC_SUMMARY.md) |
 | **API Layer** | ⏳ Planned | [`docs/plans/IMPLEMENTATION_PLAN.md`](docs/plans/IMPLEMENTATION_PLAN.md) |
 | **Slack/Web Client** | ⏳ Planned | [`docs/plans/IMPLEMENTATION_PLAN.md`](docs/plans/IMPLEMENTATION_PLAN.md) |
 
@@ -35,112 +36,106 @@ Harvest is a background coding agent service built on the architecture that powe
 
 ## System Architecture
 
-**Architecture Status**: Approved PTY-based architecture with interactive sessions, message queuing, and Stop hook detection.
+**Architecture Status**: Daytona + Claude Agent SDK
 
-**Current Phase**: Phase 1 - PTY Infrastructure implementation (see [EXEC_SUMMARY.md](.claude/plans/feat-harvest-pty-interactive-sessions/EXEC_SUMMARY.md) § 5)
+**Current Phase**: MVP implementation - Docker snapshot image with pre-installed SDK and MCP servers
+
+See [`packages/daytona-executor/ARCHITECTURE.md`](packages/daytona-executor/ARCHITECTURE.md) for detailed architecture diagrams.
 
 ```mermaid
 graph TD
     subgraph "User Interface"
-        A0[Relevance Workforce<br/>Chat Interface]
+        UI[Relevance Chat UI]
+        TV[HarvestToolViewer]
     end
 
     subgraph "External Triggers"
-        A2[Slack Bot]
-        A3[GitHub Webhooks]
+        SL[Slack Bot]
+        GH[GitHub Webhooks]
     end
 
     subgraph "Relevance Backend"
-        B0[Project Keys DB<br/>Encrypted]
-        B1[Sync Services<br/>OAuth/Webhooks]
-        B2[TriggerRunner]
-        B3[ConversationManager]
-        B4[BackgroundCoderPresetAgent]
+        TR[TriggerRunner]
+        CM[ConversationManager]
+        HP[HarvestPresetAgent]
+        HR[HarvestRuntime.ts]
+        MM[MessageMapper]
     end
 
-    subgraph "Harvest Runtime TypeScript"
-        C1[HarvestRuntime.ts<br/>GetUserProjectKey]
-        C2[Spawn Python Subprocess<br/>env: GITHUB_TOKEN<br/>CLAUDE_OAUTH_TOKEN]
+    subgraph "Daytona Cloud"
+        DS[Daytona SDK]
+        SB[Sandbox<br/>harvest-snapshot]
     end
 
-    subgraph "harvest-client Python"
-        D1[HarvestClient<br/>reads env vars]
-        D2[Modal API Call<br/>HTTPS + credentials]
+    subgraph "Inside Sandbox"
+        SDK[Claude Agent SDK]
+        QF[query function]
     end
 
-    subgraph "Modal Container HarvestSandbox"
-        E0[modal.Secret.from_dict<br/>ENV vars]
-        E1[PTY Manager]
-        E2[asyncio.Queue]
-        E3[Stop Hook Detection]
-        E4[Memory Monitor]
-    end
-
-    subgraph "Claude Code CLI"
-        F1[Interactive Session<br/>CLAUDE_CODE_OAUTH_TOKEN]
-        F2[MCP Servers<br/>GITHUB_TOKEN, etc.]
-        F3[Tool Execution]
+    subgraph "Claude Agent"
+        CA[Claude Sonnet 4.5]
+        TL[Tools: Bash, Read, Write, Edit]
+        MCP[MCP Servers]
     end
 
     subgraph "External Services"
-        G1[GitHub API]
-        G2[Gemini API]
-        G3[Linear API]
-        G4[Git Operations]
+        GHA[GitHub API]
+        GEM[Gemini API]
+        LIN[Linear API]
+        GIT[Git Operations]
     end
 
-    A0 --> B2
-    A2 --> B1
-    A3 --> B1
-    B1 --> B2
-    B2 --> B3
-    B3 --> B4
-    B4 --> C1
-    C1 --> C2
-    C2 --> D1
-    D1 --> D2
-    D2 --> E1
-    E1 --> E2
-    E2 --> F1
-    F1 --> E3
-    E3 -.->|<<<CLAUDE_DONE>>>| E2
-    E1 --> E4
-    F1 --> F2
-    F2 --> F3
-    F3 --> G1
-    F3 --> G2
-    F3 --> G3
-    F3 --> G4
+    UI -->|Send prompt| TR
+    SL -->|Event| TR
+    GH -->|Webhook| TR
 
-    F1 -.->|stdout stream| C2
-    C2 -.->|yield chunks| B3
-    B3 -.->|toolviewer| A0
+    TR --> CM
+    CM --> HP
+    HP --> HR
 
-    B0 ==>|GetUserProjectKey| C1
-    C1 ==>|subprocess env vars| C2
-    C2 ==>|env vars| D1
-    D1 ==>|Modal API HTTPS| D2
-    D2 ==>|modal.Secret| E0
-    E0 ==>|sandbox env vars| F1
-    E0 ==>|sandbox env vars| F2
+    HR -->|daytona.create| DS
+    DS -->|Spawn| SB
+    HR -->|codeRun| SB
 
-    style E1 fill:#e1f5ff
-    style F1 fill:#fff4e1
-    style E3 fill:#ffe1e1
-    style B2 fill:#e8f5e9
-    style B0 fill:#fff3e0
-    style E0 fill:#fff3e0
+    SB --> SDK
+    SDK --> QF
+    QF --> CA
+
+    CA --> TL
+    TL --> GHA
+    TL --> GIT
+    CA --> MCP
+    MCP --> GEM
+    MCP --> LIN
+
+    CA -->|JSON stream| QF
+    QF -->|stdout| HR
+    HR -->|Parse| MM
+    MM -->|Yield| CM
+    CM -->|Stream| UI
+    CM -->|Tool calls| TV
+
+    style UI fill:#e3f2fd
+    style TV fill:#e3f2fd
+    style SB fill:#fff3e0
+    style SDK fill:#fff3e0
+    style CA fill:#f3e5f5
+    style TL fill:#f3e5f5
 ```
 
 ### Key Architectural Decisions
 
-- **Session Model**: `conversation_id === session_id` (one Modal sandbox per conversation)
-- **Message Queuing**: `asyncio.Queue` for sequential prompt processing
-- **Completion Detection**: Stop hook emits `<<<CLAUDE_DONE>>>` marker
-- **Timeout Strategy**: 5-minute idle timeout, 12-hour session max
-- **Security**: Explicit credential whitelisting via `modal.Secret.from_dict()`
+- **Runtime**: Daytona sandboxes with Claude Agent SDK
+- **Session Model**: SDK manages session continuity via `resume` parameter
+- **Message Format**: Structured JSON stream from SDK
+- **Config Strategy**: Baked into snapshot image, loaded at runtime via SDK's `systemPrompt`
+- **Security**: Non-root `harvest` user, secrets injected via `envVars`
 
-See [EXEC_SUMMARY.md](.claude/plans/feat-harvest-pty-interactive-sessions/EXEC_SUMMARY.md) for implementation phases, risk mitigation, and complete technical details
+**Key benefits:**
+- TypeScript end-to-end
+- Structured message types
+- Built-in session management and cost tracking
+- Fast cold starts with pre-built snapshot
 
 ### Agent Modes
 
@@ -166,10 +161,10 @@ Both modes share execution rules (`docs/ai/shared/*.md`) but differ in intent/ap
 |--------|---------|-----------------|-------------|--------------|
 | **Memory** | `@modelcontextprotocol/server-memory` | None | - | - |
 | **Filesystem** | `@modelcontextprotocol/server-filesystem` | None | - | - |
-| **Playwright** | `@anthropic-ai/mcp-server-playwright` | None | - | - |
+| **Playwright** | `@playwright/mcp` | None | - | - |
 | **DevTools** | `chrome-devtools-mcp` | None | - | - |
-| **GitHub** | `@anthropic-ai/mcp-server-github` | `GITHUB_TOKEN` | Contents: R/W, PRs: R/W, Issues: R/W | [github.com/settings/tokens](https://github.com/settings/tokens?type=beta) |
-| **Linear** | `@modelcontextprotocol/server-linear` | `LINEAR_API_KEY` | Full access | [linear.app/settings/api](https://linear.app/settings/api) |
+| **GitHub** | `@modelcontextprotocol/server-github` | `GITHUB_TOKEN` | Contents: R/W, PRs: R/W, Issues: R/W | [github.com/settings/tokens](https://github.com/settings/tokens?type=beta) |
+| **Linear** | `mcp-remote` → `https://mcp.linear.app/sse` | `LINEAR_API_KEY` | Full access | [linear.app/settings/api](https://linear.app/settings/api) |
 | **Gemini** | `@houtini/gemini-mcp` | `GEMINI_API_KEY` | - | [aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey) |
 | **Sentry** | `@sentry/mcp-server` | `SENTRY_AUTH_TOKEN` | project:read, event:read, issue:read | [sentry.io/settings/account/api/auth-tokens](https://sentry.io/settings/account/api/auth-tokens/) |
 

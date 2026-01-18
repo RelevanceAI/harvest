@@ -31,3 +31,5 @@ htmlcov/
 
 # Git worktrees
 .worktrees
+
+.conductor

@@ -1,0 +1,122 @@
+{
+  "entities": [
+    {
+      "name": "HarvestSession",
+      "entityType": "session_context",
+      "observations": [
+        "Session context entity for tracking sandbox state and execution info"
+      ]
+    },
+    {
+      "name": "EnvironmentConfig",
+      "entityType": "environment_knowledge",
+      "observations": [
+        "Container runtime: Daytona sandbox with pre-built snapshot",
+        "Working directory: /app contains baked configuration files",
+        "Config files: claude.md, autonomous-agent.md, docs/ai/shared/, docs/mcp/",
+        "MCP servers: Pre-installed globally, spawned on-demand by SDK",
+        "Non-root user: harvest (UID 1000) for security",
+        "Persistence: Only committed/pushed work persists - sandbox is ephemeral"
+      ]
+    },
+    {
+      "name": "GitWorkflow",
+      "entityType": "process_knowledge",
+      "observations": [
+        "Follow Safe-Carry-Forward pattern: snapshot → fetch → rebase → test → squash → push",
+        "Checkpoint pattern: Create backup branch before risky operations",
+        "Squashing: Use git reset --soft, never interactive editor (non-interactive env)",
+        "Commit messages: Always use -m flag, never rely on editor",
+        "Branch ownership: Full autonomy on feature branches (rebase, force-push OK)",
+        "Main/develop: NEVER commit directly, NEVER force push"
+      ]
+    },
+    {
+      "name": "WorkflowProcedures",
+      "entityType": "process_knowledge",
+      "observations": [
+        "Two-session pattern: Session 1 (planning + approval), Session 2 (autonomous execution)",
+        "Testing: Run full test suite before committing, max 3 retry attempts",
+        "PRs: Create with proper conventions, include test plan section",
+        "Debugging: Follow escalation hierarchy - fail-forward → systematic → panic",
+        "Completion: Use finishing-workflow.md 4-option framework"
+      ]
+    },
+    {
+      "name": "ErrorPatterns",
+      "entityType": "incident_knowledge",
+      "observations": [
+        "Seed entity for tracking errors and solutions - add observations as issues are resolved"
+      ]
+    },
+    {
+      "name": "LearnedPatterns",
+      "entityType": "codebase_knowledge",
+      "observations": [
+        "Seed entity for repo-specific patterns - add observations as conventions are discovered"
+      ]
+    },
+    {
+      "name": "ComplexityDecisions",
+      "entityType": "process_knowledge",
+      "observations": [
+        "Seed entity for tracking complexity assessments - add observations after task completion"
+      ]
+    },
+    {
+      "name": "VerificationPatterns",
+      "entityType": "process_knowledge",
+      "observations": [
+        "Seed entity for verification approaches - add observations after successful verifications"
+      ]
+    },
+    {
+      "name": "SuccessfulWorkflows",
+      "entityType": "process_knowledge",
+      "observations": [
+        "Seed entity for recording successful patterns - add observations after PR merges"
+      ]
+    },
+    {
+      "name": "FailurePatterns",
+      "entityType": "incident_knowledge",
+      "observations": [
+        "Seed entity for panic/recovery situations - add observations after incidents"
+      ]
+    },
+    {
+      "name": "SessionProgress",
+      "entityType": "session_context",
+      "observations": [
+        "Seed entity for loop detection during execution - clear after session ends"
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "from": "ErrorPatterns",
+      "to": "EnvironmentConfig",
+      "relationType": "informs"
+    },
+    {
+      "from": "LearnedPatterns",
+      "to": "WorkflowProcedures",
+      "relationType": "guides"
+    },
+    {
+      "from": "GitWorkflow",
+      "to": "WorkflowProcedures",
+      "relationType": "defines"
+    },
+    {
+      "from": "ComplexityDecisions",
+      "to": "SuccessfulWorkflows",
+      "relationType": "calibrates"
+    },
+    {
+      "from": "FailurePatterns",
+      "to": "ErrorPatterns",
+      "relationType": "extends"
+    }
+  ]
+}

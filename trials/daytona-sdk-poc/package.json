@@ -1,0 +1,17 @@
+{
+  "name": "daytona-sdk-poc",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "tsx test-sdk-invocation.ts"
+  },
+  "dependencies": {
+    "@daytonaio/sdk": "^0.130.0",
+    "dotenv": "^17.2.3"
+  },
+  "devDependencies": {
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
+  }
+}
