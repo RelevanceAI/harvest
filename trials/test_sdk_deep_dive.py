@@ -36,7 +36,7 @@ async def test_multi_turn_conversation():
             print("❌ No CLAUDE_CODE_OAUTH_TOKEN found")
             return False
 
-        print(f"\nUsing OAuth token: {oauth_token[:15]}...")
+        print("\nUsing OAuth token: [REDACTED]")
 
         options = ClaudeAgentOptions(
             allowed_tools=["Read", "Write", "Glob"],
