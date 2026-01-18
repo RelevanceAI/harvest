@@ -1,5 +1,7 @@
 # Harvest Architecture: Daytona + Claude Agent SDK
 
+> **⚠️ POC Status**: This document describes the target architecture for Harvest's Daytona + Claude Agent SDK integration. The Relevance backend integration (HarvestRuntime, MessageMapper, cancel endpoints) is not yet implemented. See `trials/daytona-sdk-poc/` for current validated capabilities.
+
 ## System Overview Diagram
 
 ```mermaid
@@ -150,6 +152,10 @@ sequenceDiagram
 
 ## Session Resume Flow
 
+Session resume allows continuing a conversation across multiple requests. The SDK maintains conversation history via the `session_id`.
+
+> **⚠️ Known Issue**: Early abort (before first `assistant` message) can break resume. See [Known Issues: GitHub #69](#github-69-abort-timing-breaks-resume).
+
 ```mermaid
 sequenceDiagram
     participant User
@@ -171,11 +177,65 @@ sequenceDiagram
     SDK-->>Relevance: { type: "system", session_id: "abc123" }
     Note over SDK: Has full context from first message
     SDK-->>Relevance: "Based on my earlier analysis..."
+
+    Note over User,SDK: Resume After Cancellation
+    User->>Relevance: "Continue the analysis"
+    Note over Relevance: Use stored session_id from cancelled session
+    Relevance->>Sandbox: query({ prompt, resume: "abc123" })
+    SDK-->>Relevance: Continues where it left off
 ```
 
 ---
 
 ## Cancellation Flow
+
+The Claude Agent SDK uses `AbortController` for graceful session interruption. This allows pausing a session without destroying state, enabling resume via `session_id`.
+
+### SDK Cancellation Pattern
+
+```typescript
+// Inside sandbox: SDK code with cancellation support
+const abortController = new AbortController();
+
+const response = query({
+  prompt: userPrompt,
+  options: {
+    abortController,
+    ...(sessionId ? { resume: sessionId } : {}),
+  }
+});
+
+try {
+  for await (const message of response) {
+    if (message.type === 'system' && message.subtype === 'init') {
+      sessionId = message.session_id;  // Store for resume
+    }
+    console.log(JSON.stringify(message));  // Stream to stdout
+  }
+} catch (error) {
+  if (error.name === 'AbortError') {
+    // Session interrupted - can resume with stored sessionId
+    console.log(JSON.stringify({
+      type: 'error',
+      code: 'ABORTED',
+      session_id: sessionId,
+      resumable: true
+    }));
+  }
+}
+
+// To cancel: abortController.abort()
+```
+
+### Integration Pattern (TBD)
+
+How Relevance triggers `abortController.abort()` inside the sandbox is a design decision:
+
+| Option | Mechanism | Pros | Cons |
+|--------|-----------|------|------|
+| **PTY + SIGINT** | Run in PTY, send `\x03` (Ctrl+C) | Native signal handling | Requires PTY mode |
+| **Polling** | SDK checks cancel flag periodically | Works with `codeRun()` | Latency, complexity |
+| **WebSocket** | Bidirectional channel | Real-time | Additional infrastructure |
 
 ```mermaid
 sequenceDiagram
@@ -186,19 +246,28 @@ sequenceDiagram
     participant SDK
 
     User->>ChatUI: Send long task
-    Relevance->>Sandbox: codeRun(SDK_CODE)
+    Relevance->>Sandbox: Start SDK execution
     SDK->>SDK: Processing...
 
     Note over User: Clicks Cancel
     User->>ChatUI: Click Cancel
     ChatUI->>Relevance: POST /harvest/cancel/:id
-    Relevance->>Sandbox: process.signal("SIGTERM")
 
-    Note over Sandbox: AbortController.abort()
-    SDK-->>Sandbox: { type: "error", code: "ABORTED" }
+    alt PTY Mode
+        Relevance->>Sandbox: sendInput("\x03")
+        Note over Sandbox: SIGINT → abort handler
+    else Polling Mode
+        Relevance->>Sandbox: Set cancel flag
+        Note over Sandbox: SDK checks flag → abort
+    end
+
+    Note over SDK: abortController.abort()
+    SDK-->>Sandbox: { type: "error", code: "ABORTED", resumable: true }
     Sandbox-->>Relevance: JSON line
-    Relevance-->>ChatUI: "Cancelled"
+    Relevance-->>ChatUI: "Paused - can resume"
 ```
+
+> **Note**: Sandbox lifecycle (stop/destroy) uses Daytona SDK methods, separate from SDK session cancellation.
 
 ---
 
@@ -263,6 +332,39 @@ stateDiagram-v2
     note right of UserToolResult: tool_result content, is_error
     note right of Result: total_cost_usd, success
 ```
+
+---
+
+## Known Issues
+
+### GitHub #69: Abort Timing Breaks Resume
+
+**Issue**: Calling `abortController.abort()` immediately after receiving the `init` message (before any `assistant` messages) corrupts the session state, making resume fail.
+
+**Impact**: If user cancels very quickly after session starts, that session cannot be resumed.
+
+**Workaround**: Implement a minimum delay before allowing abort, or track whether at least one `assistant` message was received:
+
+```typescript
+let canSafelyAbort = false;
+
+for await (const message of response) {
+  if (message.type === 'assistant') {
+    canSafelyAbort = true;  // Safe to abort after first assistant message
+  }
+  // ... handle message
+}
+
+function interrupt() {
+  if (canSafelyAbort) {
+    abortController.abort();
+  } else {
+    // Either wait, or warn user that early cancel loses session
+  }
+}
+```
+
+**Status**: Open issue at `anthropics/claude-code` - monitor for SDK fix.
 
 ---
 
