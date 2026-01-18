@@ -11,8 +11,8 @@
 
 ## AI Agent Configuration
 
-- [Autonomous Agent Rules](docs/ai/autonomous-agent.md): Rules for autonomous/background agent operation
-- [Local Development Rules](docs/ai/local-development.md): Rules for local human-assisted development
+- [Agent Rules](docs/ai/agent.md): Mode-specific rules (local development in repo, autonomous in container)
+- [Autonomous Agent Rules](docs/ai/autonomous-agent.md): Rules for autonomous/background agent operation (used by container build)
 
 ## Core AI Rules (All Contexts)
 
@@ -36,15 +36,8 @@
 - [Playwright MCP](docs/mcp/playwright.md): End-to-end testing workflows
 - [Memory MCP](docs/mcp/memory.md): Persistent knowledge graph and cross-session memory
 
-## Setup & Configuration
-
-- [Modal Setup](docs/setup/modal-setup.md): Environment configuration and setup procedures
-- [Modal Testing Guide](docs/modal/testing.md): Testing strategies for Modal sandboxes
-- [Modal Base Image Spec](docs/modal/base-image-spec.md): Container image specification
-
 ## Package Documentation
 
-- [Modal Executor](packages/modal-executor/README.md): Core Modal sandbox execution package
 - [Daytona Executor](packages/daytona-executor/README.md): Daytona-based sandbox execution package
 - [Daytona Architecture](packages/daytona-executor/ARCHITECTURE.md): Daytona executor technical architecture
 

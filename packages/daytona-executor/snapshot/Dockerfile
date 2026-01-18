@@ -85,7 +85,7 @@ RUN mkdir -p /app/docs/ai/shared /app/docs/mcp \
 # Copy baked configuration files
 # These are copied by build.sh from source of truth locations
 COPY --chown=harvest:harvest config/claude.md /app/claude.md
-COPY --chown=harvest:harvest config/autonomous-agent.md /app/autonomous-agent.md
+COPY --chown=harvest:harvest config/agent.md /app/agent.md
 COPY --chown=harvest:harvest config/docs/ai/shared/ /app/docs/ai/shared/
 COPY --chown=harvest:harvest config/docs/mcp/ /app/docs/mcp/
 COPY --chown=harvest:harvest config/memory-seed.json /app/memory-seed.json

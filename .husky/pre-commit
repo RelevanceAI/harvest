@@ -1,6 +1,4 @@
-#!/bin/bash
 # Prevent commits to protected branches
-
 BRANCH=$(git branch --show-current)
 PROTECTED_BRANCHES="^(main|master|develop)$"
 
@@ -10,3 +8,6 @@ if [[ "$BRANCH" =~ $PROTECTED_BRANCHES ]]; then
   echo "   Example: git checkout -b feat/add-feature"
   exit 1
 fi
+
+# Run validation scripts
+pnpm run validate

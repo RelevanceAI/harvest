@@ -127,7 +127,7 @@ sequenceDiagram
     Sandbox-->>Relevance: JSON line
     Relevance-->>ChatUI: Stream text
 
-    Claude->>Claude: tool_use: Bash("npm test")
+    Claude->>Claude: tool_use: Bash("pnpm test")
     SDK-->>Sandbox: { type: "assistant", content: [tool_use] }
     Sandbox-->>Relevance: JSON line
     Relevance-->>ChatUI: Show tool call

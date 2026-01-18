@@ -13,7 +13,6 @@ Harvest is a background coding agent service built on the architecture that powe
 | Component | Status | Documentation |
 |-----------|--------|---------------|
 | **Daytona Executor** | 🚧 MVP Ready | [`packages/daytona-executor/`](packages/daytona-executor/) |
-| **Modal Sandboxes** | ⏸️ Legacy | [`packages/modal-executor/`](packages/modal-executor/) |
 | **Claude Agent SDK** | ✅ POC Validated | [`trials/daytona-sdk-poc/`](trials/daytona-sdk-poc/) |
 | **Claude CLI Integration** | ✅ Ready | [`docs/ai/`](docs/ai/) |
 | **Git Workflow** | ✅ Ready | [`docs/ai/shared/git-workflow.md`](docs/ai/shared/git-workflow.md) |
@@ -26,7 +25,7 @@ Harvest is a background coding agent service built on the architecture that powe
 ## Core Capabilities
 
 - **Autonomous Development**: Works continuously across repositories without human intervention
-- **Sandbox Orchestration**: Spins up isolated Modal sandboxes for each session
+- **Sandbox Orchestration**: Spins up isolated Daytona sandboxes for each session
 - **Claude Code CLI Integration**: Leverages Anthropic's official Claude CLI with full tool access
 - **Multi-Model Strategy**: Primary Claude Sonnet 4.5 + Gemini for plan validation
 - **Session Continuity**: SQLite-backed conversation state persists across sandbox restarts
@@ -146,7 +145,7 @@ Harvest uses **shared base + mode-specific extensions** architecture:
 - Can pause for human feedback
 - Human judgment available
 
-**Autonomous Agent Mode** (Modal sandbox):
+**Autonomous Agent Mode** (Daytona sandbox):
 - Maximum autonomy, no human in loop
 - Execute without asking
 - Fail forward pattern (try alternatives when blocked)
@@ -172,26 +171,23 @@ Both modes share execution rules (`docs/ai/shared/*.md`) but differ in intent/ap
 
 ## Getting Started
 
-### Quick Setup (One Command)
+### Quick Setup
 
 ```bash
-git clone https://github.com/RelevanceAI/harvest.git && \
-cd harvest && \
-bash scripts/setup-git-hooks.sh && \
-cd packages/modal-executor && \
-uv venv --allow-existing && \
-source .venv/bin/activate && \
-uv pip install -e ".[dev]" && \
-pre-commit install
+git clone https://github.com/RelevanceAI/harvest.git
+cd harvest
+pnpm install
 ```
 
 ### Prerequisites
 
-- Python 3.12+
-- [uv](https://github.com/astral-sh/uv) package manager
-- Modal account ([modal.com](https://modal.com))
+- Node.js 20+
+- [pnpm](https://pnpm.io/) package manager
+- Docker (for Daytona executor)
 - GitHub account with PAT
 - Claude Code CLI ([claude.ai/download](https://claude.ai/download))
+
+> **Note:** Harvest previously used Modal Labs for cloud sandboxes. We transitioned to Daytona because Modal containers run as root, and the Claude Agent SDK blocks autonomous operation (`bypassPermissions`) with root privileges for security reasons. Daytona supports non-root containers, resolving this architectural constraint.
 
 ### Claude Code Setup
 
@@ -208,13 +204,11 @@ Configure MCP servers in `~/.claude/mcp.json` - see [MCP table](#mcp-servers) fo
 ### Testing & Code Quality
 
 ```bash
-# Run tests
-cd packages/modal-executor
-uv run pytest tests/ -v
+# Run validation scripts
+pnpm run validate
 
-# Linting & formatting
-uv run ruff check src/ tests/
-uv run black src/ tests/
+# Test Daytona snapshot image (requires Docker)
+pnpm run test:snapshot
 ```
 
 ---
@@ -223,7 +217,6 @@ uv run black src/ tests/
 
 | Directory | Purpose |
 |-----------|---------|
-| [`docs/setup/`](docs/setup/) | Setup and configuration guides |
 | [`docs/plans/`](docs/plans/) | Implementation plans |
 | [`docs/ai/`](docs/ai/) | AI agent rules and workflows |
 | [`docs/mcp/`](docs/mcp/) | MCP server documentation |

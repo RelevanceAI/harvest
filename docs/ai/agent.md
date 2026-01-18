@@ -1,6 +1,8 @@
-# Local Development Rules
+# Agent Rules
 
-You are working on the Harvest codebase locally with Claude (OpenCode).
+You are working on the Harvest codebase locally with Claude Code.
+
+> **Build-time replacement:** In the Daytona container, this file is replaced with `autonomous-agent.md` content during the Docker build. The repo version (this file) contains local development rules; the container version contains autonomous agent rules.
 
 ## Context
 
@@ -11,90 +13,56 @@ All shared rules from `@docs/ai/shared/*.md` apply (loaded via `.claude/CLAUDE.m
 
 ## Development Commands
 
-Harvest is a Python project using `uv` for dependency management. The main package is located at `packages/modal-executor/`.
+Harvest uses pnpm for package management and Husky for git hooks. The main executor package is at `packages/daytona-executor/`.
 
 ### Initial Setup
 
 ```bash
-# Navigate to the package directory
-cd packages/modal-executor
-
-# Create virtual environment and install dependencies
-uv venv --allow-existing
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-uv pip install -e ".[dev]"
-
-# Install pre-commit hooks (one-time setup)
-pre-commit install
-
-# Authenticate with Modal
-modal setup
-
-# Create required secrets
-modal secret create harvest-github GITHUB_TOKEN=ghp_xxx
+# Clone and install dependencies
+git clone https://github.com/RelevanceAI/harvest.git
+cd harvest
+pnpm install
 ```
+
+Husky pre-commit hooks are automatically installed via the `prepare` script.
 
 ### Common Development Commands
 
 | Command | Action |
 |---------|--------|
-| `pytest` | Run all tests (this should be used by default) |
-| `pytest -v` | Run tests with verbose output |
-| `pytest tests/test_sandbox.py` | Run specific test file |
-| `pytest -m "not modal"` | Run tests excluding Modal-dependent tests |
-| `pytest --cov` | Run tests with coverage report |
-| `pre-commit run --all-files` | Run all pre-commit hooks (linting, formatting, type checking) |
-| `ruff check .` | Run linter |
-| `ruff check --fix .` | Run linter and auto-fix issues |
-| `mypy src/` | Run type checker |
-| `modal list` | Verify Modal setup |
+| `pnpm run validate` | Run all validation scripts |
+| `pnpm run test:snapshot` | Test Daytona snapshot image (requires Docker) |
+
+### Daytona Executor Commands
+
+```bash
+cd packages/daytona-executor/snapshot
+
+# Build the Docker snapshot image
+./build.sh
+
+# Test snapshot image (no API keys required)
+./test-snapshot.sh
+
+# Test with Claude Agent SDK (requires CLAUDE_CODE_OAUTH_TOKEN)
+./test.sh "your prompt here"
+```
 
 ### Testing Workflow
 
-**Default test command:**
-```bash
-pytest
-```
-
 **Before committing:**
 ```bash
-# Pre-commit hooks will run automatically on `git commit`
+# Husky hooks run automatically on `git commit`
 # To test hooks manually:
-pre-commit run --all-files
+pnpm run validate
 ```
-
-**Skipping Modal-dependent tests:**
-```bash
-# Use this if you don't have Modal credentials configured
-pytest -m "not modal"
-```
-
-**Running specific tests:**
-```bash
-# Single test file
-pytest tests/test_sandbox.py
-
-# Single test function
-pytest tests/test_sandbox.py::test_basic_execution
-
-# All tests in verbose mode
-pytest -v
-```
-
-### Stopping Development Servers
-
-Modal sandboxes are ephemeral and auto-terminate. For local development:
-
-- **Python processes**: `Ctrl+C` in the terminal
-- **Pre-commit hooks**: Run automatically on commit (no server to stop)
-- **pytest**: Tests run and exit automatically
 
 ### Requirements
 
-- Python 3.11+
-- `uv` package manager (install via `pip install uv` or `brew install uv`)
-- Modal account (for sandbox execution)
-- GitHub personal access token (for repository cloning)
+- Node.js 20+
+- pnpm (install via `corepack enable && corepack prepare pnpm@latest --activate`)
+- Docker (for Daytona executor development)
+- GitHub personal access token (for repository operations)
 
 ## MCP Tools Available
 
@@ -118,7 +86,7 @@ Modal sandboxes are ephemeral and auto-terminate. For local development:
 Use the `/superpowers:using-git-worktrees` skill, which will:
 1. Create isolated workspace at `.worktrees/<branch-name>/`
 2. Verify `.worktrees` is in `.gitignore` (already configured for Harvest)
-3. Run `npm install` and baseline tests
+3. Run `pnpm install` and baseline tests
 4. Report ready when clean
 
 Cleanup happens via `/superpowers:finishing-a-development-branch` skill
