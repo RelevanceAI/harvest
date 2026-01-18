@@ -26,14 +26,14 @@ CLAUDE_CODE_OAUTH_TOKEN=your-token
 ## Setup
 
 ```bash
-cd packages/daytona-executor/poc
-npm install
+cd trials/daytona-sdk-poc
+pnpm install
 ```
 
 ## Run POC
 
 ```bash
-npx tsx test-sdk-invocation.ts
+pnpm exec tsx test-sdk-invocation.ts
 ```
 
 ## Results

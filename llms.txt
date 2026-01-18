@@ -36,15 +36,8 @@
 - [Playwright MCP](docs/mcp/playwright.md): End-to-end testing workflows
 - [Memory MCP](docs/mcp/memory.md): Persistent knowledge graph and cross-session memory
 
-## Setup & Configuration
-
-- [Modal Setup](docs/setup/modal-setup.md): Environment configuration and setup procedures
-- [Modal Testing Guide](docs/modal/testing.md): Testing strategies for Modal sandboxes
-- [Modal Base Image Spec](docs/modal/base-image-spec.md): Container image specification
-
 ## Package Documentation
 
-- [Modal Executor](packages/modal-executor/README.md): Core Modal sandbox execution package
 - [Daytona Executor](packages/daytona-executor/README.md): Daytona-based sandbox execution package
 - [Daytona Architecture](packages/daytona-executor/ARCHITECTURE.md): Daytona executor technical architecture
 

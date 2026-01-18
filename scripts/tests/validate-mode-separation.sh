@@ -21,11 +21,5 @@ if [ ! -f .claude/claude.md ]; then
   exit 1
 fi
 
-# Check if AGENTS.md exists in active config (should be removed)
-if [ -f packages/modal-executor/src/modal_executor/config/AGENTS.md ]; then
-  echo "❌ FAIL: config/AGENTS.md should be removed"
-  exit 1
-fi
-
 echo "✅ PASS: Mode-specific files are properly separated"
 exit 0
