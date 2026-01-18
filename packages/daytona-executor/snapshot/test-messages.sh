@@ -16,14 +16,12 @@ NC='\033[0m' # No Color
 
 IMAGE="harvest-daytona-snapshot:latest"
 
-# Load from .env if present
-if [ -f "../.env" ]; then
-    export $(grep -v '^#' ../.env | xargs)
-fi
-
-if [ -f ".env" ]; then
-    export $(grep -v '^#' .env | xargs)
-fi
+# Load from .env files if present (check multiple locations)
+for envfile in "../.env" "../.env.local" ".env" ".env.local"; do
+    if [ -f "$envfile" ]; then
+        export $(grep -v '^#' "$envfile" | xargs)
+    fi
+done
 
 # Check for OAuth token
 if [ -z "$CLAUDE_CODE_OAUTH_TOKEN" ]; then
@@ -45,82 +43,86 @@ echo ""
 TEST_CODE='
 import { query } from "@anthropic-ai/claude-agent-sdk";
 
-const prompt = process.argv[2] || "List files in /app and describe what you see";
+async function main() {
+  const prompt = process.argv[2] || "List files in /app and describe what you see";
 
-console.log("=== Prompt: " + prompt + " ===");
-console.log("");
-
-try {
-  const response = query({
-    prompt: prompt,
-    options: {
-      model: "claude-sonnet-4-5",
-      workingDirectory: "/app"
-    }
-  });
-
-  let messageCount = 0;
-  const startTime = Date.now();
-
-  for await (const message of response) {
-    messageCount++;
-
-    // Format message for display based on type
-    const type = message.type || "unknown";
-
-    switch (type) {
-      case "system/init":
-        console.log(`[system/init] session_id=${message.session_id || "?"}, model=${message.model || "?"}`);
-        if (message.tools) {
-          console.log(`             tools=[${message.tools.slice(0, 5).join(", ")}...]`);
-        }
-        break;
-
-      case "assistant":
-        // Check for tool_use
-        if (message.content) {
-          for (const block of message.content) {
-            if (block.type === "text") {
-              const text = block.text.substring(0, 100);
-              console.log(`[assistant]   "${text}${block.text.length > 100 ? "..." : ""}"`);
-            } else if (block.type === "tool_use") {
-              const input = JSON.stringify(block.input || {}).substring(0, 50);
-              console.log(`[assistant]   tool_use: ${block.name}(${input}${input.length > 50 ? "..." : ""})`);
-            }
-          }
-        }
-        break;
-
-      case "user":
-        // Tool results
-        if (message.content) {
-          for (const block of message.content) {
-            if (block.type === "tool_result") {
-              const result = JSON.stringify(block.content || "").substring(0, 80);
-              console.log(`[user]        tool_result: ${result}${result.length > 80 ? "..." : ""}`);
-            }
-          }
-        }
-        break;
-
-      case "result":
-        const duration = Date.now() - startTime;
-        console.log(`[result]      success=${message.is_error === false}, cost=$${(message.cost_usd || 0).toFixed(4)}, duration=${duration}ms`);
-        break;
-
-      default:
-        // Log other message types in compact form
-        console.log(`[${type}]      ${JSON.stringify(message).substring(0, 80)}...`);
-    }
-  }
-
+  console.log("=== Prompt: " + prompt + " ===");
   console.log("");
-  console.log(`Total messages: ${messageCount}`);
 
-} catch (err) {
-  console.error("Error:", err.message);
-  process.exit(1);
+  try {
+    const response = query({
+      prompt: prompt,
+      options: {
+        model: "claude-sonnet-4-5",
+        workingDirectory: "/app"
+      }
+    });
+
+    let messageCount = 0;
+    const startTime = Date.now();
+
+    for await (const message of response) {
+      messageCount++;
+
+      // Format message for display based on type
+      const type = message.type || "unknown";
+
+      switch (type) {
+        case "system/init":
+          console.log(`[system/init] session_id=${message.session_id || "?"}, model=${message.model || "?"}`);
+          if (message.tools) {
+            console.log(`             tools=[${message.tools.slice(0, 5).join(", ")}...]`);
+          }
+          break;
+
+        case "assistant":
+          // Check for tool_use
+          if (message.content) {
+            for (const block of message.content) {
+              if (block.type === "text") {
+                const text = block.text.substring(0, 100);
+                console.log(`[assistant]   "${text}${block.text.length > 100 ? "..." : ""}"`);
+              } else if (block.type === "tool_use") {
+                const input = JSON.stringify(block.input || {}).substring(0, 50);
+                console.log(`[assistant]   tool_use: ${block.name}(${input}${input.length > 50 ? "..." : ""})`);
+              }
+            }
+          }
+          break;
+
+        case "user":
+          // Tool results
+          if (message.content) {
+            for (const block of message.content) {
+              if (block.type === "tool_result") {
+                const result = JSON.stringify(block.content || "").substring(0, 80);
+                console.log(`[user]        tool_result: ${result}${result.length > 80 ? "..." : ""}`);
+              }
+            }
+          }
+          break;
+
+        case "result":
+          const duration = Date.now() - startTime;
+          console.log(`[result]      success=${message.is_error === false}, cost=$${(message.cost_usd || 0).toFixed(4)}, duration=${duration}ms`);
+          break;
+
+        default:
+          // Log other message types in compact form
+          console.log(`[${type}]      ${JSON.stringify(message).substring(0, 80)}...`);
+      }
+    }
+
+    console.log("");
+    console.log(`Total messages: ${messageCount}`);
+
+  } catch (err) {
+    console.error("Error:", err.message);
+    process.exit(1);
+  }
 }
+
+main();
 '
 
 # Run the test inside the container
