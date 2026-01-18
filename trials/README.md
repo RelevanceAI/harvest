@@ -12,9 +12,10 @@ Superseded plans moved here from `.claude/plans/`:
 |------|-----------------|
 | `feat-harvest-pty-interactive-sessions/` | Superseded by Daytona approach |
 | `feat-modal-sandbox-block-1-1/` | Modal infrastructure superseded by Daytona |
+| `daytona-executor-poc-plan.md` | POC plan from `packages/daytona-executor/` (canonical plan now in `.claude/plans/`) |
 | `claude-agent-sdk-*.md` | SDK exploration docs (investigation complete) |
 | `phase-1.1-*.md` | Original Modal sandbox plans (superseded) |
-| `IMPLEMENTATION_PLAN.md` | Original implementation plan (superseded) |
+| `IMPLEMENTATION_PLAN.md` | Original master implementation plan (superseded) |
 
 **Active plans remain in `.claude/plans/`** - only use this for historical reference.
 
